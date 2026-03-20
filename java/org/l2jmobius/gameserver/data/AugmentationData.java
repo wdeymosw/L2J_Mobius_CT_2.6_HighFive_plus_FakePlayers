@@ -822,21 +822,33 @@ public class AugmentationData
 		// generate a skill if necessary
 		if (generateSkill)
 		{
+			final List<Integer> blueSkills = _blueSkills.get(lifeStoneLevel);
+			final List<Integer> purpleSkills = _purpleSkills.get(lifeStoneLevel);
+			final List<Integer> redSkills = _redSkills.get(lifeStoneLevel);
 			switch (resultColor)
 			{
 				case 1: // blue skill
 				{
-					stat34 = _blueSkills.get(lifeStoneLevel).get(Rnd.get(0, _blueSkills.get(lifeStoneLevel).size() - 1));
+					if ((blueSkills != null) && !blueSkills.isEmpty())
+					{
+						stat34 = blueSkills.get(Rnd.get(0, blueSkills.size() - 1));
+					}
 					break;
 				}
 				case 2: // purple skill
 				{
-					stat34 = _purpleSkills.get(lifeStoneLevel).get(Rnd.get(0, _purpleSkills.get(lifeStoneLevel).size() - 1));
+					if ((purpleSkills != null) && !purpleSkills.isEmpty())
+					{
+						stat34 = purpleSkills.get(Rnd.get(0, purpleSkills.size() - 1));
+					}
 					break;
 				}
 				case 3: // red skill
 				{
-					stat34 = _redSkills.get(lifeStoneLevel).get(Rnd.get(0, _redSkills.get(lifeStoneLevel).size() - 1));
+					if ((redSkills != null) && !redSkills.isEmpty())
+					{
+						stat34 = redSkills.get(Rnd.get(0, redSkills.size() - 1));
+					}
 					break;
 				}
 			}

@@ -1,2 +1,4 @@
 bin/
 *.class
+dist/game/log/
+dist/login/log/

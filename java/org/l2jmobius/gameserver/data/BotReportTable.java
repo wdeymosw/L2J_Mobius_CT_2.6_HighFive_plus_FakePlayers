@@ -220,7 +220,7 @@ public class BotReportTable
 		}
 		
 		final Creature bot = target.asCreature();
-		if ((!bot.isPlayer() && !bot.isFakePlayer()) || (bot.isFakePlayer() && !bot.asNpc().getTemplate().getFakePlayerInfo().isTalkable()) || (target.getObjectId() == reporter.getObjectId()))
+		if ((bot == null) || (!bot.isPlayer() && !bot.isFakePlayer()) || (bot.isFakePlayer() && !bot.asNpc().getTemplate().getFakePlayerInfo().isTalkable()) || (target.getObjectId() == reporter.getObjectId()))
 		{
 			return false;
 		}
