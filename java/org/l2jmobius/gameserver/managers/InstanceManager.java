@@ -25,6 +25,7 @@ import java.sql.Connection;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.util.Collection;
+import java.util.Collections;
 import java.util.HashMap;
 import java.util.LinkedList;
 import java.util.List;
@@ -102,12 +103,13 @@ public class InstanceManager implements IXmlReader
 		{
 			restoreInstanceTimes(playerObjId);
 		}
-		
-		if (_playerTimes.get(playerObjId).containsKey(id))
+
+		final Map<Integer, Long> times = _playerTimes.get(playerObjId);
+		if (times != null)
 		{
-			return _playerTimes.get(playerObjId).get(id);
+			return times.getOrDefault(id, -1L);
 		}
-		
+
 		return -1;
 	}
 	
@@ -121,8 +123,9 @@ public class InstanceManager implements IXmlReader
 		{
 			restoreInstanceTimes(playerObjId);
 		}
-		
-		return _playerTimes.get(playerObjId);
+
+		final Map<Integer, Long> times = _playerTimes.get(playerObjId);
+		return times != null ? times : Collections.emptyMap();
 	}
 	
 	/**

@@ -162,9 +162,19 @@ public class ClanHallTable
 	 */
 	public synchronized void setFree(int chId)
 	{
-		_freeClanHall.put(chId, _clanHall.get(chId));
-		ClanTable.getInstance().getClan(_freeClanHall.get(chId).getOwnerId()).setHideoutId(0);
-		_freeClanHall.get(chId).free();
+		final AuctionableHall clanHall = _clanHall.get(chId);
+		if (clanHall == null)
+		{
+			return;
+		}
+
+		_freeClanHall.put(chId, clanHall);
+		final Clan clan = ClanTable.getInstance().getClan(clanHall.getOwnerId());
+		if (clan != null)
+		{
+			clan.setHideoutId(0);
+		}
+		clanHall.free();
 		_clanHall.remove(chId);
 	}
 	
@@ -177,16 +187,29 @@ public class ClanHallTable
 	{
 		if (!_clanHall.containsKey(chId))
 		{
-			_clanHall.put(chId, _freeClanHall.get(chId));
+			final AuctionableHall freeClanHall = _freeClanHall.get(chId);
+			if (freeClanHall == null)
+			{
+				return;
+			}
+			_clanHall.put(chId, freeClanHall);
 			_freeClanHall.remove(chId);
 		}
 		else
 		{
 			_clanHall.get(chId).free();
 		}
-		
-		ClanTable.getInstance().getClan(clan.getId()).setHideoutId(chId);
-		_clanHall.get(chId).setOwner(clan);
+
+		final Clan dbClan = ClanTable.getInstance().getClan(clan.getId());
+		if (dbClan != null)
+		{
+			dbClan.setHideoutId(chId);
+		}
+		final AuctionableHall clanHall = _clanHall.get(chId);
+		if (clanHall != null)
+		{
+			clanHall.setOwner(clan);
+		}
 	}
 	
 	/**

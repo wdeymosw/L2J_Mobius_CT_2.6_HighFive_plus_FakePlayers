@@ -427,12 +427,17 @@ public class MapRegionManager implements IXmlReader
 			}
 			
 			// Opposing race check.
-			if (getMapRegion(player).getBannedRace().containsKey(player.getRace()))
+			final MapRegion playerRegion = getMapRegion(player);
+			if (playerRegion.getBannedRace().containsKey(player.getRace()))
 			{
-				return REGIONS.get(getMapRegion(player).getBannedRace().get(player.getRace())).getChaoticSpawnLoc();
+				final MapRegion bannedRegion = REGIONS.get(playerRegion.getBannedRace().get(player.getRace()));
+				if (bannedRegion != null)
+				{
+					return bannedRegion.getChaoticSpawnLoc();
+				}
 			}
-			
-			return getMapRegion(player).getChaoticSpawnLoc();
+
+			return playerRegion.getChaoticSpawnLoc();
 		}
 		catch (Exception e)
 		{
@@ -456,12 +461,17 @@ public class MapRegionManager implements IXmlReader
 			}
 			
 			// Opposing race check.
-			if (getMapRegion(creature).getBannedRace().containsKey(creature.getRace()))
+			final MapRegion creatureRegion = getMapRegion(creature);
+			if (creatureRegion.getBannedRace().containsKey(creature.getRace()))
 			{
-				return REGIONS.get(getMapRegion(creature).getBannedRace().get(creature.getRace())).getSpawnLoc();
+				final MapRegion bannedRegion = REGIONS.get(creatureRegion.getBannedRace().get(creature.getRace()));
+				if (bannedRegion != null)
+				{
+					return bannedRegion.getSpawnLoc();
+				}
 			}
-			
-			return getMapRegion(creature).getSpawnLoc();
+
+			return creatureRegion.getSpawnLoc();
 		}
 		catch (Exception e)
 		{

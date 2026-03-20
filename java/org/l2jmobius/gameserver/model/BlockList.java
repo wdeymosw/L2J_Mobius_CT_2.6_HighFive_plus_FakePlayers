@@ -268,11 +268,6 @@ public class BlockList
 			return isBlocked(player, targetId);
 		}
 		
-		if (!OFFLINE_LIST.containsKey(ownerId))
-		{
-			OFFLINE_LIST.put(ownerId, loadList(ownerId));
-		}
-		
-		return OFFLINE_LIST.get(ownerId).contains(targetId);
+		return OFFLINE_LIST.computeIfAbsent(ownerId, BlockList::loadList).contains(targetId);
 	}
 }

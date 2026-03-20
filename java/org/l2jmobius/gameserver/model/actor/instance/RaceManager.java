@@ -89,11 +89,15 @@ public class RaceManager extends Npc
 			if (val < 10)
 			{
 				html.setFile(player, getHtmlPath(getId(), 2));
+				final Npc[] monsters = MonsterRaceManager.getInstance().getMonsters();
 				for (int i = 0; i < 8; i++)
 				{
 					int n = i + 1;
 					search = "Mob" + n;
-					html.replace(search, MonsterRaceManager.getInstance().getMonsters()[i].getTemplate().getName());
+					if ((monsters[i] != null) && (monsters[i].getTemplate() != null))
+					{
+						html.replace(search, monsters[i].getTemplate().getName());
+					}
 				}
 				
 				search = "No1";
@@ -117,7 +121,13 @@ public class RaceManager extends Npc
 				html.setFile(player, getHtmlPath(getId(), 3));
 				html.replace("0place", player.getRaceTicket(0));
 				search = "Mob1";
-				replace = MonsterRaceManager.getInstance().getMonsters()[player.getRaceTicket(0) - 1].getTemplate().getName();
+				final int ticket0a = player.getRaceTicket(0);
+				final Npc[] monstersA = MonsterRaceManager.getInstance().getMonsters();
+				if ((ticket0a < 1) || (ticket0a > 8) || (monstersA[ticket0a - 1] == null))
+				{
+					return;
+				}
+				replace = monstersA[ticket0a - 1].getTemplate().getName();
 				html.replace(search, replace);
 				search = "0adena";
 				if (val == 10)
@@ -140,7 +150,13 @@ public class RaceManager extends Npc
 				html.setFile(player, getHtmlPath(getId(), 4));
 				html.replace("0place", player.getRaceTicket(0));
 				search = "Mob1";
-				replace = MonsterRaceManager.getInstance().getMonsters()[player.getRaceTicket(0) - 1].getTemplate().getName();
+				final int ticket0b = player.getRaceTicket(0);
+				final Npc[] monstersB = MonsterRaceManager.getInstance().getMonsters();
+				if ((ticket0b < 1) || (ticket0b > 8) || (monstersB[ticket0b - 1] == null))
+				{
+					return;
+				}
+				replace = monstersB[ticket0b - 1].getTemplate().getName();
 				html.replace(search, replace);
 				search = "0adena";
 				int price = TICKET_PRICES[player.getRaceTicket(1) - 1];
