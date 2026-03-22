@@ -51,6 +51,7 @@ CREATE TABLE IF NOT EXISTS `characters` (
   `clan_join_expiry_time` bigint(13) unsigned NOT NULL DEFAULT '0',
   `clan_create_expiry_time` bigint(13) unsigned NOT NULL DEFAULT '0',
   `death_penalty_level` SMALLINT UNSIGNED NOT NULL DEFAULT 0,
+  `death_penalty_xp` BIGINT UNSIGNED NOT NULL DEFAULT 0,
   `bookmarkslot` SMALLINT UNSIGNED NOT NULL DEFAULT 0,
   `vitality_points` SMALLINT UNSIGNED NOT NULL DEFAULT 0,
   `createDate` date NOT NULL DEFAULT '2015-01-01',

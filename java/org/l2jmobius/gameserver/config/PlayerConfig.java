@@ -49,6 +49,7 @@ public class PlayerConfig
 	public static double ALT_WEIGHT_LIMIT;
 	public static int RUN_SPD_BOOST;
 	public static int DEATH_PENALTY_CHANCE;
+	public static int DEATH_PENALTY_REDUCE_PERCENT;
 	public static double RESPAWN_RESTORE_CP;
 	public static double RESPAWN_RESTORE_HP;
 	public static double RESPAWN_RESTORE_MP;
@@ -251,6 +252,7 @@ public class PlayerConfig
 		ALT_WEIGHT_LIMIT = config.getDouble("AltWeightLimit", 1);
 		RUN_SPD_BOOST = config.getInt("RunSpeedBoost", 0);
 		DEATH_PENALTY_CHANCE = config.getInt("DeathPenaltyChance", 20);
+		DEATH_PENALTY_REDUCE_PERCENT = config.getInt("DeathPenaltyReducePercent", 10);
 		RESPAWN_RESTORE_CP = config.getDouble("RespawnRestoreCP", 0) / 100;
 		RESPAWN_RESTORE_HP = config.getDouble("RespawnRestoreHP", 65) / 100;
 		RESPAWN_RESTORE_MP = config.getDouble("RespawnRestoreMP", 0) / 100;

@@ -395,7 +395,7 @@ public class Player extends Playable
 	
 	// Character Character SQL String Definitions:
 	private static final String INSERT_CHARACTER = "INSERT INTO characters (account_name,charId,char_name,level,maxHp,curHp,maxCp,curCp,maxMp,curMp,face,hairStyle,hairColor,sex,exp,sp,karma,fame,pvpkills,pkkills,clanid,race,classid,deletetime,cancraft,title,title_color,accesslevel,online,isin7sdungeon,clan_privs,wantspeace,base_class,newbie,nobless,power_grade,createDate,lastAccess) values (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)";
-	private static final String UPDATE_CHARACTER = "UPDATE characters SET level=?,maxHp=?,curHp=?,maxCp=?,curCp=?,maxMp=?,curMp=?,face=?,hairStyle=?,hairColor=?,sex=?,heading=?,x=?,y=?,z=?,exp=?,expBeforeDeath=?,sp=?,karma=?,fame=?,pvpkills=?,pkkills=?,clanid=?,race=?,classid=?,deletetime=?,title=?,title_color=?,accesslevel=?,online=?,isin7sdungeon=?,clan_privs=?,wantspeace=?,base_class=?,onlinetime=?,newbie=?,nobless=?,power_grade=?,subpledge=?,lvl_joined_academy=?,apprentice=?,sponsor=?,clan_join_expiry_time=?,clan_create_expiry_time=?,char_name=?,death_penalty_level=?,bookmarkslot=?,vitality_points=?,language=?,faction=?,pccafe_points=? WHERE charId=?";
+	private static final String UPDATE_CHARACTER = "UPDATE characters SET level=?,maxHp=?,curHp=?,maxCp=?,curCp=?,maxMp=?,curMp=?,face=?,hairStyle=?,hairColor=?,sex=?,heading=?,x=?,y=?,z=?,exp=?,expBeforeDeath=?,sp=?,karma=?,fame=?,pvpkills=?,pkkills=?,clanid=?,race=?,classid=?,deletetime=?,title=?,title_color=?,accesslevel=?,online=?,isin7sdungeon=?,clan_privs=?,wantspeace=?,base_class=?,onlinetime=?,newbie=?,nobless=?,power_grade=?,subpledge=?,lvl_joined_academy=?,apprentice=?,sponsor=?,clan_join_expiry_time=?,clan_create_expiry_time=?,char_name=?,death_penalty_level=?,bookmarkslot=?,vitality_points=?,language=?,faction=?,pccafe_points=?,death_penalty_xp=? WHERE charId=?";
 	private static final String RESTORE_CHARACTER = "SELECT * FROM characters WHERE charId=?";
 	
 	// Character Teleport Bookmark:
@@ -716,6 +716,7 @@ public class Player extends Playable
 	
 	// Death Penalty Buff Level
 	private int _deathPenaltyBuffLevel = 0;
+	private long _deathPenaltyXpAccumulated = 0;
 	
 	// charges
 	private final AtomicInteger _charges = new AtomicInteger();
@@ -5450,7 +5451,6 @@ public class Player extends Playable
 		
 		AntiFeedManager.getInstance().setLastDeathTime(getObjectId());
 		
-		// FIXME: Karma reduction tempfix.
 		if (getKarma() > 0) // && (killer instanceof GuardInstance))
 		{
 			setKarma(getKarma() < 200 ? 0 : (int) (getKarma() - (getKarma() / 4)));
@@ -7225,6 +7225,7 @@ public class Player extends Playable
 					CursedWeaponsManager.getInstance().checkPlayer(player);
 					
 					player.setDeathPenaltyBuffLevel(rset.getInt("death_penalty_level"));
+					player._deathPenaltyXpAccumulated = rset.getLong("death_penalty_xp");
 					
 					player.setVitalityPoints(rset.getInt("vitality_points"), true);
 					
@@ -7724,7 +7725,8 @@ public class Player extends Playable
 			
 			ps.setInt(50, factionId);
 			ps.setInt(51, _pcCafePoints);
-			ps.setInt(52, getObjectId());
+			ps.setLong(52, _deathPenaltyXpAccumulated);
+			ps.setInt(53, getObjectId());
 			ps.execute();
 		}
 		catch (Exception e)
@@ -12912,7 +12914,17 @@ public class Player extends Playable
 	{
 		_deathPenaltyBuffLevel = level;
 	}
-	
+
+	public long getDeathPenaltyXpAccumulated()
+	{
+		return _deathPenaltyXpAccumulated;
+	}
+
+	public void addDeathPenaltyXp(long exp)
+	{
+		_deathPenaltyXpAccumulated += exp;
+	}
+
 	public void calculateDeathPenaltyBuffLevel(Creature killer)
 	{
 		if (killer == null)
@@ -12963,6 +12975,7 @@ public class Player extends Playable
 		}
 		
 		_deathPenaltyBuffLevel++;
+		_deathPenaltyXpAccumulated = 0;
 		addSkill(SkillData.getInstance().getSkill(5076, getDeathPenaltyBuffLevel()), false);
 		sendPacket(new EtcStatusUpdate(this));
 		final SystemMessage sm = new SystemMessage(SystemMessageId.YOUR_DEATH_PENALTY_IS_NOW_LEVEL_S1);
@@ -12984,7 +12997,8 @@ public class Player extends Playable
 		}
 		
 		_deathPenaltyBuffLevel--;
-		
+		_deathPenaltyXpAccumulated = 0;
+
 		if (_deathPenaltyBuffLevel > 0)
 		{
 			addSkill(SkillData.getInstance().getSkill(5076, getDeathPenaltyBuffLevel()), false);

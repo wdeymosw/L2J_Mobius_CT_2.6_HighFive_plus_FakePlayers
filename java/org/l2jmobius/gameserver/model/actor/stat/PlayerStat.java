@@ -221,9 +221,21 @@ public class PlayerStat extends PlayableStat
 			player.sendPacket(sm);
 		}
 		
+		// Reduce death penalty by accumulating exp after death.
+		if ((finalExp > 0) && (player.getDeathPenaltyBuffLevel() > 0) && (PlayerConfig.DEATH_PENALTY_REDUCE_PERCENT > 0))
+		{
+			player.addDeathPenaltyXp(finalExp);
+			final long expToNextLevel = getExpForLevel(getLevel() + 1) - getExpForLevel(getLevel());
+			final long expNeeded = (long) (expToNextLevel * (PlayerConfig.DEATH_PENALTY_REDUCE_PERCENT / 100.0));
+			if (player.getDeathPenaltyXpAccumulated() >= expNeeded)
+			{
+				player.reduceDeathPenaltyBuffLevel();
+			}
+		}
+
 		return true;
 	}
-	
+
 	@Override
 	public boolean removeExpAndSp(long addToExp, long addToSp)
 	{
