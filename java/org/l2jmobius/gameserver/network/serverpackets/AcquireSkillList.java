@@ -88,7 +88,7 @@ public class AcquireSkillList extends ServerPacket
 			buffer.writeInt(temp.requirements);
 			if (_skillType == AcquireSkillType.SUBPLEDGE)
 			{
-				buffer.writeInt(0); // TODO: ?
+				buffer.writeInt(0);
 			}
 		}
 	}

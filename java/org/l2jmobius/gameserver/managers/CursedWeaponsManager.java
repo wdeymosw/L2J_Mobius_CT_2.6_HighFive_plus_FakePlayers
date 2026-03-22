@@ -189,7 +189,6 @@ public class CursedWeaponsManager
 	
 	private void controlPlayers()
 	{
-		// TODO: See comments below...
 		// This entire for loop should NOT be necessary, since it is already handled by
 		// CursedWeapon.endOfLife(). However, if we indeed *need* to duplicate it for safety,
 		// then we'd better make sure that it FULLY cleans up inactive cursed weapons!

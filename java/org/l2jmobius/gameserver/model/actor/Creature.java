@@ -409,14 +409,12 @@ public abstract class Creature extends WorldObject
 	public boolean destroyItemByItemId(ItemProcessType process, int itemId, long count, WorldObject reference, boolean sendMessage)
 	{
 		// Default: NPCs consume virtual items for their skills
-		// TODO: should be logged if even happens.. should be false
 		return true;
 	}
-	
+
 	public boolean destroyItem(ItemProcessType process, int objectId, long count, WorldObject reference, boolean sendMessage)
 	{
 		// Default: NPCs consume virtual items for their skills
-		// TODO: should be logged if even happens.. should be false
 		return true;
 	}
 	
@@ -626,13 +624,11 @@ public abstract class Creature extends WorldObject
 		});
 	}
 	
-	// TODO: Add target logic.
 	public void broadcastSkillPacket(ServerPacket packet, WorldObject target)
 	{
 		broadcastPacket(packet);
 	}
-	
-	// TODO: Add targets logic.
+
 	public void broadcastSkillPacket(ServerPacket packet, Collection<WorldObject> targets)
 	{
 		broadcastPacket(packet);
@@ -3580,8 +3576,6 @@ public abstract class Creature extends WorldObject
 		
 		broadcastPacket(new ChangeWaitType(this, ChangeWaitType.WT_STOP_FAKEDEATH));
 		
-		// TODO: Temp hack: players see FD on ppl that are moving: Teleport to someone who uses FD - if he gets up he will fall down again for that client -
-		// even tho he is actually standing... Probably bad info in CharInfo packet?
 		broadcastPacket(new Revive(this));
 	}
 	
@@ -4254,7 +4248,6 @@ public abstract class Creature extends WorldObject
 				_skillCast2 = null;
 			}
 			
-			// TODO: Handle removing spawned npc.
 			if (isChanneling())
 			{
 				getSkillChannelizer().stopChanneling();
@@ -4792,21 +4785,15 @@ public abstract class Creature extends WorldObject
 				final double originalDistance = distance;
 				final int gtx = (originalX - World.WORLD_X_MIN) >> 4;
 				final int gty = (originalY - World.WORLD_Y_MIN) >> 4;
-				if (isOnGeodataPath())
+				if (isOnGeodataPath() && (_move != null))
 				{
-					try
+					if ((gtx == _move.geoPathGtx) && (gty == _move.geoPathGty))
 					{
-						if ((gtx == _move.geoPathGtx) && (gty == _move.geoPathGty))
-						{
-							sendPacket(ActionFailed.STATIC_PACKET);
-							return;
-						}
-						
-						_move.onGeodataPathIndex = -1; // Set not on geodata path.
+						sendPacket(ActionFailed.STATIC_PACKET);
+						return;
 					}
-					catch (NullPointerException e)
-					{
-					}
+
+					_move.onGeodataPathIndex = -1; // Set not on geodata path.
 				}
 				
 				// Support for player attack with direct movement. Tested at retail on May 11th 2023.
@@ -6059,7 +6046,7 @@ public abstract class Creature extends WorldObject
 			// Launch the magic skill in order to calculate its effects
 			callSkill(mut.getSkill(), mut.getTargets());
 		}
-		catch (NullPointerException e)
+		catch (Exception e)
 		{
 			LOGGER.log(Level.WARNING, "", e);
 		}

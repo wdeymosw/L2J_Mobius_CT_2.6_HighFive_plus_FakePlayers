@@ -46,17 +46,12 @@ public class PetInventory extends Inventory
 	public int getOwnerId()
 	{
 		// gets the Player-owner's ID
-		int id;
-		try
-		{
-			id = _owner.getOwner().getObjectId();
-		}
-		catch (NullPointerException e)
+		if ((_owner == null) || (_owner.getOwner() == null))
 		{
 			return 0;
 		}
-		
-		return id;
+
+		return _owner.getOwner().getObjectId();
 	}
 	
 	/**

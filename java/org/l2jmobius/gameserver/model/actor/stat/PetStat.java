@@ -23,6 +23,7 @@ package org.l2jmobius.gameserver.model.actor.stat;
 import org.l2jmobius.gameserver.config.custom.ClassBalanceConfig;
 import org.l2jmobius.gameserver.data.xml.ExperienceData;
 import org.l2jmobius.gameserver.data.xml.PetDataTable;
+import org.l2jmobius.gameserver.model.PetLevelData;
 import org.l2jmobius.gameserver.model.actor.Creature;
 import org.l2jmobius.gameserver.model.actor.instance.Pet;
 import org.l2jmobius.gameserver.model.skill.Skill;
@@ -110,19 +111,13 @@ public class PetStat extends SummonStat
 	public long getExpForLevel(int level)
 	{
 		final Pet pet = getActiveChar();
-		try
+		final PetLevelData data = PetDataTable.getInstance().getPetLevelData(pet.getId(), level);
+		if (data == null)
 		{
-			return PetDataTable.getInstance().getPetLevelData(pet.getId(), level).getPetMaxExp();
+			LOGGER.warning("Pet objectId:" + pet.getObjectId() + ", NpcId:" + pet.getId() + ", level:" + level + " is missing data from pets_stats table!");
+			return 0;
 		}
-		catch (NullPointerException e)
-		{
-			if (pet != null)
-			{
-				LOGGER.warning("Pet objectId:" + pet.getObjectId() + ", NpcId:" + pet.getId() + ", level:" + level + " is missing data from pets_stats table!");
-			}
-			
-			throw e;
-		}
+		return data.getPetMaxExp();
 	}
 	
 	@Override

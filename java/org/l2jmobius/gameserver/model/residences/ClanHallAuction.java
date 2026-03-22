@@ -73,7 +73,7 @@ public class ClanHallAuction
 	
 	public static class Bidder
 	{
-		private final String _name; // TODO replace with objId
+		private final String _name;
 		private final String _clanName;
 		private long _bid;
 		private final Calendar _timeBid;

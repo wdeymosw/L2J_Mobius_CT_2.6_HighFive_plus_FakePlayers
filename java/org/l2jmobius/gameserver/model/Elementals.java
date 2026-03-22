@@ -56,9 +56,8 @@ public class Elementals
 		525, // Level 12
 		600, // Level 13
 		Integer.MAX_VALUE
-		// TODO: Higher stones
 	};
-	
+
 	public static final int[] ARMOR_VALUES =
 	{
 		0, // Level 1
@@ -75,9 +74,8 @@ public class Elementals
 		210, // Level 12
 		240, // Level 13
 		Integer.MAX_VALUE
-		// TODO: Higher stones
 	};
-	
+
 	public static byte getItemElement(int itemId)
 	{
 		final ElementalItemHolder item = ElementalAttributeData.getInstance().getElementalItem(itemId);

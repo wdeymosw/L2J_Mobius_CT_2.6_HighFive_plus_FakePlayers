@@ -1434,16 +1434,9 @@ public class Clan
 		{
 			for (ClanMember temp : _members.values())
 			{
-				try
+				if ((temp != null) && temp.isOnline() && (temp.getPlayer() != null) && (skill.getMinPledgeClass() <= temp.getPlayer().getPledgeClass()))
 				{
-					if ((temp != null) && temp.isOnline() && (skill.getMinPledgeClass() <= temp.getPlayer().getPledgeClass()))
-					{
-						temp.getPlayer().addSkill(skill, false);
-					}
-				}
-				catch (NullPointerException e)
-				{
-					LOGGER.log(Level.WARNING, e.getMessage(), e);
+					temp.getPlayer().addSkill(skill, false);
 				}
 			}
 		}
@@ -2496,7 +2489,6 @@ public class Clan
 		
 		player.updateUserInfo();
 		
-		// TODO: Need correct message id
 		player.sendMessage("Alliance " + allyName + " has been created.");
 	}
 	

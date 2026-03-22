@@ -1875,7 +1875,6 @@ public class AttackableAI extends CreatureAI
 		
 		final double dist = npc.calculateDistance2D(target);
 		
-		// TODO(Zoey76): Review this "magic changes".
 		final int random = Rnd.get(100);
 		if (!target.isImmobilized() && (random < 15) && tryCast(npc, target, AISkillScope.IMMOBILIZE, dist))
 		{
@@ -1996,20 +1995,17 @@ public class AttackableAI extends CreatureAI
 						continue;
 					}
 					
-					try
-					{
-						actor.setTarget(getAttackTarget());
-						dist = actor.calculateDistance2D(obj);
-						dist2 = dist - actor.getTemplate().getCollisionRadius();
-						range = sk.getCastRange() + actor.getTemplate().getCollisionRadius() + obj.getTemplate().getCollisionRadius();
-						if (obj.isMoving())
-						{
-							dist2 -= 70;
-						}
-					}
-					catch (NullPointerException e)
+					if (getAttackTarget() == null)
 					{
 						continue;
+					}
+					actor.setTarget(getAttackTarget());
+					dist = actor.calculateDistance2D(obj);
+					dist2 = dist - actor.getTemplate().getCollisionRadius();
+					range = sk.getCastRange() + actor.getTemplate().getCollisionRadius() + obj.getTemplate().getCollisionRadius();
+					if (obj.isMoving())
+					{
+						dist2 -= 70;
 					}
 					
 					if ((dist2 <= range) && !getAttackTarget().isAffectedBySkill(sk.getId()))
@@ -2027,20 +2023,17 @@ public class AttackableAI extends CreatureAI
 						continue;
 					}
 					
-					try
-					{
-						actor.setTarget(getAttackTarget());
-						dist = actor.calculateDistance2D(obj);
-						dist2 = dist;
-						range = sk.getCastRange() + actor.getTemplate().getCollisionRadius() + obj.getTemplate().getCollisionRadius();
-						if (obj.isMoving())
-						{
-							dist2 -= 70;
-						}
-					}
-					catch (NullPointerException e)
+					if (getAttackTarget() == null)
 					{
 						continue;
+					}
+					actor.setTarget(getAttackTarget());
+					dist = actor.calculateDistance2D(obj);
+					dist2 = dist;
+					range = sk.getCastRange() + actor.getTemplate().getCollisionRadius() + obj.getTemplate().getCollisionRadius();
+					if (obj.isMoving())
+					{
+						dist2 -= 70;
 					}
 					
 					if ((obj.isPlayer() || obj.isSummon()) && (dist2 <= range) && !getAttackTarget().isAffectedBySkill(sk.getId()))
@@ -2066,20 +2059,17 @@ public class AttackableAI extends CreatureAI
 						continue;
 					}
 					
-					try
-					{
-						actor.setTarget(getAttackTarget());
-						dist = actor.calculateDistance2D(targets);
-						dist2 = dist - actor.getTemplate().getCollisionRadius();
-						range = sk.getCastRange() + actor.getTemplate().getCollisionRadius() + targets.getTemplate().getCollisionRadius();
-						if (targets.isMoving())
-						{
-							dist2 -= 70;
-						}
-					}
-					catch (NullPointerException e)
+					if (getAttackTarget() == null)
 					{
 						continue;
+					}
+					actor.setTarget(getAttackTarget());
+					dist = actor.calculateDistance2D(targets);
+					dist2 = dist - actor.getTemplate().getCollisionRadius();
+					range = sk.getCastRange() + actor.getTemplate().getCollisionRadius() + targets.getTemplate().getCollisionRadius();
+					if (targets.isMoving())
+					{
+						dist2 -= 70;
 					}
 					
 					if ((dist2 <= range) && !targets.isAffectedBySkill(sk.getId()))
@@ -2101,20 +2091,17 @@ public class AttackableAI extends CreatureAI
 					continue;
 				}
 				
-				try
-				{
-					actor.setTarget(getAttackTarget());
-					dist = actor.calculateDistance2D(obj);
-					dist2 = dist - actor.getTemplate().getCollisionRadius();
-					range = sk.getCastRange() + actor.getTemplate().getCollisionRadius() + obj.getTemplate().getCollisionRadius();
-					if (obj.isMoving())
-					{
-						dist2 -= 70;
-					}
-				}
-				catch (NullPointerException e)
+				if (getAttackTarget() == null)
 				{
 					continue;
+				}
+				actor.setTarget(getAttackTarget());
+				dist = actor.calculateDistance2D(obj);
+				dist2 = dist - actor.getTemplate().getCollisionRadius();
+				range = sk.getCastRange() + actor.getTemplate().getCollisionRadius() + obj.getTemplate().getCollisionRadius();
+				if (obj.isMoving())
+				{
+					dist2 -= 70;
 				}
 				
 				if ((obj.isPlayer() || obj.isSummon()) && (dist2 <= range) && (getAttackTarget().getEffectList().getFirstEffect(EffectType.BUFF) != null))
@@ -2142,20 +2129,17 @@ public class AttackableAI extends CreatureAI
 					continue;
 				}
 				
-				try
-				{
-					actor.setTarget(getAttackTarget());
-					dist = actor.calculateDistance2D(obj);
-					dist2 = dist - actor.getTemplate().getCollisionRadius();
-					range = sk.getCastRange() + actor.getTemplate().getCollisionRadius() + getAttackTarget().getTemplate().getCollisionRadius();
-					
-					// if(obj.isMoving())
-					// dist2 = dist2 - 40;
-				}
-				catch (NullPointerException e)
+				if (getAttackTarget() == null)
 				{
 					continue;
 				}
+				actor.setTarget(getAttackTarget());
+				dist = actor.calculateDistance2D(obj);
+				dist2 = dist - actor.getTemplate().getCollisionRadius();
+				range = sk.getCastRange() + actor.getTemplate().getCollisionRadius() + getAttackTarget().getTemplate().getCollisionRadius();
+				
+				// if(obj.isMoving())
+				// dist2 = dist2 - 40;
 				
 				if (dist2 <= range)
 				{
@@ -2168,20 +2152,17 @@ public class AttackableAI extends CreatureAI
 		{
 			for (WorldObject target : World.getInstance().getVisibleObjects(actor, WorldObject.class))
 			{
-				try
-				{
-					actor.setTarget(getAttackTarget());
-					dist = actor.calculateDistance2D(target);
-					dist2 = dist;
-					range = sk.getCastRange() + actor.getTemplate().getCollisionRadius() + getAttackTarget().getTemplate().getCollisionRadius();
-					
-					// if(obj.isMoving())
-					// dist2 = dist2 - 40;
-				}
-				catch (NullPointerException e)
+				if (getAttackTarget() == null)
 				{
 					continue;
 				}
+				actor.setTarget(getAttackTarget());
+				dist = actor.calculateDistance2D(target);
+				dist2 = dist;
+				range = sk.getCastRange() + actor.getTemplate().getCollisionRadius() + getAttackTarget().getTemplate().getCollisionRadius();
+				
+				// if(obj.isMoving())
+				// dist2 = dist2 - 40;
 				
 				final Creature obj = target.isCreature() ? target.asCreature() : null;
 				if ((obj == null) || !GeoEngine.getInstance().canSeeTarget(actor, obj) || (dist2 > range))
@@ -2229,19 +2210,12 @@ public class AttackableAI extends CreatureAI
 					continue;
 				}
 				
-				try
+				dist = actor.calculateDistance2D(obj);
+				dist2 = dist - actor.getTemplate().getCollisionRadius();
+				range = actor.getPhysicalAttackRange() + actor.getTemplate().getCollisionRadius() + obj.getTemplate().getCollisionRadius();
+				if (obj.isMoving())
 				{
-					dist = actor.calculateDistance2D(obj);
-					dist2 = dist - actor.getTemplate().getCollisionRadius();
-					range = actor.getPhysicalAttackRange() + actor.getTemplate().getCollisionRadius() + obj.getTemplate().getCollisionRadius();
-					if (obj.isMoving())
-					{
-						dist2 -= 70;
-					}
-				}
-				catch (NullPointerException e)
-				{
-					continue;
+					dist2 -= 70;
 				}
 				
 				if (dist2 <= range)
@@ -2504,7 +2478,7 @@ public class AttackableAI extends CreatureAI
 					});
 				}
 			}
-			catch (NullPointerException e)
+			catch (Exception e)
 			{
 				// LOGGER.warning(getClass().getSimpleName() + ": There has been a problem trying to think the attack!", e);
 			}

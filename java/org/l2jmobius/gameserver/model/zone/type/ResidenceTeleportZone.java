@@ -50,13 +50,13 @@ public class ResidenceTeleportZone extends ZoneRespawn
 	@Override
 	protected void onEnter(Creature creature)
 	{
-		creature.setInsideZone(ZoneId.NO_SUMMON_FRIEND, true); // FIXME: Custom ?
+		creature.setInsideZone(ZoneId.NO_SUMMON_FRIEND, true);
 	}
 	
 	@Override
 	protected void onExit(Creature creature)
 	{
-		creature.setInsideZone(ZoneId.NO_SUMMON_FRIEND, false); // FIXME: Custom ?
+		creature.setInsideZone(ZoneId.NO_SUMMON_FRIEND, false);
 	}
 	
 	@Override

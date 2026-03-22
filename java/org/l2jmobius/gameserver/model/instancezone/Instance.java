@@ -467,7 +467,6 @@ public class Instance
 	
 	public void loadInstanceTemplate(int templateId)
 	{
-		// TODO: Cache templates.
 		Document document = null;
 		final File xml = new File("." + File.separator + "data" + File.separator + "instances" + File.separator + InstanceManager.getInstance().getInstanceTemplateFileName(templateId));
 		try

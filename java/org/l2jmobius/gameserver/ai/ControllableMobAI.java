@@ -364,13 +364,7 @@ public class ControllableMobAI extends AttackableAI
 		{
 			return false;
 		}
-		
-		// TODO(Zoey76)[#112]: This check must change if summon fall in Npc hierarchy.
-		if (target.isNpc())
-		{
-			return false;
-		}
-		
+
 		// Check if the target isn't invulnerable
 		if (target.isInvul() || target.isAlikeDead())
 		{

@@ -371,8 +371,9 @@ public class CursedWeapon
 		// Only allow picking up the cursed weapon if unmounting is successful.
 		if (player.isMounted() && !player.dismount())
 		{
-			// TODO: Verify the following system message, may still be custom.
-			player.sendPacket(SystemMessageId.YOU_HAVE_FAILED_TO_PICK_UP_S1);
+			final SystemMessage sm = new SystemMessage(SystemMessageId.YOU_HAVE_FAILED_TO_PICK_UP_S1);
+			sm.addItemName(item);
+			player.sendPacket(sm);
 			player.dropItem(ItemProcessType.DROP, item, null, true);
 			return;
 		}

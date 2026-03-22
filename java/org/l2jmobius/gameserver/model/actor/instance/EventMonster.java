@@ -31,7 +31,6 @@ public class EventMonster extends Monster
 	
 	// Event mobs should drop items to ground
 	// but item pickup must be protected to killer
-	// TODO: Some mobs need protect drop for spawner
 	public boolean drop_on_ground = false;
 	
 	/**

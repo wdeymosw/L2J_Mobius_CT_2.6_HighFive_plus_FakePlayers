@@ -103,7 +103,7 @@ public class Broadcast
 					}
 				}
 			}
-			catch (NullPointerException e)
+			catch (Exception e)
 			{
 				LOGGER.log(Level.WARNING, e.getMessage(), e);
 			}

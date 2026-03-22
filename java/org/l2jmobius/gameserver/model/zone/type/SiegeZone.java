@@ -177,7 +177,7 @@ public class SiegeZone extends ZoneType
 		
 		creature.setInsideZone(ZoneId.PVP, true);
 		creature.setInsideZone(ZoneId.SIEGE, true);
-		creature.setInsideZone(ZoneId.NO_SUMMON_FRIEND, true); // FIXME: Custom ?
+		creature.setInsideZone(ZoneId.NO_SUMMON_FRIEND, true);
 		
 		if (!creature.isPlayer())
 		{
@@ -247,7 +247,7 @@ public class SiegeZone extends ZoneType
 	{
 		creature.setInsideZone(ZoneId.PVP, false);
 		creature.setInsideZone(ZoneId.SIEGE, false);
-		creature.setInsideZone(ZoneId.NO_SUMMON_FRIEND, false); // FIXME: Custom ?
+		creature.setInsideZone(ZoneId.NO_SUMMON_FRIEND, false);
 		if (getSettings().isActiveSiege() && creature.isPlayer())
 		{
 			final Player player = creature.asPlayer();

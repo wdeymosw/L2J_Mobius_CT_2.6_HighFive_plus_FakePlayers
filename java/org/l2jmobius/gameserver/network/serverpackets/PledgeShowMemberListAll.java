@@ -49,7 +49,6 @@ public class PledgeShowMemberListAll extends ServerPacket
 	{
 		_pledgeType = 0;
 		
-		// FIXME: That's wrong on retail sends this whole packet few times (depending how much sub pledges it has)
 		writePledge(0, buffer);
 		for (SubPledge subPledge : _clan.getAllSubPledges())
 		{

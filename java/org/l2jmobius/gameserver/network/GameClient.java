@@ -683,7 +683,7 @@ public class GameClient extends Client<org.l2jmobius.commons.network.Connection<
 				}
 			}
 		}
-		catch (NullPointerException e)
+		catch (Exception e)
 		{
 			return "[Character read failed due to disconnect]";
 		}

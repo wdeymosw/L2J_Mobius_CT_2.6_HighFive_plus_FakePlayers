@@ -160,7 +160,7 @@ public class World
 		if (object.isPlayer())
 		{
 			final Player newPlayer = object.asPlayer();
-			if (newPlayer.isTeleporting()) // TODO: Drop when we stop removing player from the world while teleporting.
+			if (newPlayer.isTeleporting())
 			{
 				return;
 			}
@@ -196,7 +196,7 @@ public class World
 		if (object.isPlayer())
 		{
 			final Player player = object.asPlayer();
-			if (player.isTeleporting()) // TODO: Drop when we stop removing player from the world while teleporting.
+			if (player.isTeleporting())
 			{
 				return;
 			}

@@ -66,7 +66,6 @@ public class RequestAnswerJoinAlly extends ClientPacket
 			// we must double check this cause of hack
 			if (requestorClan.checkAllyJoinCondition(requestor, player))
 			{
-				// TODO: Need correct message id
 				requestor.sendPacket(SystemMessageId.THAT_PERSON_HAS_BEEN_SUCCESSFULLY_ADDED_TO_YOUR_FRIEND_LIST);
 				player.sendPacket(SystemMessageId.YOU_HAVE_ACCEPTED_THE_ALLIANCE);
 				

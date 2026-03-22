@@ -109,7 +109,6 @@ public class RequestPledgeSetAcademyMaster extends ClientPacket
 		{
 			if ((apprenticeMember.getSponsor() != 0) || (sponsorMember.getApprentice() != 0) || (apprenticeMember.getApprentice() != 0) || (sponsorMember.getSponsor() != 0))
 			{
-				// TODO retail message
 				player.sendMessage("Remove previous connections first.");
 				return;
 			}

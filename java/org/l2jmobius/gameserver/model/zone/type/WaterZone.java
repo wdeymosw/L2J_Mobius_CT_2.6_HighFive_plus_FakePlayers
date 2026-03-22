@@ -41,7 +41,6 @@ public class WaterZone extends ZoneType
 	{
 		creature.setInsideZone(ZoneId.WATER, true);
 		
-		// TODO: update to only send speed status when that packet is known
 		if (creature.isPlayer())
 		{
 			final Player player = creature.asPlayer();
@@ -79,7 +78,6 @@ public class WaterZone extends ZoneType
 	{
 		creature.setInsideZone(ZoneId.WATER, false);
 		
-		// TODO: update to only send speed status when that packet is known
 		if (creature.isPlayer())
 		{
 			// Mobius: Attempt to stop water task.

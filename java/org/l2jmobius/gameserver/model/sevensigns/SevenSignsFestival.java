@@ -1948,7 +1948,7 @@ public class SevenSignsFestival
 				for (DarknessFestival festivalInst : _festivalInstances.values())
 				{
 					festivalInst.spawnFestivalMonsters(FESTIVAL_DEFAULT_RESPAWN, 3);
-					festivalInst.sendMessageToParticipants("The chests have spawned! Be quick, the festival will end soon."); // FIXME What is the correct npcString?
+					festivalInst.sendMessageToParticipants("The chests have spawned! Be quick, the festival will end soon.");
 				}
 				
 				elapsedTime += FeatureConfig.ALT_FESTIVAL_CHEST_SPAWN - FeatureConfig.ALT_FESTIVAL_SECOND_SWARM;
@@ -2101,7 +2101,7 @@ public class SevenSignsFestival
 						}
 					}
 				}
-				catch (NullPointerException e)
+				catch (Exception e)
 				{
 					// deleteMe handling should teleport party out in case of disconnect
 				}

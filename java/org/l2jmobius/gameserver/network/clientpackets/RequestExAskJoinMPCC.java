@@ -144,7 +144,6 @@ public class RequestExAskJoinMPCC extends ClientPacket
 		else if (requestor.getInventory().getItemByItemId(8871) != null)
 		{
 			// 8871 Strategy Guide.
-			// TODO: Should destroyed after successful invite?
 			hasRight = true;
 		}
 		else if ((requestor.getPledgeClass() >= 5) && (requestor.getKnownSkill(391) != null))

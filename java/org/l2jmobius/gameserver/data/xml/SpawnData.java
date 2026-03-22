@@ -413,15 +413,11 @@ public class SpawnData implements IXmlReader
 								int y = 0;
 								int z = 0;
 								
-								try
+								if (attrs.getNamedItem("x") != null)
 								{
 									x = parseInteger(attrs, "x");
 									y = parseInteger(attrs, "y");
 									z = parseInteger(attrs, "z");
-								}
-								catch (NullPointerException npe)
-								{
-									// x, y, z can be unspecified, if this spawn is territory based, do nothing.
 								}
 								
 								if ((x == 0) && (y == 0) && (territoryName == null)) // Both coordinates and zone are unspecified.

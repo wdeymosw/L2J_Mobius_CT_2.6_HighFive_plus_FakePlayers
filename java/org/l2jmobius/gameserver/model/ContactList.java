@@ -155,7 +155,6 @@ public class ContactList
 		}
 		else if (contactId < 1)
 		{
-			// TODO: Message?
 			return;
 		}
 		

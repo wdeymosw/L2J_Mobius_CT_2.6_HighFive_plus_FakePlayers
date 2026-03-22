@@ -629,14 +629,11 @@ public class VillageMaster extends Folk
 					}
 					else
 					{
-						try
+						if ((player.getSubClasses() == null) || (player.getSubClasses().get(paramOne) == null))
 						{
-							if (!checkVillageMaster(player.getSubClasses().get(paramOne).getPlayerClass()))
-							{
-								return;
-							}
+							return;
 						}
-						catch (NullPointerException e)
+						if (!checkVillageMaster(player.getSubClasses().get(paramOne).getPlayerClass()))
 						{
 							return;
 						}
@@ -659,7 +656,6 @@ public class VillageMaster extends Folk
 					// another validity check
 					if ((subsAvailable == null) || subsAvailable.isEmpty())
 					{
-						// TODO: Retail message
 						player.sendMessage("There are no sub classes available at this time.");
 						return;
 					}

@@ -65,7 +65,7 @@ public class ExPartyRoomMember extends ServerPacket
 				}
 			}
 			
-			buffer.writeInt(0); // TODO: Instance datas there is more if that is not 0!
+			buffer.writeInt(0);
 		}
 	}
 }

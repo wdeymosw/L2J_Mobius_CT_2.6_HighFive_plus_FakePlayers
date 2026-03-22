@@ -282,7 +282,7 @@ public class CastleManager
 			// online-player circlet removal
 			if (player != null)
 			{
-				try
+				if (player.getInventory() != null)
 				{
 					final Item circlet = player.getInventory().getItemByItemId(circletId);
 					if (circlet != null)
@@ -291,14 +291,10 @@ public class CastleManager
 						{
 							player.getInventory().unEquipItemInSlot(circlet.getLocationSlot());
 						}
-						
+
 						player.destroyItemByItemId(ItemProcessType.DESTROY, circletId, 1, player, true);
 					}
 					return;
-				}
-				catch (NullPointerException e)
-				{
-					// continue removing offline
 				}
 			}
 			// else offline-player circlet removal

@@ -396,7 +396,7 @@ public class SiegeGuardAI extends CreatureAI implements Runnable
 				continue;
 			}
 			
-			if (npc.getAI() != null) // TODO: possibly check not needed
+			if (npc.getAI() != null)
 			{
 				if (!npc.isDead() && (Math.abs(target.getZ() - npc.getZ()) < 600) && ((npc.getAI()._intention == Intention.IDLE) || (npc.getAI()._intention == Intention.ACTIVE)) && target.isInsideRadius3D(npc, 1500) && GeoEngine.getInstance().canSeeTarget(npc, target))
 				{
@@ -446,22 +446,19 @@ public class SiegeGuardAI extends CreatureAI implements Runnable
 		int range = 0;
 		Creature attackTarget = getAttackTarget();
 		
-		try
-		{
-			_actor.setTarget(attackTarget);
-			skills = _actor.getAllSkills();
-			distance = _actor.calculateDistance2D(attackTarget);
-			range = _actor.getPhysicalAttackRange() + _actor.getTemplate().getCollisionRadius() + attackTarget.getTemplate().getCollisionRadius();
-			if (attackTarget.isMoving())
-			{
-				range += 50;
-			}
-		}
-		catch (NullPointerException e)
+		if (attackTarget == null)
 		{
 			_actor.setTarget(null);
 			setIntention(Intention.IDLE, null, null);
 			return;
+		}
+		_actor.setTarget(attackTarget);
+		skills = _actor.getAllSkills();
+		distance = _actor.calculateDistance2D(attackTarget);
+		range = _actor.getPhysicalAttackRange() + _actor.getTemplate().getCollisionRadius() + attackTarget.getTemplate().getCollisionRadius();
+		if (attackTarget.isMoving())
+		{
+			range += 50;
 		}
 		
 		// never attack defenders
