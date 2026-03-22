@@ -21,6 +21,8 @@ import java.util.Arrays;
 import org.l2jmobius.commons.network.WritableBuffer;
 import org.l2jmobius.gameserver.config.custom.MultilingualSupportConfig;
 import org.l2jmobius.gameserver.data.xml.ItemData;
+import org.l2jmobius.gameserver.data.xml.NpcData;
+import org.l2jmobius.gameserver.data.xml.SkillData;
 import org.l2jmobius.gameserver.model.actor.Npc;
 import org.l2jmobius.gameserver.model.actor.Player;
 import org.l2jmobius.gameserver.model.actor.Summon;
@@ -360,7 +362,40 @@ public class SystemMessage extends ServerPacket
 						final Object[] params = new Object[_paramIndex];
 						for (int i = 0; i < _paramIndex; i++)
 						{
-							params[i] = _params[i].getValue();
+							final SMParam p = _params[i];
+							switch (p.getType())
+							{
+								case TYPE_ITEM_NAME:
+								{
+									final ItemTemplate itemTemplate = ItemData.getInstance().getTemplate(p.getIntValue());
+									params[i] = itemTemplate != null ? itemTemplate.getName() : String.valueOf(p.getIntValue());
+									break;
+								}
+								case TYPE_NPC_NAME:
+								{
+									final NpcTemplate npcTemplate = NpcData.getInstance().getTemplate(p.getIntValue() - 1000000);
+									params[i] = npcTemplate != null ? npcTemplate.getName() : String.valueOf(p.getIntValue() - 1000000);
+									break;
+								}
+								case TYPE_SKILL_NAME:
+								{
+									final int[] arr = p.getIntArrayValue();
+									final Skill skill = SkillData.getInstance().getSkill(arr[0], arr[1]);
+									params[i] = skill != null ? skill.getName() : String.valueOf(arr[0]);
+									break;
+								}
+								case TYPE_ZONE_NAME:
+								{
+									final int[] arr = p.getIntArrayValue();
+									params[i] = arr[0] + " " + arr[1] + " " + arr[2];
+									break;
+								}
+								default:
+								{
+									params[i] = p.getValue();
+									break;
+								}
+							}
 						}
 						
 						buffer.writeInt(SystemMessageId.S1_2.getId());
