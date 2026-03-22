@@ -722,14 +722,7 @@ public class SignsPriest extends Npc
 						}
 						case 4:
 						{
-							final Item blueStonesAll = player.getInventory().getItemByItemId(SevenSigns.SEAL_STONE_BLUE_ID);
-							final Item greenStonesAll = player.getInventory().getItemByItemId(SevenSigns.SEAL_STONE_GREEN_ID);
-							final Item redStonesAll = player.getInventory().getItemByItemId(SevenSigns.SEAL_STONE_RED_ID);
-							final long blueStoneCountAll = blueStonesAll == null ? 0 : blueStonesAll.getCount();
-							final long greenStoneCountAll = greenStonesAll == null ? 0 : greenStonesAll.getCount();
-							final long redStoneCountAll = redStonesAll == null ? 0 : redStonesAll.getCount();
-							long ancientAdenaRewardAll = 0;
-							ancientAdenaRewardAll = SevenSigns.calcAncientAdenaReward(blueStoneCountAll, greenStoneCountAll, redStoneCountAll);
+							final long ancientAdenaRewardAll = SevenSigns.calcAncientAdenaReward(blueStoneCount, greenStoneCount, redStoneCount);
 							if (ancientAdenaRewardAll == 0)
 							{
 								if (this instanceof DawnPriest)
@@ -743,19 +736,19 @@ public class SignsPriest extends Npc
 								return;
 							}
 							
-							if (blueStoneCountAll > 0)
+							if (blueStoneCount > 0)
 							{
-								player.destroyItemByItemId(ItemProcessType.FEE, SevenSigns.SEAL_STONE_BLUE_ID, blueStoneCountAll, this, true);
+								player.destroyItemByItemId(ItemProcessType.FEE, SevenSigns.SEAL_STONE_BLUE_ID, blueStoneCount, this, true);
 							}
 							
-							if (greenStoneCountAll > 0)
+							if (greenStoneCount > 0)
 							{
-								player.destroyItemByItemId(ItemProcessType.FEE, SevenSigns.SEAL_STONE_GREEN_ID, greenStoneCountAll, this, true);
+								player.destroyItemByItemId(ItemProcessType.FEE, SevenSigns.SEAL_STONE_GREEN_ID, greenStoneCount, this, true);
 							}
 							
-							if (redStoneCountAll > 0)
+							if (redStoneCount > 0)
 							{
-								player.destroyItemByItemId(ItemProcessType.FEE, SevenSigns.SEAL_STONE_RED_ID, redStoneCountAll, this, true);
+								player.destroyItemByItemId(ItemProcessType.FEE, SevenSigns.SEAL_STONE_RED_ID, redStoneCount, this, true);
 							}
 							
 							player.addAncientAdena(ItemProcessType.REWARD, ancientAdenaRewardAll, this, true);
