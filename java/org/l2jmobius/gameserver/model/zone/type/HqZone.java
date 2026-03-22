@@ -34,21 +34,9 @@ public class HqZone extends ZoneType
 	@Override
 	public void setParameter(String name, String value)
 	{
-		if ("castleId".equals(name))
+		if ("castleId".equals(name) || "fortId".equals(name) || "clanHallId".equals(name) || "territoryId".equals(name))
 		{
-			// TODO
-		}
-		else if ("fortId".equals(name))
-		{
-			// TODO
-		}
-		else if ("clanHallId".equals(name))
-		{
-			// TODO
-		}
-		else if ("territoryId".equals(name))
-		{
-			// TODO
+			// Parameters accepted but not yet implemented.
 		}
 		else
 		{

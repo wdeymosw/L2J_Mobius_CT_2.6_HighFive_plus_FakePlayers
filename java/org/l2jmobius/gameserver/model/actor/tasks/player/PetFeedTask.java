@@ -89,7 +89,6 @@ public class PetFeedTask implements Runnable
 			Item food = null;
 			for (int id : foodIds)
 			{
-				// TODO: possibly pet inv?
 				food = _player.getInventory().getItemByItemId(id);
 				if (food != null)
 				{

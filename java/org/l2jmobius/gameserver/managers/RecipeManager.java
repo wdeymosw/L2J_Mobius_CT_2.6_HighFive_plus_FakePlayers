@@ -82,7 +82,7 @@ public class RecipeManager
 	
 	public void requestMakeItemAbort(Player player)
 	{
-		_activeMakers.remove(player.getObjectId()); // TODO: anything else here?
+		_activeMakers.remove(player.getObjectId());
 	}
 	
 	public void requestManufactureItem(Player manufacturer, int recipeListId, Player player)

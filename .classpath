@@ -11,5 +11,5 @@
 	<classpathentry kind="lib" path="dist/libs/slf4j-simple-2.0.17.jar" sourcepath="dist/libs/slf4j-simple-2.0.17-sources.jar"/>
 	<classpathentry including="**/*.java" kind="src" path="dist/game/data/scripts"/>
 	<classpathentry kind="src" path="java"/>
-	<classpathentry kind="output" path="D:/My_projects/Lineage/bin"/>
+	<classpathentry kind="output" path="bin"/>
 </classpath>

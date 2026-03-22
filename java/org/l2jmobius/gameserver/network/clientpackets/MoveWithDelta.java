@@ -40,6 +40,5 @@ public class MoveWithDelta extends ClientPacket
 	@Override
 	protected void runImpl()
 	{
-		// TODO this
 	}
 }
