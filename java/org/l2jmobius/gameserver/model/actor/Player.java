@@ -614,7 +614,7 @@ public class Player extends Playable
 	
 	private TradeList _activeTradeList;
 	private ItemContainer _activeWarehouse;
-	private Map<Integer, ManufactureItem> _manufactureItems;
+	private volatile Map<Integer, ManufactureItem> _manufactureItems;
 	private String _storeName = "";
 	private TradeList _sellList;
 	private TradeList _buyList;
@@ -6227,7 +6227,10 @@ public class Player extends Playable
 		{
 			synchronized (this)
 			{
-				_manufactureItems = Collections.synchronizedMap(new LinkedHashMap<>());
+				if (_manufactureItems == null)
+				{
+					_manufactureItems = Collections.synchronizedMap(new LinkedHashMap<>());
+				}
 			}
 		}
 		
