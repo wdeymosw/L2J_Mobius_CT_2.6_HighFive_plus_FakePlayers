@@ -2,3 +2,4 @@ bin/
 *.class
 dist/game/log/
 dist/login/log/
+dist/game/data/geodata/*.l2j
