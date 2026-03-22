@@ -100,6 +100,10 @@ public class Formulas
 	public static final byte SHIELD_DEFENSE_PERFECT_BLOCK = 2; // perfect block
 	
 	private static final byte MELEE_ATTACK_RANGE = 40;
+
+	private static final double PROXIMITY_BONUS_BEHIND = 1.2; // +20% damage when attacking from behind
+	private static final double PROXIMITY_BONUS_SIDE = 1.1;   // +10% damage when attacking from the side
+	private static final double PROXIMITY_BONUS_FRONT = 1.0;  // no bonus when attacking from the front
 	
 	/**
 	 * Return the period between 2 regeneration task (3s for Creature, 5 min for Door).
@@ -567,7 +571,7 @@ public class Formulas
 		final boolean isPvE = attacker.isPlayable() && target.isAttackable();
 		final double power = skill.getPower(isPvP, isPvE);
 		double damage = 0;
-		final double proximityBonus = attacker.isBehind(target) ? 1.2 : attacker.isInFrontOf(target) ? 1 : 1.1; // Behind: +20% - Side: +10% (TODO: values are unconfirmed, possibly custom, remove or update when confirmed);
+		final double proximityBonus = getProximityBonus(attacker, target);
 		final double ssboost = ss ? 1.458 : 1;
 		double pvpBonus = 1;
 		
@@ -656,7 +660,7 @@ public class Formulas
 		final boolean isPvP = attacker.isPlayable() && target.isPlayer();
 		final boolean isPvE = attacker.isPlayable() && target.isAttackable();
 		double damage = 0;
-		final double proximityBonus = attacker.isBehind(target) ? 1.2 : attacker.isInFrontOf(target) ? 1 : 1.1; // Behind: +20% - Side: +10%
+		final double proximityBonus = getProximityBonus(attacker, target);
 		final double ssboost = ss ? 1.458 : 1;
 		double pvpBonus = 1;
 		
@@ -727,7 +731,7 @@ public class Formulas
 	{
 		final boolean isPvP = attacker.isPlayable() && target.isPlayable();
 		final boolean isPvE = attacker.isPlayable() && target.isAttackable();
-		final double proximityBonus = attacker.isBehind(target) ? 1.2 : attacker.isInFrontOf(target) ? 1 : 1.1; // Behind: +20% - Side: +10%
+		final double proximityBonus = getProximityBonus(attacker, target);
 		double damage = attacker.getPAtk(target);
 		double defence = target.getPDef(attacker);
 		
@@ -1977,6 +1981,21 @@ public class Formulas
 		// Lvl Bonus Modifier.
 		final int chance = (int) (rate * (info.getSkill().getMagicLevel() > 0 ? 1 + ((cancelMagicLvl - info.getSkill().getMagicLevel()) / 100.) : 1));
 		return Rnd.get(100) < MathUtil.clamp(chance, skill.getMinChance(), skill.getMaxChance());
+	}
+
+	/**
+	 * Returns a positional damage multiplier based on the attacker's position relative to the target.
+	 * @param attacker
+	 * @param target
+	 * @return 1.2 if behind, 1.1 if to the side, 1.0 if in front
+	 */
+	private static double getProximityBonus(Creature attacker, Creature target)
+	{
+		if (attacker.isBehind(target))
+		{
+			return PROXIMITY_BONUS_BEHIND;
+		}
+		return attacker.isInFrontOf(target) ? PROXIMITY_BONUS_FRONT : PROXIMITY_BONUS_SIDE;
 	}
 	
 	/**
