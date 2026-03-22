@@ -185,6 +185,7 @@ public class GeneralConfig
 	public static boolean HELLBOUND_WITHOUT_QUEST;
 	public static int NORMAL_ENCHANT_COST_MULTIPLIER;
 	public static int SAFE_ENCHANT_COST_MULTIPLIER;
+	public static float ENCHANT_HP_BONUS_FULL_ARMOR_MODIFIER;
 	public static boolean BOTREPORT_ENABLE;
 	public static String[] BOTREPORT_RESETPOINT_HOUR;
 	public static long BOTREPORT_REPORT_DELAY;
@@ -375,6 +376,7 @@ public class GeneralConfig
 		HELLBOUND_WITHOUT_QUEST = config.getBoolean("HellboundWithoutQuest", false);
 		NORMAL_ENCHANT_COST_MULTIPLIER = config.getInt("NormalEnchantCostMultipiler", 1);
 		SAFE_ENCHANT_COST_MULTIPLIER = config.getInt("SafeEnchantCostMultipiler", 5);
+		ENCHANT_HP_BONUS_FULL_ARMOR_MODIFIER = config.getFloat("EnchantHPBonusFullArmorModifier", 1.5f);
 		BOTREPORT_ENABLE = config.getBoolean("EnableBotReportButton", false);
 		BOTREPORT_RESETPOINT_HOUR = config.getString("BotReportPointsResetHour", "00:00").split(":");
 		BOTREPORT_REPORT_DELAY = config.getInt("BotReportDelay", 30) * 60000;

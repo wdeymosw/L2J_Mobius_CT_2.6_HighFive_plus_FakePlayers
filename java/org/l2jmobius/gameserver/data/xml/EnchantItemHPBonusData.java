@@ -27,6 +27,7 @@ import org.w3c.dom.Document;
 import org.w3c.dom.Node;
 
 import org.l2jmobius.commons.util.IXmlReader;
+import org.l2jmobius.gameserver.config.GeneralConfig;
 import org.l2jmobius.gameserver.model.item.ItemTemplate;
 import org.l2jmobius.gameserver.model.item.enums.BodyPart;
 import org.l2jmobius.gameserver.model.item.instance.Item;
@@ -43,7 +44,6 @@ public class EnchantItemHPBonusData implements IXmlReader
 {
 	private final Map<CrystalType, List<Integer>> _armorHPBonuses = new EnumMap<>(CrystalType.class);
 	
-	private static final float FULL_ARMOR_MODIFIER = 1.5f; // TODO: Move it to config!
 	
 	/**
 	 * Instantiates a new enchant hp bonus data.
@@ -140,7 +140,7 @@ public class EnchantItemHPBonusData implements IXmlReader
 		final int bonus = values.get(Math.min(item.getOlyEnchantLevel(), values.size()) - 1);
 		if (item.getTemplate().getBodyPart() == BodyPart.FULL_ARMOR)
 		{
-			return (int) (bonus * FULL_ARMOR_MODIFIER);
+			return (int) (bonus * GeneralConfig.ENCHANT_HP_BONUS_FULL_ARMOR_MODIFIER);
 		}
 		
 		return bonus;
