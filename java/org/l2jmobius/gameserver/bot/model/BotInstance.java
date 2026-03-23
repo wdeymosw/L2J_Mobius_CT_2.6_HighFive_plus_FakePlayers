@@ -3,7 +3,10 @@
  */
 package org.l2jmobius.gameserver.bot.model;
 
+import java.util.List;
+
 import org.l2jmobius.gameserver.bot.zone.FarmZone;
+import org.l2jmobius.gameserver.geoengine.pathfinding.GeoLocation;
 import org.l2jmobius.gameserver.model.actor.Creature;
 import org.l2jmobius.gameserver.model.actor.Player;
 
@@ -33,6 +36,10 @@ public class BotInstance
 	private int _lastX;
 	private int _lastY;
 	private long _lastMoveCheckTime = 0;
+
+	// --- Pathfinding ---
+	private List<GeoLocation> _currentPath = null;
+	private int _pathIndex = 0;
 
 	public BotInstance(Player player, BotProfile profile)
 	{
@@ -150,6 +157,40 @@ public class BotInstance
 	public long getLastMoveCheckTime()
 	{
 		return _lastMoveCheckTime;
+	}
+
+	// --- Pathfinding ---
+
+	public void setPath(List<GeoLocation> path)
+	{
+		_currentPath = path;
+		_pathIndex = 0;
+	}
+
+	public boolean hasPath()
+	{
+		return (_currentPath != null) && (_pathIndex < _currentPath.size());
+	}
+
+	public boolean hasNextWaypoint()
+	{
+		return (_currentPath != null) && ((_pathIndex + 1) < _currentPath.size());
+	}
+
+	public GeoLocation getCurrentWaypoint()
+	{
+		return hasPath() ? _currentPath.get(_pathIndex) : null;
+	}
+
+	public void advanceWaypoint()
+	{
+		_pathIndex++;
+	}
+
+	public void clearPath()
+	{
+		_currentPath = null;
+		_pathIndex = 0;
 	}
 
 	public void updatePositionSnapshot()

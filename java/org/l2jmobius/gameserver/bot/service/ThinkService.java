@@ -96,9 +96,9 @@ public class ThinkService
 		}
 
 		// --- 3. Out of zone? Return. ---
-		if (!bot.isInZone())
+		if (!bot.isInZone() && (bot.getState() != BotState.RETURNING))
 		{
-			handleReturnToZone(bot);
+			startReturn(bot);
 			return;
 		}
 
@@ -120,7 +120,14 @@ public class ThinkService
 			}
 			case RETURNING:
 			{
-				bot.setState(BotState.IDLE);
+				if (PathService.tickPath(bot) && bot.isInZone())
+				{
+					bot.setState(BotState.IDLE);
+				}
+				else if (!bot.isInZone() && !bot.hasPath())
+				{
+					startReturn(bot);
+				}
 				break;
 			}
 			case ATTACKING:
@@ -158,17 +165,20 @@ public class ThinkService
 		if (now >= bot.getNextSearchTime())
 		{
 			bot.getPlayer().doRevive();
-			CombatService.moveTo(bot, bot.getZone().getCenter());
 			bot.setState(BotState.RETURNING);
+			PathService.navigateTo(bot, bot.getZone().getX(), bot.getZone().getY(), bot.getZone().getZ());
 			LOGGER.info("ThinkService: " + bot.getPlayer().getName() + " revived, returning to zone");
 		}
 	}
 
-	private static void handleReturnToZone(BotInstance bot)
+	private static void startReturn(BotInstance bot)
 	{
 		bot.setState(BotState.RETURNING);
 		bot.clearTarget();
-		CombatService.moveTo(bot, bot.getZone().getCenter());
+		final int cx = bot.getZone().getX();
+		final int cy = bot.getZone().getY();
+		final int cz = bot.getZone().getZ();
+		PathService.navigateTo(bot, cx, cy, cz);
 	}
 
 	private static void handleAttacking(BotInstance bot, long now)
@@ -198,8 +208,16 @@ public class ThinkService
 			final int dy = bot.getPlayer().getY() - bot.getLastY();
 			if (Math.sqrt(dx * dx + dy * dy) < STUCK_MIN_DISTANCE)
 			{
-				bot.clearTarget();
-				bot.setState(BotState.SEARCHING);
+				final Creature stuckTarget = bot.getTarget();
+				if (stuckTarget != null)
+				{
+					// Try to path around the obstacle.
+					PathService.navigateTo(bot, stuckTarget.getX(), stuckTarget.getY(), stuckTarget.getZ());
+				}
+				else
+				{
+					bot.setState(BotState.SEARCHING);
+				}
 				bot.updatePositionSnapshot();
 				return;
 			}
