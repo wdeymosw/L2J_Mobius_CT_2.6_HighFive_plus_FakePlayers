@@ -6,12 +6,10 @@ package org.l2jmobius.gameserver.bot.core;
 import java.util.logging.Logger;
 
 import org.l2jmobius.gameserver.bot.model.BotInstance;
-import org.l2jmobius.gameserver.model.Location;
 import org.l2jmobius.gameserver.model.actor.Player;
 
 /**
  * Puts a bot into the game world and removes it cleanly.
- * <p>
  * Mirrors the pattern used by OfflineTraderTable:
  * spawn = setOnlineStatus + spawnMe, remove = storeMe + deleteMe.
  */
@@ -24,28 +22,28 @@ public class BotSpawner
 	}
 
 	/**
-	 * Places the bot into the world at a random point inside its zone.
+	 * Places the bot into the world at its last saved position (loaded from DB).
 	 * Does nothing if the player is already online.
-	 *
 	 * @param bot the bot to spawn
 	 */
 	public static void spawnBot(BotInstance bot)
 	{
 		final Player player = bot.getPlayer();
 
-		// Characters may have online=1 left over from a crash or previous session.
-		// Reset to offline first so setOnlineStatus(true) + spawnMe() always proceed cleanly.
+		// Characters may have online=1 left over from a crash — reset to proceed cleanly.
 		if (player.isOnline())
 		{
 			LOGGER.info("BotSpawner: resetting stale online status for " + player.getName());
 			player.setOnlineStatus(false, false);
 		}
 
-		final Location spawnLoc = bot.getZone().randomPointInside();
-		player.setXYZInvisible(spawnLoc.getX(), spawnLoc.getY(), spawnLoc.getZ());
+		// Use the position stored in DB (already loaded by Player.load()).
+		final int x = player.getX();
+		final int y = player.getY();
+		final int z = player.getZ();
 		player.setOnlineStatus(true, false);
-		player.spawnMe(spawnLoc.getX(), spawnLoc.getY(), spawnLoc.getZ());
-		LOGGER.info("BotSpawner: placed " + player.getName() + " at " + spawnLoc.getX() + "," + spawnLoc.getY() + "," + spawnLoc.getZ());
+		player.spawnMe(x, y, z);
+		LOGGER.info("BotSpawner: spawned " + player.getName() + " at " + x + "," + y + "," + z);
 	}
 
 	/**
