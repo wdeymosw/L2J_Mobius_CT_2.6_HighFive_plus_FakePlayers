@@ -8,6 +8,7 @@ import java.util.logging.Logger;
 import org.l2jmobius.gameserver.bot.model.BotInstance;
 import org.l2jmobius.gameserver.bot.model.BotProfile;
 import org.l2jmobius.gameserver.model.actor.Player;
+import org.l2jmobius.gameserver.model.item.enums.ItemProcessType;
 
 /**
  * Creates {@link BotInstance} objects from {@link BotProfile} templates.
@@ -41,6 +42,13 @@ public class BotFactory
 
 		// No real network connection — packets are discarded by Player.sendPacket() null-check.
 		player.setClient(null);
+
+		// One-time starter funds for brand-new bot characters (adena == 0).
+		if (player.getAdena() == 0)
+		{
+			player.addAdena(ItemProcessType.REWARD, 50_000, null, false);
+			LOGGER.info("BotFactory: gave starter 50k adena to " + player.getName());
+		}
 
 		return new BotInstance(player, profile);
 	}
