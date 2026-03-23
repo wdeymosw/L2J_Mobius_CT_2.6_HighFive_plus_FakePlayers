@@ -21,6 +21,7 @@ public class BotInstance
 	// --- Game object (controlled, not extended) ---
 	private final Player _player;
 	private final BotProfile _profile;
+	private final BotRole _role;
 
 	// --- Runtime state ---
 	private BotState _state = BotState.IDLE;
@@ -45,6 +46,7 @@ public class BotInstance
 	{
 		_player = player;
 		_profile = profile;
+		_role = RoleResolver.resolve(player.getActiveClass());
 		_lastX = player.getX();
 		_lastY = player.getY();
 		// Initialize to now so stuck detection doesn't fire on the very first tick.
@@ -61,6 +63,11 @@ public class BotInstance
 	public BotProfile getProfile()
 	{
 		return _profile;
+	}
+
+	public BotRole getRole()
+	{
+		return _role;
 	}
 
 	public FarmZone getZone()
