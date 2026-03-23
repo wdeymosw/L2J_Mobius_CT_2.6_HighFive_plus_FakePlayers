@@ -233,7 +233,11 @@ public class ThinkService
 			return;
 		}
 
-		CombatService.attack(bot);
+		// Try a damage skill first; fall back to autoattack if nothing is ready.
+		if (!SkillService.tryDamageSkill(bot))
+		{
+			CombatService.attack(bot);
+		}
 	}
 
 	private static void handleSearching(BotInstance bot, long now)
