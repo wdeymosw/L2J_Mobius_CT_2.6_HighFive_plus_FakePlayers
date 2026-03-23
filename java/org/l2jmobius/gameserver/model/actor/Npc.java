@@ -40,10 +40,7 @@ import org.l2jmobius.gameserver.config.OlympiadConfig;
 import org.l2jmobius.gameserver.config.PlayerConfig;
 import org.l2jmobius.gameserver.config.RatesConfig;
 import org.l2jmobius.gameserver.config.ServerConfig;
-import org.l2jmobius.gameserver.config.custom.FakePlayersConfig;
 import org.l2jmobius.gameserver.config.custom.PrivateStoreRangeConfig;
-import org.l2jmobius.gameserver.config.custom.PvpAnnounceConfig;
-import org.l2jmobius.gameserver.config.custom.PvpRewardItemConfig;
 import org.l2jmobius.gameserver.data.xml.DynamicExpRateData;
 import org.l2jmobius.gameserver.data.xml.ItemData;
 import org.l2jmobius.gameserver.data.xml.NpcData;
@@ -67,7 +64,6 @@ import org.l2jmobius.gameserver.model.actor.enums.creature.Race;
 import org.l2jmobius.gameserver.model.actor.enums.creature.Team;
 import org.l2jmobius.gameserver.model.actor.enums.npc.AISkillScope;
 import org.l2jmobius.gameserver.model.actor.enums.npc.AIType;
-import org.l2jmobius.gameserver.model.actor.holders.npc.FakePlayerHolder;
 import org.l2jmobius.gameserver.model.actor.instance.ClanHallManager;
 import org.l2jmobius.gameserver.model.actor.instance.Doorman;
 import org.l2jmobius.gameserver.model.actor.instance.Fisherman;
@@ -101,9 +97,7 @@ import org.l2jmobius.gameserver.model.siege.Castle;
 import org.l2jmobius.gameserver.model.siege.Fort;
 import org.l2jmobius.gameserver.model.siege.clanhalls.SiegableHall;
 import org.l2jmobius.gameserver.model.skill.Skill;
-import org.l2jmobius.gameserver.model.stats.Formulas;
 import org.l2jmobius.gameserver.model.variables.NpcVariables;
-import org.l2jmobius.gameserver.model.zone.ZoneId;
 import org.l2jmobius.gameserver.model.zone.type.TownZone;
 import org.l2jmobius.gameserver.network.NpcStringId;
 import org.l2jmobius.gameserver.network.SystemMessageId;
@@ -111,16 +105,10 @@ import org.l2jmobius.gameserver.network.enums.ChatType;
 import org.l2jmobius.gameserver.network.serverpackets.AbstractNpcInfo;
 import org.l2jmobius.gameserver.network.serverpackets.ActionFailed;
 import org.l2jmobius.gameserver.network.serverpackets.ExChangeNpcState;
-import org.l2jmobius.gameserver.network.serverpackets.ExPrivateStoreSetWholeMsg;
-import org.l2jmobius.gameserver.network.serverpackets.FakePlayerInfo;
 import org.l2jmobius.gameserver.network.serverpackets.MagicSkillUse;
 import org.l2jmobius.gameserver.network.serverpackets.NpcHtmlMessage;
 import org.l2jmobius.gameserver.network.serverpackets.NpcSay;
-import org.l2jmobius.gameserver.network.serverpackets.PrivateStoreMsgBuy;
-import org.l2jmobius.gameserver.network.serverpackets.PrivateStoreMsgSell;
-import org.l2jmobius.gameserver.network.serverpackets.RecipeShopMsg;
 import org.l2jmobius.gameserver.network.serverpackets.ServerObjectInfo;
-import org.l2jmobius.gameserver.network.serverpackets.SystemMessage;
 import org.l2jmobius.gameserver.taskmanagers.DecayTaskManager;
 import org.l2jmobius.gameserver.taskmanagers.ItemsAutoDestroyTaskManager;
 import org.l2jmobius.gameserver.util.Broadcast;
@@ -163,8 +151,6 @@ public class Npc extends Creature
 	private boolean _isWalker = false;
 	private boolean _isTalkable = getTemplate().isTalkable();
 	private final boolean _isQuestMonster = getTemplate().isQuestMonster();
-	private final boolean _isFakePlayer = getTemplate().isFakePlayer();
-	
 	private int _currentLHandId; // normally this shouldn't change from the template, but there exist exceptions
 	private int _currentRHandId; // normally this shouldn't change from the template, but there exist exceptions
 	private int _currentEnchant; // normally this shouldn't change from the template, but there exist exceptions
@@ -304,7 +290,7 @@ public class Npc extends Creature
 	 */
 	public boolean isRandomAnimationEnabled()
 	{
-		return !_isFakePlayer && _isRandomAnimationEnabled;
+		return _isRandomAnimationEnabled;
 	}
 	
 	public void setRandomWalking(boolean enabled)
@@ -416,11 +402,7 @@ public class Npc extends Creature
 				return;
 			}
 			
-			if (_isFakePlayer)
-			{
-				player.sendPacket(new FakePlayerInfo(this));
-			}
-			else if (getRunSpeed() == 0)
+			if (getRunSpeed() == 0)
 			{
 				player.sendPacket(new ServerObjectInfo(this, player));
 			}
@@ -1223,78 +1205,6 @@ public class Npc extends Creature
 		
 		final Weapon weapon = (killer != null) ? killer.getActiveWeaponItem() : null;
 		_killingBlowWeaponId = (weapon != null) ? weapon.getId() : 0;
-		if (_isFakePlayer && (killer != null) && killer.isPlayable())
-		{
-			final Player player = killer.asPlayer();
-			if (isScriptValue(0) && (getKarma() < 0))
-			{
-				if (FakePlayersConfig.FAKE_PLAYER_KILL_KARMA)
-				{
-					player.setKarma(player.getKarma() + Formulas.calculateKarmaGain(player.getPkKills(), killer.isSummon()));
-					player.setPkKills(player.getPkKills() + 1);
-					player.broadcastUserInfo();
-					player.checkItemRestriction();
-					
-					// pk item rewards
-					if (PvpRewardItemConfig.REWARD_PK_ITEM)
-					{
-						if (!(PvpRewardItemConfig.DISABLE_REWARDS_IN_INSTANCES && (getInstanceId() != 0)) && //
-							!(PvpRewardItemConfig.DISABLE_REWARDS_IN_PVP_ZONES && isInsideZone(ZoneId.PVP)))
-						{
-							player.addItem(ItemProcessType.REWARD, PvpRewardItemConfig.REWARD_PK_ITEM_ID, PvpRewardItemConfig.REWARD_PK_ITEM_AMOUNT, this, PvpRewardItemConfig.REWARD_PK_ITEM_MESSAGE);
-						}
-					}
-					
-					// announce pk
-					if (PvpAnnounceConfig.ANNOUNCE_PK_PVP && !player.isGM())
-					{
-						final String msg = PvpAnnounceConfig.ANNOUNCE_PK_MSG.replace("$killer", player.getName()).replace("$target", getName());
-						if (PvpAnnounceConfig.ANNOUNCE_PK_PVP_NORMAL_MESSAGE)
-						{
-							final SystemMessage sm = new SystemMessage(SystemMessageId.S1_3);
-							sm.addString(msg);
-							Broadcast.toAllOnlinePlayers(sm);
-						}
-						else
-						{
-							Broadcast.toAllOnlinePlayers(msg, false);
-						}
-					}
-				}
-			}
-			else if (FakePlayersConfig.FAKE_PLAYER_KILL_PVP)
-			{
-				player.setPvpKills(player.getPvpKills() + 1);
-				player.broadcastUserInfo();
-				
-				// pvp item rewards
-				if (PvpRewardItemConfig.REWARD_PVP_ITEM)
-				{
-					if (!(PvpRewardItemConfig.DISABLE_REWARDS_IN_INSTANCES && (getInstanceId() != 0)) && //
-						!(PvpRewardItemConfig.DISABLE_REWARDS_IN_PVP_ZONES && isInsideZone(ZoneId.PVP)))
-					{
-						player.addItem(ItemProcessType.REWARD, PvpRewardItemConfig.REWARD_PVP_ITEM_ID, PvpRewardItemConfig.REWARD_PVP_ITEM_AMOUNT, this, PvpRewardItemConfig.REWARD_PVP_ITEM_MESSAGE);
-					}
-				}
-				
-				// announce pvp
-				if (PvpAnnounceConfig.ANNOUNCE_PK_PVP && !player.isGM())
-				{
-					final String msg = PvpAnnounceConfig.ANNOUNCE_PVP_MSG.replace("$killer", player.getName()).replace("$target", getName());
-					if (PvpAnnounceConfig.ANNOUNCE_PK_PVP_NORMAL_MESSAGE)
-					{
-						final SystemMessage sm = new SystemMessage(SystemMessageId.S1_3);
-						sm.addString(msg);
-						Broadcast.toAllOnlinePlayers(sm);
-					}
-					else
-					{
-						Broadcast.toAllOnlinePlayers(msg, false);
-					}
-				}
-			}
-		}
-		
 		DecayTaskManager.getInstance().add(this);
 		return true;
 	}
@@ -1521,45 +1431,7 @@ public class Npc extends Creature
 	{
 		if (isVisibleFor(player))
 		{
-			if (_isFakePlayer)
-			{
-				player.sendPacket(new FakePlayerInfo(this));
-				
-				// Private store message support.
-				final FakePlayerHolder fakePlayerInfo = getTemplate().getFakePlayerInfo();
-				final int storeType = fakePlayerInfo.getPrivateStoreType();
-				if (storeType > 0)
-				{
-					final String message = fakePlayerInfo.getPrivateStoreMessage();
-					if (!message.isEmpty())
-					{
-						switch (storeType)
-						{
-							case 1: // Sell
-							{
-								player.sendPacket(new PrivateStoreMsgSell(getObjectId(), message));
-								break;
-							}
-							case 3: // Buy
-							{
-								player.sendPacket(new PrivateStoreMsgBuy(getObjectId(), message));
-								break;
-							}
-							case 5: // Manufacture
-							{
-								player.sendPacket(new RecipeShopMsg(getObjectId(), message));
-								break;
-							}
-							case 8: // Package Sell
-							{
-								player.sendPacket(new ExPrivateStoreSetWholeMsg(getObjectId(), message));
-								break;
-							}
-						}
-					}
-				}
-			}
-			else if (getRunSpeed() == 0)
+			if (getRunSpeed() == 0)
 			{
 				player.sendPacket(new ServerObjectInfo(this, player));
 			}
@@ -1716,21 +1588,7 @@ public class Npc extends Creature
 	@Override
 	public void rechargeShots(boolean physical, boolean magic)
 	{
-		if (_isFakePlayer && FakePlayersConfig.FAKE_PLAYER_USE_SHOTS)
-		{
-			if (physical)
-			{
-				broadcastPacket(new MagicSkillUse(this, this, 2154, 1, 0, 0));
-				setChargedShot(ShotType.SOULSHOTS, true);
-			}
-			
-			if (magic)
-			{
-				broadcastPacket(new MagicSkillUse(this, this, 2159, 1, 0, 0));
-				setChargedShot(ShotType.SPIRITSHOTS, true);
-			}
-		}
-		else if ((_soulshotamount > 0) || (_spiritshotamount > 0))
+		if ((_soulshotamount > 0) || (_spiritshotamount > 0))
 		{
 			if (physical)
 			{
@@ -2014,12 +1872,6 @@ public class Npc extends Creature
 	public int getKillingBlowWeapon()
 	{
 		return _killingBlowWeaponId;
-	}
-	
-	@Override
-	public boolean isFakePlayer()
-	{
-		return _isFakePlayer;
 	}
 	
 	/**

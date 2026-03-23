@@ -722,6 +722,12 @@ public class SignsPriest extends Npc
 						}
 						case 4:
 						{
+							final Item blueStoneInst = player.getInventory().getItemByItemId(SevenSigns.SEAL_STONE_BLUE_ID);
+							final Item greenStoneInst = player.getInventory().getItemByItemId(SevenSigns.SEAL_STONE_GREEN_ID);
+							final Item redStoneInst = player.getInventory().getItemByItemId(SevenSigns.SEAL_STONE_RED_ID);
+							final long blueStoneCount = blueStoneInst != null ? blueStoneInst.getCount() : 0;
+							final long greenStoneCount = greenStoneInst != null ? greenStoneInst.getCount() : 0;
+							final long redStoneCount = redStoneInst != null ? redStoneInst.getCount() : 0;
 							final long ancientAdenaRewardAll = SevenSigns.calcAncientAdenaReward(blueStoneCount, greenStoneCount, redStoneCount);
 							if (ancientAdenaRewardAll == 0)
 							{

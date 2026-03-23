@@ -196,7 +196,7 @@ public class PlayerStatus extends PlayableStatus
 						}
 					}
 					
-					if ((attacker.isPlayable() || attacker.isFakePlayer()) && (caster.getCurrentCp() > 0))
+					if ((attacker.isPlayable()) && (caster.getCurrentCp() > 0))
 					{
 						if (caster.getCurrentCp() > transferDmg)
 						{
@@ -218,7 +218,7 @@ public class PlayerStatus extends PlayableStatus
 				}
 			}
 			
-			if (!ignoreCP && (attacker.isPlayable() || attacker.isFakePlayer()))
+			if (!ignoreCP && (attacker.isPlayable()))
 			{
 				if (_currentCp >= amount)
 				{

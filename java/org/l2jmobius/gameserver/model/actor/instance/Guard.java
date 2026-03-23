@@ -52,7 +52,7 @@ public class Guard extends Attackable
 	@Override
 	public boolean isAutoAttackable(Creature attacker)
 	{
-		if (attacker.isMonster() && !attacker.isFakePlayer())
+		if (attacker.isMonster())
 		{
 			return true;
 		}
@@ -168,13 +168,6 @@ public class Guard extends Attackable
 			player.getAI().setIntention(Intention.ATTACK, this);
 		}
 		
-		if (isFakePlayer() && isInCombat())
-		{
-			interact = false;
-			
-			// TODO: Fix normal targeting
-			player.getAI().setIntention(Intention.ATTACK, this);
-		}
 		
 		// Check if the Player already target the GuardInstance
 		if (getObjectId() != player.getTargetId())

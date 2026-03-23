@@ -55,7 +55,7 @@ public class PvpFlaggingStopTask extends Script
 		if (event.equals("FLAG_CHECK"))
 		{
 			final WorldObject target = npc.getTarget();
-			if ((target != null) && (target.isPlayable() || target.isFakePlayer()))
+			if ((target != null) && target.isPlayable())
 			{
 				npc.setScriptValue(1); // in combat
 				cancelQuestTimer("FINISH_FLAG", npc, null);

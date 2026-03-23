@@ -84,7 +84,7 @@ public class AntiFeedManager
 		}
 		
 		// Players in offline mode should't be valid targets.
-		if (targetPlayer.getClient().isDetached())
+		if ((targetPlayer.getClient() == null) || targetPlayer.getClient().isDetached())
 		{
 			return false;
 		}

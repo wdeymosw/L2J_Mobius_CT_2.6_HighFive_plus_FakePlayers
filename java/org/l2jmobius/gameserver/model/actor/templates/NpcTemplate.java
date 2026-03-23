@@ -33,7 +33,6 @@ import org.l2jmobius.gameserver.config.RatesConfig;
 import org.l2jmobius.gameserver.config.custom.ChampionMonstersConfig;
 import org.l2jmobius.gameserver.config.custom.NpcStatMultipliersConfig;
 import org.l2jmobius.gameserver.config.custom.PremiumSystemConfig;
-import org.l2jmobius.gameserver.data.sql.CharInfoTable;
 import org.l2jmobius.gameserver.data.xml.ItemData;
 import org.l2jmobius.gameserver.data.xml.NpcData;
 import org.l2jmobius.gameserver.model.StatSet;
@@ -47,7 +46,6 @@ import org.l2jmobius.gameserver.model.actor.enums.player.PlayerClass;
 import org.l2jmobius.gameserver.model.actor.enums.player.Sex;
 import org.l2jmobius.gameserver.model.actor.holders.npc.DropGroupHolder;
 import org.l2jmobius.gameserver.model.actor.holders.npc.DropHolder;
-import org.l2jmobius.gameserver.model.actor.holders.npc.FakePlayerHolder;
 import org.l2jmobius.gameserver.model.actor.stat.PlayerStat;
 import org.l2jmobius.gameserver.model.item.ItemTemplate;
 import org.l2jmobius.gameserver.model.item.holders.ItemHolder;
@@ -89,8 +87,6 @@ public class NpcTemplate extends CreatureTemplate
 	private boolean _randomWalk;
 	private boolean _randomAnimation;
 	private boolean _flying;
-	private boolean _fakePlayer;
-	private FakePlayerHolder _fakePlayerInfo;
 	private boolean _canMove;
 	private boolean _noSleepMode;
 	private boolean _passableDoor;
@@ -161,18 +157,6 @@ public class NpcTemplate extends CreatureTemplate
 		_randomWalk = set.getBoolean("randomWalk", !_type.equals("Guard"));
 		_randomAnimation = set.getBoolean("randomAnimation", true);
 		_flying = set.getBoolean("flying", false);
-		_fakePlayer = set.getBoolean("fakePlayer", false);
-		if (_fakePlayer)
-		{
-			_fakePlayerInfo = new FakePlayerHolder(set);
-			
-			// Check if a character with the same name already exists.
-			if (CharInfoTable.getInstance().getIdByName(_name) > 0)
-			{
-				LOGGER.info(getClass().getSimpleName() + ": Fake player id [" + _id + "] conflict. A real player with name [" + _name + "] already exists.");
-			}
-		}
-		
 		_canMove = (set.getDouble("baseWalkSpd", 1d) <= 0.1) || set.getBoolean("canMove", true);
 		_noSleepMode = set.getBoolean("noSleepMode", false);
 		_passableDoor = set.getBoolean("passableDoor", false);
@@ -404,16 +388,6 @@ public class NpcTemplate extends CreatureTemplate
 	public boolean isFlying()
 	{
 		return _flying;
-	}
-	
-	public boolean isFakePlayer()
-	{
-		return _fakePlayer;
-	}
-	
-	public FakePlayerHolder getFakePlayerInfo()
-	{
-		return _fakePlayerInfo;
 	}
 	
 	public boolean canMove()

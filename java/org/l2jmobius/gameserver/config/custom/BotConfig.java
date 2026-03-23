@@ -1,16 +1,16 @@
 /*
  * Copyright (c) 2013 L2jMobius
- * 
+ *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to deal
  * in the Software without restriction, including without limitation the rights
  * to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
  * copies of the Software, and to permit persons to whom the Software is
  * furnished to do so, subject to the following conditions:
- * 
+ *
  * The above copyright notice and this permission notice shall be
  * included in all copies or substantial portions of the Software.
- * 
+ *
  * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
  * IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
  * FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
@@ -18,47 +18,34 @@
  * WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR
  * IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
-package org.l2jmobius.gameserver.data.holders;
+package org.l2jmobius.gameserver.config.custom;
 
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.List;
+import org.l2jmobius.commons.util.ConfigReader;
 
 /**
- * @author Mobius
+ * Bot Orchestrator configuration.
  */
-public class FakePlayerChatHolder
+public class BotConfig
 {
-	private final String _fpcName;
-	private final String _searchMethod;
-	private final List<String> _searchText;
-	private final List<String> _answers;
-	
-	public FakePlayerChatHolder(String fpcName, String searchMethod, String searchText, String answers)
+	private static final String BOT_CONFIG_FILE = "./config/Custom/Bots.ini";
+
+	public static boolean BOTS_ENABLED;
+	public static int MAX_BOTS_ONLINE;
+	public static int BOTS_SPAWN_BATCH_SIZE;
+	public static int BOTS_SPAWN_INTERVAL_SECONDS;
+	public static int BOT_CORE_PERCENT;
+	public static double BOT_XP_MULTIPLIER;
+	public static double BOT_DROP_MULTIPLIER;
+
+	public static void load()
 	{
-		_fpcName = fpcName;
-		_searchMethod = searchMethod;
-		_searchText = new ArrayList<>(Arrays.asList(searchText.split(";")));
-		_answers = new ArrayList<>(Arrays.asList(answers.split(";")));
-	}
-	
-	public String getFpcName()
-	{
-		return _fpcName;
-	}
-	
-	public String getSearchMethod()
-	{
-		return _searchMethod;
-	}
-	
-	public List<String> getSearchText()
-	{
-		return _searchText;
-	}
-	
-	public List<String> getAnswers()
-	{
-		return _answers;
+		final ConfigReader config = new ConfigReader(BOT_CONFIG_FILE);
+		BOTS_ENABLED = config.getBoolean("EnableBots", false);
+		MAX_BOTS_ONLINE = config.getInt("MaxBotsOnline", 50);
+		BOTS_SPAWN_BATCH_SIZE = config.getInt("BotsSpawnBatchSize", 3);
+		BOTS_SPAWN_INTERVAL_SECONDS = config.getInt("BotsSpawnIntervalSeconds", 60);
+		BOT_CORE_PERCENT = config.getInt("BotCorePercent", 30);
+		BOT_XP_MULTIPLIER = config.getDouble("BotXpMultiplier", 0.1);
+		BOT_DROP_MULTIPLIER = config.getDouble("BotDropMultiplier", 0.1);
 	}
 }

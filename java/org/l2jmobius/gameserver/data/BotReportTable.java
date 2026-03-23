@@ -220,7 +220,7 @@ public class BotReportTable
 		}
 		
 		final Creature bot = target.asCreature();
-		if ((bot == null) || (!bot.isPlayer() && !bot.isFakePlayer()) || (bot.isFakePlayer() && !bot.asNpc().getTemplate().getFakePlayerInfo().isTalkable()) || (target.getObjectId() == reporter.getObjectId()))
+		if ((bot == null) || !bot.isPlayer() || (target.getObjectId() == reporter.getObjectId()))
 		{
 			return false;
 		}
@@ -449,7 +449,7 @@ public class BotReportTable
 	 */
 	private static int hashIp(Player player)
 	{
-		final String con = player.getClient().getIp();
+		final String con = (player.getClient() != null) ? player.getClient().getIp() : "127.0.0.1";
 		final String[] rawByte = con.split("\\.");
 		final int[] rawIp = new int[4];
 		for (int i = 0; i < 4; i++)

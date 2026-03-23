@@ -548,7 +548,7 @@ public class VillageMaster extends Folk
 					/**
 					 * If the character is less than level 75 on any of their previously chosen classes then disallow them to change to their most recently added sub-class choice.
 					 */
-					if (!player.getClient().getFloodProtectors().canChangeSubclass())
+					if ((player.getClient() != null) && !player.getClient().getFloodProtectors().canChangeSubclass())
 					{
 						return;
 					}
@@ -609,7 +609,7 @@ public class VillageMaster extends Folk
 					/**
 					 * If the character is less than level 75 on any of their previously chosen classes then disallow them to change to their most recently added sub-class choice. Note: paramOne = classIndex
 					 */
-					if (!player.getClient().getFloodProtectors().canChangeSubclass())
+					if ((player.getClient() != null) && !player.getClient().getFloodProtectors().canChangeSubclass())
 					{
 						return;
 					}
@@ -697,7 +697,7 @@ public class VillageMaster extends Folk
 					/**
 					 * Warning: the information about this subclass will be removed from the subclass list even if false!
 					 */
-					if (!player.getClient().getFloodProtectors().canChangeSubclass())
+					if ((player.getClient() != null) && !player.getClient().getFloodProtectors().canChangeSubclass())
 					{
 						return;
 					}

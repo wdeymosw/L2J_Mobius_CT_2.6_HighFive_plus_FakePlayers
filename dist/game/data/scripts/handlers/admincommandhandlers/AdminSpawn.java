@@ -30,7 +30,6 @@ import java.util.logging.Logger;
 
 import org.l2jmobius.commons.util.StringUtil;
 import org.l2jmobius.gameserver.config.PlayerConfig;
-import org.l2jmobius.gameserver.config.custom.FakePlayersConfig;
 import org.l2jmobius.gameserver.data.SpawnTable;
 import org.l2jmobius.gameserver.data.xml.AdminData;
 import org.l2jmobius.gameserver.data.xml.NpcData;
@@ -318,7 +317,7 @@ public class AdminSpawn implements IAdminCommandHandler
 			for (int i = 1; i <= npcCount; i++)
 			{
 				final NpcTemplate template = NpcData.getInstance().getTemplate(i);
-				if ((template == null) || (template.getId() != template.getDisplayId()) || template.isType("GrandBoss") || template.isFakePlayer())
+				if ((template == null) || (template.getId() != template.getDisplayId()) || template.isType("GrandBoss"))
 				{
 					continue;
 				}
@@ -687,12 +686,6 @@ public class AdminSpawn implements IAdminCommandHandler
 			template = NpcData.getInstance().getTemplateByName(monsterId.replace('_', ' '));
 		}
 		
-		if (!FakePlayersConfig.FAKE_PLAYERS_ENABLED && template.isFakePlayer())
-		{
-			activeChar.sendPacket(SystemMessageId.YOUR_TARGET_CANNOT_BE_FOUND);
-			return;
-		}
-		
 		try
 		{
 			final Spawn spawn = new Spawn(template);
@@ -762,11 +755,6 @@ public class AdminSpawn implements IAdminCommandHandler
 		}
 		
 		final NpcTemplate template1 = NpcData.getInstance().getTemplate(id);
-		if (!FakePlayersConfig.FAKE_PLAYERS_ENABLED && template1.isFakePlayer())
-		{
-			activeChar.sendPacket(SystemMessageId.YOUR_TARGET_CANNOT_BE_FOUND);
-			return;
-		}
 		
 		try
 		{

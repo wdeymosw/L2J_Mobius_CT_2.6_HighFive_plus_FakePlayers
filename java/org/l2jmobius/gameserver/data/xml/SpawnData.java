@@ -41,7 +41,6 @@ import org.w3c.dom.Node;
 import org.l2jmobius.commons.util.IXmlReader;
 import org.l2jmobius.gameserver.config.DevelopmentConfig;
 import org.l2jmobius.gameserver.config.ServerConfig;
-import org.l2jmobius.gameserver.config.custom.FakePlayersConfig;
 import org.l2jmobius.gameserver.data.SpawnTable;
 import org.l2jmobius.gameserver.managers.DayNightSpawnManager;
 import org.l2jmobius.gameserver.managers.ZoneManager;
@@ -95,27 +94,16 @@ public class SpawnData implements IXmlReader
 		final NpcTemplate npcTemplate = NpcData.getInstance().getTemplate(npcId);
 		if (npcTemplate == null)
 		{
-			// Log a warning for invalid NPC IDs outside the fake player range [80000, 89999].
-			// This hardcoded check provides a resource-constrained solution to prevent unnecessary logging.
-			if (FakePlayersConfig.FAKE_PLAYERS_ENABLED || ((npcId < 80000) && (npcId > 89999)))
-			{
-				LOGGER.warning(getClass().getSimpleName() + ": Requested spawn for non-existing NPC: " + npcId + ".");
-			}
-			
+			LOGGER.warning(getClass().getSimpleName() + ": Requested spawn for non-existing NPC: " + npcId + ".");
 			return false;
 		}
-		
+
 		if (npcTemplate.isType("SiegeGuard") || npcTemplate.isType("RaidBoss"))
 		{
 			// Do not spawn.
 			return false;
 		}
-		
-		if (!FakePlayersConfig.FAKE_PLAYERS_ENABLED && npcTemplate.isFakePlayer())
-		{
-			return false;
-		}
-		
+
 		return true;
 	}
 	

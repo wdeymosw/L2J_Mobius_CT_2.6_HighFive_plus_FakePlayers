@@ -29,7 +29,6 @@ import org.l2jmobius.gameserver.ai.Intention;
 import org.l2jmobius.gameserver.ai.SummonAI;
 import org.l2jmobius.gameserver.config.GeoEngineConfig;
 import org.l2jmobius.gameserver.config.PlayerConfig;
-import org.l2jmobius.gameserver.config.custom.FakePlayersConfig;
 import org.l2jmobius.gameserver.data.xml.ExperienceData;
 import org.l2jmobius.gameserver.data.xml.ItemData;
 import org.l2jmobius.gameserver.geoengine.GeoEngine;
@@ -985,10 +984,6 @@ public abstract class Summon extends Playable
 		{
 			setTarget(target);
 			getAI().setIntention(Intention.ATTACK, target);
-			if (target.isFakePlayer() && !FakePlayersConfig.FAKE_PLAYER_AUTO_ATTACKABLE)
-			{
-				_owner.updatePvPStatus();
-			}
 		}
 	}
 	

@@ -26,7 +26,6 @@ import org.l2jmobius.gameserver.model.actor.Player;
 import org.l2jmobius.gameserver.model.zone.ZoneId;
 import org.l2jmobius.gameserver.model.zone.ZoneType;
 import org.l2jmobius.gameserver.network.serverpackets.AbstractNpcInfo;
-import org.l2jmobius.gameserver.network.serverpackets.FakePlayerInfo;
 import org.l2jmobius.gameserver.network.serverpackets.ServerObjectInfo;
 
 public class WaterZone extends ZoneType
@@ -57,11 +56,7 @@ public class WaterZone extends ZoneType
 		{
 			World.getInstance().forEachVisibleObject(creature, Player.class, player ->
 			{
-				if (creature.isFakePlayer())
-				{
-					player.sendPacket(new FakePlayerInfo(creature.asNpc()));
-				}
-				else if (creature.getRunSpeed() == 0)
+				if (creature.getRunSpeed() == 0)
 				{
 					player.sendPacket(new ServerObjectInfo(creature.asNpc(), player));
 				}
@@ -95,11 +90,7 @@ public class WaterZone extends ZoneType
 		{
 			World.getInstance().forEachVisibleObject(creature, Player.class, player ->
 			{
-				if (creature.isFakePlayer())
-				{
-					player.sendPacket(new FakePlayerInfo(creature.asNpc()));
-				}
-				else if (creature.getRunSpeed() == 0)
+				if (creature.getRunSpeed() == 0)
 				{
 					player.sendPacket(new ServerObjectInfo(creature.asNpc(), player));
 				}

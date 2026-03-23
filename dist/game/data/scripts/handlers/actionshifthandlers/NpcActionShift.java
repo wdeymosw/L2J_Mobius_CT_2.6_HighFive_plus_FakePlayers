@@ -65,7 +65,7 @@ public class NpcActionShift implements IActionShiftHandler
 			html.setFile(player, "data/html/admin/npcinfo.htm");
 			
 			html.replace("%objid%", String.valueOf(target.getObjectId()));
-			html.replace("%class%", (target.isFakePlayer() ? "Fake Player - " : "") + target.getClass().getSimpleName());
+			html.replace("%class%", target.getClass().getSimpleName());
 			html.replace("%race%", target.asNpc().getTemplate().getRace().toString());
 			html.replace("%id%", String.valueOf(target.asNpc().getTemplate().getId()));
 			html.replace("%lvl%", String.valueOf(target.asNpc().getTemplate().getLevel()));
@@ -189,7 +189,7 @@ public class NpcActionShift implements IActionShiftHandler
 		}
 		else if (NpcConfig.ALT_GAME_VIEWNPC)
 		{
-			if (!target.isNpc() || target.isFakePlayer())
+			if (!target.isNpc())
 			{
 				return false;
 			}

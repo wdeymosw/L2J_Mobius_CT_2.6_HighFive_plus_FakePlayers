@@ -31,7 +31,6 @@ import org.l2jmobius.gameserver.config.custom.FactionSystemConfig;
 import org.l2jmobius.gameserver.config.custom.StartingLocationConfig;
 import org.l2jmobius.gameserver.config.custom.StartingTitleConfig;
 import org.l2jmobius.gameserver.data.sql.CharInfoTable;
-import org.l2jmobius.gameserver.data.xml.FakePlayerData;
 import org.l2jmobius.gameserver.data.xml.InitialEquipmentData;
 import org.l2jmobius.gameserver.data.xml.InitialShortcutData;
 import org.l2jmobius.gameserver.data.xml.PlayerTemplateData;
@@ -116,11 +115,6 @@ public class CharacterCreate extends ClientPacket
 			}
 		}
 		
-		if (FakePlayerData.getInstance().getProperName(_name) != null)
-		{
-			client.sendPacket(new CharCreateFail(CharCreateFail.REASON_INCORRECT_NAME));
-			return;
-		}
 		
 		// Last Verified: May 30, 2009 - Gracia Final
 		if (!StringUtil.isAlphaNumeric(_name) || !isValidName(_name))

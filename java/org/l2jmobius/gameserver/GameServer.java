@@ -55,6 +55,7 @@ import org.l2jmobius.gameserver.data.sql.CharInfoTable;
 import org.l2jmobius.gameserver.data.sql.CharSummonTable;
 import org.l2jmobius.gameserver.data.sql.ClanHallTable;
 import org.l2jmobius.gameserver.data.sql.ClanTable;
+import org.l2jmobius.gameserver.bot.manager.BotManager;
 import org.l2jmobius.gameserver.data.sql.CrestTable;
 import org.l2jmobius.gameserver.data.sql.OfflinePlayTable;
 import org.l2jmobius.gameserver.data.sql.OfflineTraderTable;
@@ -121,7 +122,6 @@ import org.l2jmobius.gameserver.managers.DailyResetManager;
 import org.l2jmobius.gameserver.managers.DayNightSpawnManager;
 import org.l2jmobius.gameserver.managers.DimensionalRiftManager;
 import org.l2jmobius.gameserver.managers.EventDropManager;
-import org.l2jmobius.gameserver.managers.FakePlayerChatManager;
 import org.l2jmobius.gameserver.managers.FishingChampionshipManager;
 import org.l2jmobius.gameserver.managers.FortManager;
 import org.l2jmobius.gameserver.managers.FortSiegeManager;
@@ -298,7 +298,6 @@ public class GameServer
 		SkillLearnData.getInstance();
 		NpcData.getInstance();
 		LevelUpCrystalData.getInstance();
-		FakePlayerChatManager.getInstance();
 		WalkingManager.getInstance();
 		StaticObjectData.getInstance();
 		ItemAuctionManager.getInstance();
@@ -478,7 +477,8 @@ public class GameServer
 		new ConnectionManager<>(new InetSocketAddress(ServerConfig.PORT_GAME), GameClient::new, new GamePacketHandler());
 		
 		LoginServerThread.getInstance().start();
-		
+		BotManager.getInstance().start();
+
 		Toolkit.getDefaultToolkit().beep();
 	}
 	

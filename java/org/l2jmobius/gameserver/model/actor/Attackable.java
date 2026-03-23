@@ -43,7 +43,7 @@ import org.l2jmobius.gameserver.config.NpcConfig;
 import org.l2jmobius.gameserver.config.PlayerConfig;
 import org.l2jmobius.gameserver.config.RatesConfig;
 import org.l2jmobius.gameserver.config.custom.ChampionMonstersConfig;
-import org.l2jmobius.gameserver.config.custom.FakePlayersConfig;
+import org.l2jmobius.gameserver.config.custom.BotConfig;
 import org.l2jmobius.gameserver.config.custom.PremiumSystemConfig;
 import org.l2jmobius.gameserver.data.xml.ItemData;
 import org.l2jmobius.gameserver.managers.CursedWeaponsManager;
@@ -296,7 +296,7 @@ public class Attackable extends Npc
 	
 	public synchronized boolean getMustRewardExpSP()
 	{
-		return _mustGiveExpSp && !isFakePlayer();
+		return _mustGiveExpSp;
 	}
 	
 	/**
@@ -569,6 +569,13 @@ public class Attackable extends Npc
 									addSp *= PremiumSystemConfig.PREMIUM_RATE_SP;
 								}
 								
+								// Bot XP reduction
+								if (attacker.isBot())
+								{
+									addExp = (long) (addExp * BotConfig.BOT_XP_MULTIPLIER);
+									addSp = (int) (addSp * BotConfig.BOT_XP_MULTIPLIER);
+								}
+
 								attacker.addExpAndSp(addExp, addSp, useVitalityRate());
 								if ((addExp > 0) && useVitalityRate())
 								{
@@ -776,11 +783,6 @@ public class Attackable extends Npc
 			return;
 		}
 		
-		// Check if fake players should aggro each other.
-		if (isFakePlayer() && !FakePlayersConfig.FAKE_PLAYER_AGGRO_FPC && attacker.isFakePlayer())
-		{
-			return;
-		}
 		
 		// Get the AggroInfo of the attacker Creature from the _aggroList of the Attackable
 		final AggroInfo ai = _aggroList.computeIfAbsent(attacker, AggroInfo::new);
@@ -854,10 +856,7 @@ public class Attackable extends Npc
 				((AttackableAI) getAI()).setGlobalAggro(-25);
 				clearAggroList();
 				getAI().setIntention(Intention.ACTIVE);
-				if (!isFakePlayer())
-				{
-					setWalking();
-				}
+				setWalking();
 			}
 			return;
 		}
@@ -874,10 +873,7 @@ public class Attackable extends Npc
 			((AttackableAI) getAI()).setGlobalAggro(-25);
 			clearAggroList();
 			getAI().setIntention(Intention.ACTIVE);
-			if (!isFakePlayer())
-			{
-				setWalking();
-			}
+			setWalking();
 		}
 	}
 	
@@ -1077,43 +1073,7 @@ public class Attackable extends Npc
 		// Don't drop anything if the last attacker or owner isn't Player
 		if (player == null)
 		{
-			// unless its a fake player and they can drop items
-			if (mainDamageDealer.isFakePlayer() && FakePlayersConfig.FAKE_PLAYER_CAN_DROP_ITEMS)
-			{
-				final Collection<ItemHolder> deathItems = npcTemplate.calculateDrops(DropType.DROP, this, mainDamageDealer);
-				if (deathItems != null)
-				{
-					for (ItemHolder drop : deathItems)
-					{
-						final ItemTemplate item = ItemData.getInstance().getTemplate(drop.getId());
-						
-						// Check if the autoLoot mode is active
-						if (PlayerConfig.AUTO_LOOT_ITEM_IDS.contains(item.getId()) || isFlying() || (!item.hasExImmediateEffect() && ((!_isRaid && PlayerConfig.AUTO_LOOT) || (_isRaid && PlayerConfig.AUTO_LOOT_RAIDS))))
-						{
-							// do nothing
-						}
-						else if (PlayerConfig.AUTO_LOOT_HERBS && item.hasExImmediateEffect())
-						{
-							for (SkillHolder skillHolder : item.getSkills())
-							{
-								doSimultaneousCast(skillHolder.getSkill());
-							}
-							
-							mainDamageDealer.broadcastInfo(); // ? check if this is necessary
-						}
-						else
-						{
-							final Item droppedItem = dropItem(mainDamageDealer, drop); // drop the item on the ground
-							if (FakePlayersConfig.FAKE_PLAYER_CAN_PICKUP)
-							{
-								mainDamageDealer.getFakePlayerDrops().add(droppedItem);
-							}
-						}
-					}
-					
-					deathItems.clear();
-				}
-			}
+
 			return;
 		}
 		
@@ -1124,6 +1084,12 @@ public class Attackable extends Npc
 			_sweepItems.set(npcTemplate.calculateDrops(DropType.SPOIL, this, player));
 		}
 		
+		// Bots get reduced drop chance
+		if (player.isBot() && (Math.random() >= BotConfig.BOT_DROP_MULTIPLIER))
+		{
+			return;
+		}
+
 		final Collection<ItemHolder> deathItems = npcTemplate.calculateDrops(DropType.DROP, this, player);
 		if (deathItems != null)
 		{
@@ -1503,18 +1469,7 @@ public class Attackable extends Npc
 		// Clear Harvester reward
 		_harvestItem.set(null);
 		
-		// fake players
-		if (isFakePlayer())
-		{
-			getFakePlayerDrops().clear(); // Clear existing fake player drops
-			setKarma(0); // reset karma
-			setScriptValue(0); // remove pvp flag
-			setRunning(); // don't walk
-		}
-		else
-		{
-			setWalking();
-		}
+		setWalking();
 		
 		// Clear mod Seeded stat
 		_seeded = false;

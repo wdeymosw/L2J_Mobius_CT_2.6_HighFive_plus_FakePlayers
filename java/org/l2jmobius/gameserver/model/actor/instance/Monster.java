@@ -23,7 +23,6 @@ package org.l2jmobius.gameserver.model.actor.instance;
 import java.util.List;
 
 import org.l2jmobius.gameserver.config.NpcConfig;
-import org.l2jmobius.gameserver.config.custom.FakePlayersConfig;
 import org.l2jmobius.gameserver.model.WorldObject;
 import org.l2jmobius.gameserver.model.actor.Attackable;
 import org.l2jmobius.gameserver.model.actor.Creature;
@@ -65,10 +64,6 @@ public class Monster extends Attackable
 	@Override
 	public boolean isAutoAttackable(Creature attacker)
 	{
-		if (isFakePlayer())
-		{
-			return FakePlayersConfig.FAKE_PLAYER_AUTO_ATTACKABLE || isInCombat() || attacker.isMonster() || (getScriptValue() > 0);
-		}
 		
 		// Check if the Monster target is aggressive
 		if (NpcConfig.GUARD_ATTACK_AGGRO_MOB && isAggressive() && (attacker instanceof Guard))
@@ -78,7 +73,7 @@ public class Monster extends Attackable
 		
 		if (attacker.isMonster())
 		{
-			return attacker.isFakePlayer();
+			return false;
 		}
 		
 		// Anything considers monsters friendly except Players, Attackables (Guards, Friendly NPC), Traps and EffectPoints.

@@ -34,6 +34,7 @@ import org.l2jmobius.gameserver.config.custom.OfflinePlayConfig;
 import org.l2jmobius.gameserver.config.custom.OfflineTradeConfig;
 import org.l2jmobius.gameserver.data.BotReportTable;
 import org.l2jmobius.gameserver.data.SchemeBufferTable;
+import org.l2jmobius.gameserver.bot.manager.BotManager;
 import org.l2jmobius.gameserver.data.sql.ClanTable;
 import org.l2jmobius.gameserver.data.sql.OfflinePlayTable;
 import org.l2jmobius.gameserver.data.sql.OfflineTraderTable;
@@ -352,6 +353,9 @@ public class Shutdown extends Thread
 		
 		try
 		{
+			BotManager.getInstance().shutdown();
+			LOGGER.info("BotManager: Bots saved and removed(" + tc.getEstimatedTimeAndRestartCounter() + "ms).");
+
 			if ((OfflineTradeConfig.OFFLINE_TRADE_ENABLE || OfflineTradeConfig.OFFLINE_CRAFT_ENABLE) && OfflineTradeConfig.RESTORE_OFFLINERS && !OfflineTradeConfig.STORE_OFFLINE_TRADE_IN_REALTIME)
 			{
 				OfflineTraderTable.getInstance().storeOffliners();

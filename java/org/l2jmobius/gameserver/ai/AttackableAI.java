@@ -31,7 +31,6 @@ import org.l2jmobius.gameserver.config.GeneralConfig;
 import org.l2jmobius.gameserver.config.NpcConfig;
 import org.l2jmobius.gameserver.config.custom.ChampionMonstersConfig;
 import org.l2jmobius.gameserver.config.custom.FactionSystemConfig;
-import org.l2jmobius.gameserver.config.custom.FakePlayersConfig;
 import org.l2jmobius.gameserver.geoengine.GeoEngine;
 import org.l2jmobius.gameserver.managers.DimensionalRiftManager;
 import org.l2jmobius.gameserver.managers.ItemsOnGroundManager;
@@ -487,80 +486,7 @@ public class AttackableAI extends CreatureAI
 					return;
 				}
 				
-				if (npc.isFakePlayer() && npc.isAggressive())
-				{
-					final List<Item> droppedItems = npc.getFakePlayerDrops();
-					if (droppedItems.isEmpty())
-					{
-						Creature nearestTarget = null;
-						double closestDistance = Double.MAX_VALUE;
-						for (Creature t : World.getInstance().getVisibleObjectsInRange(npc, Creature.class, npc.getAggroRange()))
-						{
-							if ((t == _actor) || (t == null) || t.isDead())
-							{
-								continue;
-							}
-							
-							if ((FakePlayersConfig.FAKE_PLAYER_AGGRO_FPC && t.isFakePlayer()) //
-								|| (FakePlayersConfig.FAKE_PLAYER_AGGRO_MONSTERS && t.isMonster() && !t.isFakePlayer()) //
-								|| (FakePlayersConfig.FAKE_PLAYER_AGGRO_PLAYERS && t.isPlayer()))
-							{
-								final long hating = npc.getHating(t);
-								final double distance = npc.calculateDistance2D(t);
-								if ((hating == 0) && (closestDistance > distance))
-								{
-									nearestTarget = t;
-									closestDistance = distance;
-								}
-							}
-						}
-						
-						if (nearestTarget != null)
-						{
-							npc.addDamageHate(nearestTarget, 0, 1);
-						}
-					}
-					else if (!npc.isInCombat()) // must pickup items
-					{
-						final int itemIndex = npc.getFakePlayerDrops().size() - 1; // last item dropped - can also use 0 for first item dropped
-						final Item droppedItem = npc.getFakePlayerDrops().get(itemIndex);
-						if ((droppedItem != null) && droppedItem.isSpawned())
-						{
-							if (npc.calculateDistance2D(droppedItem) > 50)
-							{
-								moveTo(droppedItem);
-							}
-							else
-							{
-								npc.getFakePlayerDrops().remove(itemIndex);
-								droppedItem.pickupMe(npc);
-								if (GeneralConfig.SAVE_DROPPED_ITEM)
-								{
-									ItemsOnGroundManager.getInstance().removeObject(droppedItem);
-								}
-								
-								if (droppedItem.getTemplate().hasExImmediateEffect())
-								{
-									for (SkillHolder skillHolder : droppedItem.getTemplate().getSkills())
-									{
-										npc.doSimultaneousCast(skillHolder.getSkill());
-									}
-									
-									npc.broadcastInfo(); // ? check if this is necessary
-								}
-							}
-						}
-						else
-						{
-							npc.getFakePlayerDrops().remove(itemIndex);
-						}
-						
-						npc.setRunning();
-					}
-					return;
-				}
-				
-				/*
+/*
 				 * Check to see if this is a festival mob spawn. If it is, then check to see if the aggro trigger is a festival participant...if so, move to attack it.
 				 */
 				if ((npc instanceof FestivalMonster) && target.isPlayer())
@@ -575,19 +501,6 @@ public class AttackableAI extends CreatureAI
 				// For each Creature check if the target is autoattackable
 				if (isAggressiveTowards(target)) // check aggression
 				{
-					if (target.isFakePlayer())
-					{
-						if (!npc.isFakePlayer() || (npc.isFakePlayer() && FakePlayersConfig.FAKE_PLAYER_AGGRO_FPC))
-						{
-							final long hating = npc.getHating(target);
-							if (hating == 0)
-							{
-								npc.addDamageHate(target, 0, 0);
-							}
-						}
-						return;
-					}
-					
 					if (target.isPlayable() && EventDispatcher.getInstance().hasListener(EventType.ON_NPC_HATE, getActiveChar()))
 					{
 						final TerminateReturn term = EventDispatcher.getInstance().notifyEvent(new OnAttackableHate(getActiveChar(), target.asPlayer(), target.isSummon()), getActiveChar(), TerminateReturn.class);
@@ -886,10 +799,7 @@ public class AttackableAI extends CreatureAI
 			// Set the AI Intention to ACTIVE
 			setIntention(Intention.ACTIVE);
 			
-			if (!_actor.isFakePlayer())
-			{
-				npc.setWalking();
-			}
+			npc.setWalking();
 			
 			// Monster teleport to spawn
 			if (npc.isMonster() && (npc.getSpawn() != null) && (npc.getInstanceId() == 0) && (npc.isInCombat() || World.getInstance().getVisibleObjects(npc, Player.class).isEmpty()))

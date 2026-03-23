@@ -43,7 +43,6 @@ import org.l2jmobius.gameserver.data.xml.TeleporterData;
 import org.l2jmobius.gameserver.data.xml.TransformData;
 import org.l2jmobius.gameserver.handler.IAdminCommandHandler;
 import org.l2jmobius.gameserver.managers.CursedWeaponsManager;
-import org.l2jmobius.gameserver.managers.FakePlayerChatManager;
 import org.l2jmobius.gameserver.managers.ScriptManager;
 import org.l2jmobius.gameserver.managers.WalkingManager;
 import org.l2jmobius.gameserver.managers.ZoneManager;
@@ -261,13 +260,7 @@ public class AdminReload implements IAdminCommandHandler
 					AdminData.getInstance().broadcastMessageToGMs(activeChar.getName() + ": Reloaded item mall data.");
 					break;
 				}
-				case "fakeplayerchat":
-				{
-					FakePlayerChatManager.getInstance().load();
-					AdminData.getInstance().broadcastMessageToGMs(activeChar.getName() + ": Reloaded Fake Player Chat data.");
-					break;
-				}
-				case "localisations":
+			case "localisations":
 				{
 					SystemMessageId.loadLocalisations();
 					NpcStringId.loadLocalisations();

@@ -58,6 +58,7 @@ CREATE TABLE IF NOT EXISTS `characters` (
   `language` VARCHAR(2) DEFAULT NULL,
   `faction` TINYINT UNSIGNED NOT NULL DEFAULT '0',
   `pccafe_points` int(6) NOT NULL DEFAULT '0',
+  `is_bot` TINYINT(1) NOT NULL DEFAULT '0',
   PRIMARY KEY (`charId`),
   KEY `account_name` (`account_name`),
   KEY `char_name` (`char_name`),

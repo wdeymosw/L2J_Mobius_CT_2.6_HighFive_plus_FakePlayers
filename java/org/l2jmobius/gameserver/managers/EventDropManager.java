@@ -58,7 +58,7 @@ public class EventDropManager
 		}
 		
 		// Event items drop only for players.
-		if ((attacker == null) || !attacker.isPlayable() || attackable.isFakePlayer())
+		if ((attacker == null) || !attacker.isPlayable())
 		{
 			return;
 		}

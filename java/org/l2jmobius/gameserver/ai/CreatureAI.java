@@ -892,7 +892,7 @@ public class CreatureAI extends AbstractAI
 		// Kill the actor client side by sending Server->Client packet AutoAttackStop, StopMove/StopRotation, Die (broadcast)
 		clientNotifyDead();
 		
-		if (!_actor.isPlayable() && !_actor.isFakePlayer())
+		if (!_actor.isPlayable())
 		{
 			_actor.setWalking();
 		}

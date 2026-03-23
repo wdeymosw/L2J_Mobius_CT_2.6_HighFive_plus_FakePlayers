@@ -66,7 +66,6 @@ import org.l2jmobius.gameserver.config.RatesConfig;
 import org.l2jmobius.gameserver.config.custom.AutoPlayConfig;
 import org.l2jmobius.gameserver.config.custom.DualboxCheckConfig;
 import org.l2jmobius.gameserver.config.custom.FactionSystemConfig;
-import org.l2jmobius.gameserver.config.custom.FakePlayersConfig;
 import org.l2jmobius.gameserver.config.custom.FreeMountsConfig;
 import org.l2jmobius.gameserver.config.custom.MultilingualSupportConfig;
 import org.l2jmobius.gameserver.config.custom.OfflinePlayConfig;
@@ -395,7 +394,7 @@ public class Player extends Playable
 	
 	// Character Character SQL String Definitions:
 	private static final String INSERT_CHARACTER = "INSERT INTO characters (account_name,charId,char_name,level,maxHp,curHp,maxCp,curCp,maxMp,curMp,face,hairStyle,hairColor,sex,exp,sp,karma,fame,pvpkills,pkkills,clanid,race,classid,deletetime,cancraft,title,title_color,accesslevel,online,isin7sdungeon,clan_privs,wantspeace,base_class,newbie,nobless,power_grade,createDate,lastAccess) values (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)";
-	private static final String UPDATE_CHARACTER = "UPDATE characters SET level=?,maxHp=?,curHp=?,maxCp=?,curCp=?,maxMp=?,curMp=?,face=?,hairStyle=?,hairColor=?,sex=?,heading=?,x=?,y=?,z=?,exp=?,expBeforeDeath=?,sp=?,karma=?,fame=?,pvpkills=?,pkkills=?,clanid=?,race=?,classid=?,deletetime=?,title=?,title_color=?,accesslevel=?,online=?,isin7sdungeon=?,clan_privs=?,wantspeace=?,base_class=?,onlinetime=?,newbie=?,nobless=?,power_grade=?,subpledge=?,lvl_joined_academy=?,apprentice=?,sponsor=?,clan_join_expiry_time=?,clan_create_expiry_time=?,char_name=?,death_penalty_level=?,bookmarkslot=?,vitality_points=?,language=?,faction=?,pccafe_points=?,death_penalty_xp=? WHERE charId=?";
+	private static final String UPDATE_CHARACTER = "UPDATE characters SET level=?,maxHp=?,curHp=?,maxCp=?,curCp=?,maxMp=?,curMp=?,face=?,hairStyle=?,hairColor=?,sex=?,heading=?,x=?,y=?,z=?,exp=?,expBeforeDeath=?,sp=?,karma=?,fame=?,pvpkills=?,pkkills=?,clanid=?,race=?,classid=?,deletetime=?,title=?,title_color=?,accesslevel=?,online=?,isin7sdungeon=?,clan_privs=?,wantspeace=?,base_class=?,onlinetime=?,newbie=?,nobless=?,power_grade=?,subpledge=?,lvl_joined_academy=?,apprentice=?,sponsor=?,clan_join_expiry_time=?,clan_create_expiry_time=?,char_name=?,death_penalty_level=?,bookmarkslot=?,vitality_points=?,language=?,faction=?,pccafe_points=?,death_penalty_xp=?,is_bot=? WHERE charId=?";
 	private static final String RESTORE_CHARACTER = "SELECT * FROM characters WHERE charId=?";
 	
 	// Character Teleport Bookmark:
@@ -461,6 +460,7 @@ public class Player extends Playable
 	private String _htmlPrefix = "";
 	
 	private volatile boolean _isOnline = false;
+	private boolean _isBot = false;
 	private boolean _offlinePlay = false;
 	private boolean _enteredWorld = false;
 	private long _onlineTime;
@@ -4696,10 +4696,6 @@ public class Player extends Playable
 	{
 		super.doAttack(target);
 		setRecentFakeDeath(false);
-		if (target.isFakePlayer() && !FakePlayersConfig.FAKE_PLAYER_AUTO_ATTACKABLE)
-		{
-			updatePvPStatus();
-		}
 	}
 	
 	@Override
@@ -5260,8 +5256,7 @@ public class Player extends Playable
 		if (killer != null)
 		{
 			final Player pk = killer.asPlayer();
-			final boolean fpcKill = killer.isFakePlayer();
-			if ((pk != null) || fpcKill)
+			if (pk != null)
 			{
 				if ((getParty() != null) && (getParty().getUCState() instanceof UCTeam))
 				{
@@ -5294,7 +5289,7 @@ public class Player extends Playable
 				}
 				
 				// announce pvp/pk
-				if (PvpAnnounceConfig.ANNOUNCE_PK_PVP && (((pk != null) && !pk.isGM()) || fpcKill))
+				if (PvpAnnounceConfig.ANNOUNCE_PK_PVP && (((pk != null) && !pk.isGM())))
 				{
 					String msg = "";
 					if (_pvpFlag == 0)
@@ -5327,11 +5322,6 @@ public class Player extends Playable
 					}
 				}
 				
-				if (fpcKill && FakePlayersConfig.FAKE_PLAYER_KILL_KARMA && (_pvpFlag == 0) && (getKarma() <= 0))
-				{
-					killer.setKarma(killer.getKarma() + 150);
-					killer.broadcastInfo();
-				}
 			}
 			
 			broadcastStatusUpdate();
@@ -7167,6 +7157,7 @@ public class Player extends Playable
 					}
 					
 					player.setPcCafePoints(rset.getInt("pccafe_points"));
+					player.setBot(rset.getInt("is_bot") == 1);
 					player.setPowerGrade(rset.getInt("power_grade"));
 					player.setPledgeType(rset.getInt("subpledge"));
 					// player.setApprentice(rs.getInt("apprentice"));
@@ -7729,7 +7720,8 @@ public class Player extends Playable
 			ps.setInt(50, factionId);
 			ps.setInt(51, _pcCafePoints);
 			ps.setLong(52, _deathPenaltyXpAccumulated);
-			ps.setInt(53, getObjectId());
+			ps.setInt(53, _isBot ? 1 : 0);
+			ps.setInt(54, getObjectId());
 			ps.execute();
 		}
 		catch (Exception e)
@@ -7930,6 +7922,16 @@ public class Player extends Playable
 		return 0;
 	}
 	
+	public boolean isBot()
+	{
+		return _isBot;
+	}
+
+	public void setBot(boolean value)
+	{
+		_isBot = value;
+	}
+
 	public void startOfflinePlay()
 	{
 		if (hasPremiumStatus() && (DualboxCheckConfig.DUALBOX_CHECK_MAX_OFFLINEPLAY_PREMIUM_PER_IP > 0) && !AntiFeedManager.getInstance().tryAddPlayer(AntiFeedManager.OFFLINE_PLAY, this, DualboxCheckConfig.DUALBOX_CHECK_MAX_OFFLINEPLAY_PREMIUM_PER_IP))

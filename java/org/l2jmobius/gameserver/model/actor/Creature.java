@@ -50,7 +50,6 @@ import org.l2jmobius.gameserver.config.custom.BossAnnouncementsConfig;
 import org.l2jmobius.gameserver.config.custom.CaptchaConfig;
 import org.l2jmobius.gameserver.config.custom.ChampionMonstersConfig;
 import org.l2jmobius.gameserver.config.custom.ClassBalanceConfig;
-import org.l2jmobius.gameserver.config.custom.FakePlayersConfig;
 import org.l2jmobius.gameserver.data.enums.CategoryType;
 import org.l2jmobius.gameserver.data.xml.CategoryData;
 import org.l2jmobius.gameserver.data.xml.DoorData;
@@ -156,7 +155,6 @@ import org.l2jmobius.gameserver.network.serverpackets.Attack;
 import org.l2jmobius.gameserver.network.serverpackets.ChangeMoveType;
 import org.l2jmobius.gameserver.network.serverpackets.ChangeWaitType;
 import org.l2jmobius.gameserver.network.serverpackets.ExRotation;
-import org.l2jmobius.gameserver.network.serverpackets.FakePlayerInfo;
 import org.l2jmobius.gameserver.network.serverpackets.FlyToLocation;
 import org.l2jmobius.gameserver.network.serverpackets.MagicSkillCanceled;
 import org.l2jmobius.gameserver.network.serverpackets.MagicSkillLaunched;
@@ -300,9 +298,6 @@ public abstract class Creature extends WorldObject
 	
 	private Set<Creature> _seenCreatures = null;
 	private int _seenCreatureRange = PlayerConfig.ALT_PARTY_RANGE;
-	
-	/** A list containing the dropped items of this fake player. */
-	private final List<Item> _fakePlayerDrops = new CopyOnWriteArrayList<>();
 	
 	private OnCreatureAttack _onCreatureAttack = null;
 	private OnCreatureAttacked _onCreatureAttacked = null;
@@ -1248,17 +1243,6 @@ public abstract class Creature extends WorldObject
 			if (_attackEndTime < currentTime)
 			{
 				_attackEndTime = currentTime + TimeUnit.MILLISECONDS.toNanos(Integer.MAX_VALUE);
-			}
-			
-			if (isFakePlayer() && !FakePlayersConfig.FAKE_PLAYER_AUTO_ATTACKABLE && (target.isPlayable() || target.isFakePlayer()))
-			{
-				final Npc npc = asNpc();
-				if (!npc.isScriptValue(1))
-				{
-					npc.setScriptValue(1); // in combat
-					broadcastInfo(); // update flag status
-					ScriptManager.getInstance().getScript("PvpFlaggingStopTask").notifyEvent("FLAG_CHECK", npc, null);
-				}
 			}
 			
 			// Flag the attacker if it's a Player outside a PvP area
@@ -3149,11 +3133,7 @@ public abstract class Creature extends WorldObject
 					return;
 				}
 				
-				if (isFakePlayer())
-				{
-					player.sendPacket(new FakePlayerInfo(asNpc()));
-				}
-				else if (_stat.getRunSpeed() == 0)
+				if (_stat.getRunSpeed() == 0)
 				{
 					player.sendPacket(new ServerObjectInfo(asNpc(), player));
 				}
@@ -4018,11 +3998,7 @@ public abstract class Creature extends WorldObject
 							return;
 						}
 						
-						if (isFakePlayer())
-						{
-							player.sendPacket(new FakePlayerInfo(asNpc()));
-						}
-						else if (_stat.getRunSpeed() == 0)
+						if (_stat.getRunSpeed() == 0)
 						{
 							player.sendPacket(new ServerObjectInfo(asNpc(), player));
 						}
@@ -5235,11 +5211,6 @@ public abstract class Creature extends WorldObject
 			return;
 		}
 		
-		// Check if fake players should aggro each other.
-		if (isFakePlayer() && !FakePlayersConfig.FAKE_PLAYER_AGGRO_FPC && target.isFakePlayer())
-		{
-			return;
-		}
 		
 		if ((isNpc() && target.isAlikeDead()) || target.isDead() || (!isInSurroundingRegion(target) && !isDoor()))
 		{
@@ -5555,7 +5526,7 @@ public abstract class Creature extends WorldObject
 	
 	public boolean isInsidePeaceZone(WorldObject attacker, WorldObject target)
 	{
-		if ((target == null) || !((target.isPlayable() || target.isFakePlayer()) && attacker.isPlayable()))
+		if ((target == null) || !(target.isPlayable() && attacker.isPlayable()))
 		{
 			return false;
 		}
@@ -6338,10 +6309,6 @@ public abstract class Creature extends WorldObject
 						}
 					}
 					
-					if (target.isFakePlayer() && !FakePlayersConfig.FAKE_PLAYER_AUTO_ATTACKABLE)
-					{
-						player.updatePvPStatus();
-					}
 				}
 				
 				// Mobs in range 1000 see spell
@@ -6393,19 +6360,6 @@ public abstract class Creature extends WorldObject
 						}
 					}
 					
-					if (isFakePlayer()) // fake player attacks player
-					{
-						if (target.isPlayable() || target.isFakePlayer())
-						{
-							final Npc npc = asNpc();
-							if (!npc.isScriptValue(1))
-							{
-								npc.setScriptValue(1); // in combat
-								npc.broadcastInfo(); // update flag status
-								ScriptManager.getInstance().getScript("PvpFlaggingStopTask").notifyEvent("FLAG_CHECK", npc, null);
-							}
-						}
-					}
 				}
 			}
 		}
@@ -7422,11 +7376,6 @@ public abstract class Creature extends WorldObject
 	public void setCursorKeyMovement(boolean value)
 	{
 		_cursorKeyMovement = value;
-	}
-	
-	public List<Item> getFakePlayerDrops()
-	{
-		return _fakePlayerDrops;
 	}
 	
 	public void addBuffInfoTime(BuffInfo info)

@@ -133,10 +133,6 @@ public class NpcAction implements IActionHandler
 						player.updateNotMoveUntil();
 					}
 					
-					if (npc.isFakePlayer() && GeoEngine.getInstance().canSeeTarget(player, npc))
-					{
-						player.getAI().setIntention(Intention.FOLLOW, npc);
-					}
 				}
 			}
 		}

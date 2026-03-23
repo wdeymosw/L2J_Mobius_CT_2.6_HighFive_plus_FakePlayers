@@ -40,7 +40,6 @@ import org.w3c.dom.Node;
 import org.l2jmobius.commons.util.IXmlReader;
 import org.l2jmobius.gameserver.config.GeneralConfig;
 import org.l2jmobius.gameserver.config.RatesConfig;
-import org.l2jmobius.gameserver.config.custom.FakePlayersConfig;
 import org.l2jmobius.gameserver.model.StatSet;
 import org.l2jmobius.gameserver.model.actor.enums.npc.AISkillScope;
 import org.l2jmobius.gameserver.model.actor.enums.npc.DropType;
@@ -347,43 +346,6 @@ public class NpcData implements IXmlReader
 									set.set("canBeSown", parseBoolean(attrs, "canBeSown"));
 									break;
 								}
-								case "fakeplayer":
-								{
-									set.set("fakePlayer", true);
-									set.set("classId", parseInteger(attrs, "classId", 1));
-									set.set("hair", parseInteger(attrs, "hair", 1));
-									set.set("hairColor", parseInteger(attrs, "hairColor", 1));
-									set.set("face", parseInteger(attrs, "face", 1));
-									set.set("nameColor", parseInteger(attrs, "nameColor", 0xFFFFFF));
-									set.set("titleColor", parseInteger(attrs, "titleColor", 0xECF9A2));
-									set.set("equipHead", parseInteger(attrs, "equipHead", 0));
-									set.set("equipRHand", parseInteger(attrs, "equipRHand", 0)); // Or dual hand.
-									set.set("equipLHand", parseInteger(attrs, "equipLHand", 0));
-									set.set("equipGloves", parseInteger(attrs, "equipGloves", 0));
-									set.set("equipChest", parseInteger(attrs, "equipChest", 0));
-									set.set("equipLegs", parseInteger(attrs, "equipLegs", 0));
-									set.set("equipFeet", parseInteger(attrs, "equipFeet", 0));
-									set.set("equipCloak", parseInteger(attrs, "equipCloak", 0));
-									set.set("equipHair", parseInteger(attrs, "equipHair", 0));
-									set.set("equipHair2", parseInteger(attrs, "equipHair2", 0));
-									set.set("agathionId", parseInteger(attrs, "agathionId", 0));
-									set.set("weaponEnchantLevel", parseInteger(attrs, "weaponEnchantLevel", 0));
-									set.set("armorEnchantLevel", parseInteger(attrs, "armorEnchantLevel", 0));
-									set.set("fishing", parseBoolean(attrs, "fishing", false));
-									set.set("baitLocationX", parseInteger(attrs, "baitLocationX", 0));
-									set.set("baitLocationY", parseInteger(attrs, "baitLocationY", 0));
-									set.set("baitLocationZ", parseInteger(attrs, "baitLocationZ", 0));
-									set.set("recommends", parseInteger(attrs, "recommends", 0));
-									set.set("nobleLevel", parseInteger(attrs, "nobleLevel", 0));
-									set.set("hero", parseBoolean(attrs, "hero", false));
-									set.set("clanId", parseInteger(attrs, "clanId", 0));
-									set.set("pledgeStatus", parseInteger(attrs, "pledgeStatus", 0));
-									set.set("sitting", parseBoolean(attrs, "sitting", false));
-									set.set("privateStoreType", parseInteger(attrs, "privateStoreType", 0));
-									set.set("privateStoreMessage", parseString(attrs, "privateStoreMessage", ""));
-									set.set("fakePlayerTalkable", parseBoolean(attrs, "fakePlayerTalkable", true));
-									break;
-								}
 								case "skilllist":
 								{
 									skills = new HashMap<>();
@@ -586,11 +548,6 @@ public class NpcData implements IXmlReader
 									break;
 								}
 							}
-						}
-						
-						if (!FakePlayersConfig.FAKE_PLAYERS_ENABLED && set.getBoolean("fakePlayer", false))
-						{
-							continue;
 						}
 						
 						NpcTemplate template = _npcs.get(npcId);
