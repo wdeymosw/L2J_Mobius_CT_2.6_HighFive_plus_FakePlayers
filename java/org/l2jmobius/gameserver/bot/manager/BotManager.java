@@ -31,7 +31,6 @@ import org.l2jmobius.gameserver.config.custom.BotConfig;
 
 /**
  * Central registry and scheduler for all active bots.
- * <p>
  * Two schedulers run on the same single thread:
  * - tick (300ms): calls ThinkService for every active bot
  * - spawn (configurable): gradually fills the world up to MaxBotsOnline
@@ -40,14 +39,14 @@ public class BotManager
 {
 	private static final Logger LOGGER = Logger.getLogger(BotManager.class.getName());
 
-	private static final String LOAD_BOT_IDS = "SELECT charId FROM characters WHERE is_bot=1";
+	private static final String LOAD_BOTS = "SELECT charId, level FROM characters WHERE is_bot=1";
 	private static final long TICK_INTERVAL_MS = 300;
 
 	/** objectId → active bot */
 	private final Map<Integer, BotInstance> _bots = new ConcurrentHashMap<>();
 
-	/** Pool of all bot character IDs loaded from DB, not yet spawned */
-	private final List<Integer> _availableIds = new ArrayList<>();
+	/** charId → level for bots not yet spawned */
+	private final Map<Integer, Integer> _availablePool = new ConcurrentHashMap<>();
 
 	private final ScheduledExecutorService _scheduler = Executors.newSingleThreadScheduledExecutor(r ->
 	{
@@ -82,7 +81,7 @@ public class BotManager
 	// -------------------------------------------------------------------------
 
 	/**
-	 * Loads bot IDs from DB and starts tick + spawn schedulers.
+	 * Loads bot characters from DB and starts tick + spawn schedulers.
 	 * Call once at server startup (after DB is available).
 	 */
 	public void start()
@@ -93,9 +92,9 @@ public class BotManager
 			return;
 		}
 
-		loadBotIds();
+		loadBots();
 
-		if (_availableIds.isEmpty())
+		if (_availablePool.isEmpty())
 		{
 			LOGGER.warning("BotManager: no bot characters found in DB (is_bot=1). Nothing to spawn.");
 			return;
@@ -107,7 +106,7 @@ public class BotManager
 		// Initial delay 10s so the world finishes loading before first spawn attempt.
 		_spawnTask = _scheduler.scheduleAtFixedRate(this::spawnBatch, 10_000L, spawnIntervalMs, TimeUnit.MILLISECONDS);
 
-		LOGGER.info("BotManager: started. Available bot IDs: " + _availableIds.size() + ", max online: " + BotConfig.MAX_BOTS_ONLINE);
+		LOGGER.info("BotManager: started. Pool size: " + _availablePool.size() + ", max online: " + BotConfig.MAX_BOTS_ONLINE);
 	}
 
 	/** Stops schedulers and removes all active bots cleanly. */
@@ -134,7 +133,6 @@ public class BotManager
 
 	/**
 	 * Spawns a bot from the given profile and registers it.
-	 *
 	 * @param profile bot configuration
 	 * @return the created BotInstance, or null on failure
 	 */
@@ -152,13 +150,13 @@ public class BotManager
 		_bots.put(objectId, bot);
 		ZoneRegistry.getInstance().assignBot(objectId, profile.getZone());
 
-		LOGGER.info("BotManager: spawned " + bot.getPlayer().getName() + " (" + profile.getType() + ") in " + profile.getZone().getName());
+		LOGGER.info("BotManager: spawned " + bot.getPlayer().getName() + " (" + profile.getType() + ") in zone \"" + profile.getZone().getName() + "\"");
 		return bot;
 	}
 
 	/**
 	 * Saves and removes the bot with the given objectId.
-	 *
+	 * Returns the character to the available pool so it can be re-spawned later.
 	 * @param objectId Player objectId
 	 */
 	public void removeBot(int objectId)
@@ -166,10 +164,10 @@ public class BotManager
 		final BotInstance bot = _bots.remove(objectId);
 		if (bot != null)
 		{
+			final int level = bot.getPlayer().getLevel();
 			BotSpawner.removeBot(bot);
 			ZoneRegistry.getInstance().unassignBot(objectId);
-			// Return ID to pool so it can be re-spawned later
-			_availableIds.add(objectId);
+			_availablePool.put(objectId, level);
 		}
 	}
 
@@ -202,36 +200,45 @@ public class BotManager
 	private void spawnBatch()
 	{
 		final int needed = BotConfig.MAX_BOTS_ONLINE - _bots.size();
-		if (needed <= 0)
+		if ((needed <= 0) || _availablePool.isEmpty())
 		{
 			return;
 		}
 
-		final int toSpawn = Math.min(needed, BotConfig.BOTS_SPAWN_BATCH_SIZE);
+		// Snapshot entries to avoid ConcurrentModificationException.
+		final List<Map.Entry<Integer, Integer>> entries = new ArrayList<>(_availablePool.entrySet());
+		final int toSpawn = Math.min(needed, Math.min(BotConfig.BOTS_SPAWN_BATCH_SIZE, entries.size()));
 		int spawned = 0;
 
-		for (int i = 0; (i < _availableIds.size()) && (spawned < toSpawn); i++)
+		for (Map.Entry<Integer, Integer> entry : entries)
 		{
-			final FarmZone zone = ZoneRegistry.getInstance().selectZone();
-			if (zone == null)
+			if (spawned >= toSpawn)
 			{
-				LOGGER.warning("BotManager: all zones full, cannot spawn more bots.");
 				break;
 			}
 
-			final int objectId = _availableIds.remove(i);
+			final int charId = entry.getKey();
+			final int level = entry.getValue();
+
+			final FarmZone zone = ZoneRegistry.getInstance().selectZone(level);
+			if (zone == null)
+			{
+				LOGGER.warning("BotManager: no zone found for level " + level + ", skipping charId=" + charId);
+				continue;
+			}
+
+			_availablePool.remove(charId);
 			final BotType type = pickType();
-			final BotProfile profile = new BotProfile(objectId, type, zone, type == BotType.CORE ? 0.1f : 0.4f);
+			final BotProfile profile = new BotProfile(charId, type, zone, type == BotType.CORE ? 0.1f : 0.4f);
 
 			if (spawnBot(profile) != null)
 			{
 				spawned++;
-				i--; // list shifted after remove
 			}
 			else
 			{
-				// Failed to load — discard this ID
-				LOGGER.warning("BotManager: failed to spawn objectId=" + objectId + ", skipping.");
+				// Failed to load — discard this character.
+				LOGGER.warning("BotManager: failed to spawn charId=" + charId + ", discarding.");
 			}
 		}
 	}
@@ -246,20 +253,20 @@ public class BotManager
 	// DB
 	// -------------------------------------------------------------------------
 
-	private void loadBotIds()
+	private void loadBots()
 	{
 		try (Connection con = DatabaseFactory.getConnection();
-			PreparedStatement ps = con.prepareStatement(LOAD_BOT_IDS);
+			PreparedStatement ps = con.prepareStatement(LOAD_BOTS);
 			ResultSet rs = ps.executeQuery())
 		{
 			while (rs.next())
 			{
-				_availableIds.add(rs.getInt("charId"));
+				_availablePool.put(rs.getInt("charId"), rs.getInt("level"));
 			}
 		}
 		catch (Exception e)
 		{
-			LOGGER.warning("BotManager: failed to load bot IDs — " + e.getMessage());
+			LOGGER.warning("BotManager: failed to load bots from DB — " + e.getMessage());
 		}
 	}
 

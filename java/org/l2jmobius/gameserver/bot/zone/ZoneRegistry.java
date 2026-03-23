@@ -11,14 +11,14 @@ import java.util.concurrent.ConcurrentHashMap;
 
 /**
  * Registry of all available FarmZones.
- * Tracks how many bots are currently assigned to each zone.
- * Provides zone selection logic: least-filled zone wins.
+ * Tracks how many bots are assigned to each zone.
+ * Zone selection filters by bot level first, then picks the least-filled match.
  */
 public class ZoneRegistry
 {
 	private final List<FarmZone> _zones = new ArrayList<>();
 
-	/** objectId → zone mapping for fast lookup when a bot is removed. */
+	/** objectId → zone mapping for fast lookup when a bot is removed */
 	private final Map<Integer, FarmZone> _botZoneMap = new ConcurrentHashMap<>();
 
 	// -------------------------------------------------------------------------
@@ -55,21 +55,29 @@ public class ZoneRegistry
 	}
 
 	/**
-	 * Selects the zone with the lowest fill ratio (currentBots / maxBots)
-	 * that still has capacity. Returns null if all zones are full.
+	 * Selects a zone suitable for a bot of the given level.
+	 * Filters by minLevel..maxLevel, then picks the zone with the lowest fill ratio.
+	 * Returns null if no zone matches or all matching zones are full.
+	 * @param level bot character level
 	 */
-	public FarmZone selectZone()
+	public FarmZone selectZone(int level)
 	{
 		FarmZone best = null;
 		double bestFill = Double.MAX_VALUE;
 
 		for (FarmZone zone : _zones)
 		{
+			if ((level < zone.getMinLevel()) || (level > zone.getMaxLevel()))
+			{
+				continue;
+			}
+
 			final long count = _botZoneMap.values().stream().filter(z -> z == zone).count();
 			if (count >= zone.getMaxBots())
 			{
 				continue;
 			}
+
 			final double fill = (double) count / zone.getMaxBots();
 			if (fill < bestFill)
 			{
@@ -92,28 +100,29 @@ public class ZoneRegistry
 		_botZoneMap.remove(objectId);
 	}
 
-	/** Returns how many bots are currently in the given zone. */
+	/** Returns how many bots are currently assigned to the given zone. */
 	public int getBotCount(FarmZone zone)
 	{
 		return (int) _botZoneMap.values().stream().filter(z -> z == zone).count();
 	}
 
 	// -------------------------------------------------------------------------
-	// Default zones — edit coordinates to match your server's hunting areas
+	// Default zones — city centers by level range
+	// Bots spawn here and search for mobs within TargetService.SEARCH_RADIUS.
+	// Format: name, centerX, centerY, centerZ, radius, minLevel, maxLevel, maxBots
 	// -------------------------------------------------------------------------
 
 	private void registerDefaultZones()
 	{
-		// Format: name, centerX, centerY, centerZ, radius, minLevel, maxLevel, maxBots
-		register(new FarmZone("Execution Grounds",    116782, -178334, -980,   600, 20, 35, 8));
-		register(new FarmZone("Abandoned Camp",       -41107,  211355, -3064,  500, 25, 38, 6));
-		register(new FarmZone("Cruma Tower",           16658,  114570, -3720,  700, 40, 52, 8));
-		register(new FarmZone("Alligator Island",      47458,  186744, -3465,  600, 45, 55, 6));
-		register(new FarmZone("Dragon Valley",         95417,  108608, -3720,  800, 55, 65, 10));
-		register(new FarmZone("Forest of Mirrors",     49572,   66464, -3456,  600, 58, 68, 6));
-		register(new FarmZone("Giants Cave",          115613,   16028, -4895,  700, 62, 72, 8));
-		register(new FarmZone("Hot Springs",           80858,  149249, -3080,  600, 68, 76, 6));
-		register(new FarmZone("Stakato Nest",          82390,  194699, -3712,  700, 70, 78, 8));
-		register(new FarmZone("Monastery of Silence", 116507,    9536, -2200,  600, 74, 80, 6));
+		register(new FarmZone("Talking Island",   -84318,  243572, -3728,  500,  1, 20, 5));
+		register(new FarmZone("Gludin Village",   -81168,  149888, -3043,  500, 15, 30, 5));
+		register(new FarmZone("Gludio",           -14168,  123688, -3119,  500, 25, 40, 5));
+		register(new FarmZone("Dion",              17768,  144624, -3096,  500, 30, 50, 5));
+		register(new FarmZone("Giran",             83400,  147720, -3403,  500, 45, 60, 8));
+		register(new FarmZone("Oren",              82608,   53120, -1506,  500, 50, 65, 5));
+		register(new FarmZone("Aden",             147456,  -55360, -2979,  500, 58, 75, 8));
+		register(new FarmZone("Rune",              43648,  -47744,  -800,  500, 65, 80, 5));
+		register(new FarmZone("Goddard",          -79264,  150400, -3651,  500, 68, 80, 5));
+		register(new FarmZone("Schuttgart",        87360, -142976, -1293,  500, 70, 80, 5));
 	}
 }
