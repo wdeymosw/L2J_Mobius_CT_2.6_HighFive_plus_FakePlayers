@@ -95,22 +95,36 @@ public class ThinkService
 			return;
 		}
 
-		// --- 3. Out of zone? Return. ---
-		if (!bot.isInZone() && (bot.getState() != BotState.RETURNING))
+		// --- 3. Out of zone? Return (skip if in city states). ---
+		if (!bot.isInZone()
+			&& (bot.getState() != BotState.RETURNING)
+			&& (bot.getState() != BotState.BUYING)
+			&& (bot.getState() != BotState.CITY_IDLE))
 		{
 			startReturn(bot);
 			return;
 		}
 
-		// --- 4. "Тупняк" — random mistake, human-like target reset. ---
-		if (shouldMakeMistake())
+		// --- 4. "Тупняк" — random mistake (skip during city phases). ---
+		if ((bot.getState() != BotState.BUYING) && (bot.getState() != BotState.CITY_IDLE) && shouldMakeMistake())
 		{
 			bot.clearTarget();
 			bot.setState(BotState.SEARCHING);
 			return;
 		}
 
-		// --- 5. State machine. ---
+		// --- 5. Out of supplies? Restock before farming. ---
+		if (SupplyService.needsRestock(bot)
+			&& (bot.getState() != BotState.BUYING)
+			&& (bot.getState() != BotState.CITY_IDLE)
+			&& (bot.getState() != BotState.RETURNING))
+		{
+			bot.clearTarget();
+			SupplyService.restock(bot);
+			return;
+		}
+
+		// --- 6. State machine. ---
 		switch (bot.getState())
 		{
 			case DEAD:
@@ -127,6 +141,22 @@ public class ThinkService
 				else if (!bot.isInZone() && !bot.hasPath())
 				{
 					startReturn(bot);
+				}
+				break;
+			}
+			case BUYING:
+			{
+				// Safety: restock() transitions to CITY_IDLE immediately,
+				// so this branch only runs if something went wrong.
+				SupplyService.restock(bot);
+				break;
+			}
+			case CITY_IDLE:
+			{
+				if (now >= bot.getCityIdleEndTime())
+				{
+					LOGGER.info("ThinkService: " + bot.getPlayer().getName() + " leaving city, heading to zone.");
+					bot.setState(BotState.IDLE); // out of zone → next tick triggers RETURNING
 				}
 				break;
 			}

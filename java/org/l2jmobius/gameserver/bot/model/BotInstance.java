@@ -32,6 +32,7 @@ public class BotInstance
 	private long _nextSearchTime = 0;
 	private long _sessionEndTime = 0;    // 0 = no session limit (CORE bots)
 	private long _targetExpireTime = 0;  // 0 = no limit; set when target is acquired
+	private long _cityIdleEndTime = 0;   // when to leave city and head to zone
 
 	// --- Stuck detection ---
 	private int _lastX;
@@ -131,6 +132,16 @@ public class BotInstance
 	public void setNextSearchTime(long time)
 	{
 		_nextSearchTime = time;
+	}
+
+	public long getCityIdleEndTime()
+	{
+		return _cityIdleEndTime;
+	}
+
+	public void setCityIdleEndTime(long time)
+	{
+		_cityIdleEndTime = time;
 	}
 
 	/** Session end time for NOISE bots. 0 means no limit. */

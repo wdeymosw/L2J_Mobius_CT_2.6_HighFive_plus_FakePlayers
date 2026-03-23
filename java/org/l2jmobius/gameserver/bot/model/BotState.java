@@ -22,5 +22,11 @@ public enum BotState
 	DEAD,
 
 	/** Bot is moving back to its zone center after wandering out. */
-	RETURNING
+	RETURNING,
+
+	/** Bot is buying supplies (shots, arrows, potions) — virtual instant action. */
+	BUYING,
+
+	/** Bot is standing idle in a city after buying, before heading to the farming zone. */
+	CITY_IDLE
 }
