@@ -7,6 +7,7 @@ import java.util.logging.Logger;
 
 import org.l2jmobius.gameserver.bot.model.BotInstance;
 import org.l2jmobius.gameserver.bot.model.BotProfile;
+import org.l2jmobius.gameserver.bot.service.EquipService;
 import org.l2jmobius.gameserver.model.actor.Player;
 import org.l2jmobius.gameserver.model.item.enums.ItemProcessType;
 
@@ -50,6 +51,8 @@ public class BotFactory
 			LOGGER.info("BotFactory: gave starter 50k adena to " + player.getName());
 		}
 
-		return new BotInstance(player, profile);
+		final BotInstance bot = new BotInstance(player, profile);
+		EquipService.equip(bot);
+		return bot;
 	}
 }
