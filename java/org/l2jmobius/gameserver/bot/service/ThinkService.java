@@ -279,6 +279,12 @@ public class ThinkService
 			return;
 		}
 
+		// Pick up ground items before looking for a new target.
+		if (LootService.pickupNearest(bot))
+		{
+			return;
+		}
+
 		if (now >= bot.getNextSearchTime())
 		{
 			TargetService.findTarget(bot);
@@ -302,14 +308,14 @@ public class ThinkService
 	// Helpers
 	// -------------------------------------------------------------------------
 
-	/** 3–7% chance per minute, evaluated per tick. */
+	/** @return true with 3–7% probability per minute, evaluated per tick. */
 	private static boolean shouldMakeMistake()
 	{
 		final float chancePerMin = MISTAKE_CHANCE_MIN_PER_MIN + ThreadLocalRandom.current().nextFloat() * (MISTAKE_CHANCE_MAX_PER_MIN - MISTAKE_CHANCE_MIN_PER_MIN);
 		return ThreadLocalRandom.current().nextFloat() < (chancePerMin / 100f / TICKS_PER_MINUTE);
 	}
 
-	/** ~1.5% chance per minute. */
+	/** @return true with ~1.5% probability per minute. */
 	private static boolean shouldPause()
 	{
 		return ThreadLocalRandom.current().nextFloat() < (PAUSE_CHANCE_PER_MIN / 100f / TICKS_PER_MINUTE);
