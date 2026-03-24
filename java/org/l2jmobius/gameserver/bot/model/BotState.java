@@ -28,5 +28,8 @@ public enum BotState
 	BUYING,
 
 	/** Bot is standing idle in a city after buying, before heading to the farming zone. */
-	CITY_IDLE
+	CITY_IDLE,
+
+	/** Bot is selling trash items to an NPC shop — virtual instant action. */
+	SELLING
 }

@@ -99,24 +99,37 @@ public class ThinkService
 		if (!bot.isInZone()
 			&& (bot.getState() != BotState.RETURNING)
 			&& (bot.getState() != BotState.BUYING)
-			&& (bot.getState() != BotState.CITY_IDLE))
+			&& (bot.getState() != BotState.CITY_IDLE)
+			&& (bot.getState() != BotState.SELLING))
 		{
 			startReturn(bot);
 			return;
 		}
 
 		// --- 4. "Тупняк" — random mistake (skip during city phases). ---
-		if ((bot.getState() != BotState.BUYING) && (bot.getState() != BotState.CITY_IDLE) && shouldMakeMistake())
+		if ((bot.getState() != BotState.BUYING) && (bot.getState() != BotState.CITY_IDLE) && (bot.getState() != BotState.SELLING) && shouldMakeMistake())
 		{
 			bot.clearTarget();
 			bot.setState(BotState.SEARCHING);
 			return;
 		}
 
-		// --- 5. Out of supplies? Restock before farming. ---
+		// --- 5a. Inventory full? Sell before anything else. ---
+		if (SellService.needsSell(bot)
+			&& (bot.getState() != BotState.SELLING)
+			&& (bot.getState() != BotState.BUYING)
+			&& (bot.getState() != BotState.CITY_IDLE))
+		{
+			bot.clearTarget();
+			bot.setState(BotState.SELLING);
+			return;
+		}
+
+		// --- 5b. Out of supplies? Restock before farming. ---
 		if (SupplyService.needsRestock(bot)
 			&& (bot.getState() != BotState.BUYING)
 			&& (bot.getState() != BotState.CITY_IDLE)
+			&& (bot.getState() != BotState.SELLING)
 			&& (bot.getState() != BotState.RETURNING))
 		{
 			bot.clearTarget();
@@ -142,6 +155,20 @@ public class ThinkService
 				{
 					startReturn(bot);
 				}
+				break;
+			}
+			case SELLING:
+			{
+				// Sell trash, then immediately restock (shots etc.) and idle.
+				final boolean hasValuables = SellService.sell(bot);
+				if (hasValuables)
+				{
+					// TODO Step 9: open private shop for A/S gear and recipes.
+					LOGGER.info("ThinkService: " + bot.getPlayer().getName() + " has valuables — private shop TBD.");
+				}
+				// After selling: equip any looted upgrades, then restock.
+				EquipService.equip(bot);
+				SupplyService.restock(bot); // transitions to CITY_IDLE
 				break;
 			}
 			case BUYING:
