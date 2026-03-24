@@ -36,6 +36,8 @@ public class BotConfig
 	public static int BOT_CORE_PERCENT;
 	public static double BOT_XP_MULTIPLIER;
 	public static double BOT_DROP_MULTIPLIER;
+	public static int BOT_CITY_IDLE_MIN_SECONDS;
+	public static int BOT_CITY_IDLE_MAX_SECONDS;
 
 	public static void load()
 	{
@@ -47,5 +49,7 @@ public class BotConfig
 		BOT_CORE_PERCENT = config.getInt("BotCorePercent", 30);
 		BOT_XP_MULTIPLIER = config.getDouble("BotXpMultiplier", 0.1);
 		BOT_DROP_MULTIPLIER = config.getDouble("BotDropMultiplier", 0.1);
+		BOT_CITY_IDLE_MIN_SECONDS = config.getInt("BotCityIdleMinSeconds", 300);
+		BOT_CITY_IDLE_MAX_SECONDS = config.getInt("BotCityIdleMaxSeconds", 600);
 	}
 }

@@ -9,6 +9,7 @@ import java.util.logging.Logger;
 import org.l2jmobius.gameserver.bot.model.BotInstance;
 import org.l2jmobius.gameserver.bot.model.BotRole;
 import org.l2jmobius.gameserver.bot.model.BotState;
+import org.l2jmobius.gameserver.config.custom.BotConfig;
 import org.l2jmobius.gameserver.model.actor.Player;
 import org.l2jmobius.gameserver.model.item.enums.ItemGrade;
 import org.l2jmobius.gameserver.model.item.instance.Item;
@@ -43,9 +44,7 @@ public class SupplyService
 	/** Target quantity to maintain after restocking. */
 	private static final long RESTOCK_TARGET = 3000;
 
-	/** City idle duration: 5–10 minutes in ms. */
-	private static final long CITY_IDLE_MIN_MS = 5 * 60 * 1000L;
-	private static final long CITY_IDLE_MAX_MS = 10 * 60 * 1000L;
+	// City idle duration is read from BotConfig at runtime (BotCityIdleMinSeconds / BotCityIdleMaxSeconds).
 
 	private SupplyService()
 	{
@@ -112,7 +111,9 @@ public class SupplyService
 		}
 
 		// Enter city idle phase regardless — even if adena ran out.
-		final long idleMs = CITY_IDLE_MIN_MS + ThreadLocalRandom.current().nextLong(CITY_IDLE_MAX_MS - CITY_IDLE_MIN_MS);
+		final long minMs = BotConfig.BOT_CITY_IDLE_MIN_SECONDS * 1000L;
+		final long maxMs = BotConfig.BOT_CITY_IDLE_MAX_SECONDS * 1000L;
+		final long idleMs = minMs + ThreadLocalRandom.current().nextLong(Math.max(1, maxMs - minMs));
 		bot.setCityIdleEndTime(System.currentTimeMillis() + idleMs);
 		bot.setState(BotState.CITY_IDLE);
 		LOGGER.info("SupplyService: " + player.getName() + " entering city idle for " + (idleMs / 60000) + " min.");
