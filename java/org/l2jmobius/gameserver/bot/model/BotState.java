@@ -4,32 +4,41 @@
 package org.l2jmobius.gameserver.bot.model;
 
 /**
- * Finite state machine states for a BotInstance.
- * ThinkService drives transitions between these states each tick.
+ * The three top-level operating modes of a bot, plus DEAD.
+ * <p>
+ * <b>TRAVEL</b>  — bot is walking to a fixed destination (zone, city, etc.).<br>
+ * <b>FARM_MOB</b> — bot is farming: searching for targets and attacking them.<br>
+ * <b>CITY_IDLE</b> — bot is resting in a city after selling/buying.<br>
+ * <b>DEAD</b>    — bot died and is waiting to revive.<br>
+ * <p>
+ * FARM_MOB uses two internal sub-phases tracked by the same field:
+ * {@link #SEARCHING} and {@link #ATTACKING}.
  */
 public enum BotState
 {
-	/** Bot is idle, waiting for the next think cycle. */
-	IDLE,
+	// -----------------------------------------------------------------------
+	// Main modes
+	// -----------------------------------------------------------------------
 
-	/** Bot is searching for a target within its zone. */
-	SEARCHING,
+	/** Bot is moving to {@code _moveDestination}; on arrival executes {@code _travelAction}. */
+	TRAVEL,
 
-	/** Bot is actively attacking a target. */
-	ATTACKING,
+	/** Bot is in the farming loop — see sub-phases below. */
+	FARM_MOB,
 
-	/** Bot died and is waiting for revive. */
-	DEAD,
-
-	/** Bot is moving back to its zone center after wandering out. */
-	RETURNING,
-
-	/** Bot is buying supplies (shots, arrows, potions) — virtual instant action. */
-	BUYING,
-
-	/** Bot is standing idle in a city after buying, before heading to the farming zone. */
+	/** Bot is resting in a city after a sell/buy trip. */
 	CITY_IDLE,
 
-	/** Bot is selling trash items to an NPC shop — virtual instant action. */
-	SELLING
+	/** Bot died and is waiting for the revive timer. */
+	DEAD,
+
+	// -----------------------------------------------------------------------
+	// FARM_MOB sub-phases (internal — ThinkService transitions between these)
+	// -----------------------------------------------------------------------
+
+	/** Bot is looking for the next target within its zone. */
+	SEARCHING,
+
+	/** Bot is actively attacking its current target. */
+	ATTACKING,
 }

@@ -10,13 +10,14 @@ import org.l2jmobius.gameserver.ai.Intention;
 import org.l2jmobius.gameserver.bot.model.BotInstance;
 import org.l2jmobius.gameserver.bot.model.BotState;
 import org.l2jmobius.gameserver.bot.model.BotType;
+import org.l2jmobius.gameserver.bot.model.TravelAction;
 import org.l2jmobius.gameserver.model.actor.Creature;
 
 /**
- * Drives the bot's state machine each scheduler tick.
+ * Drives the bot's three-mode state machine each scheduler tick.
  * <p>
- * Called by BotManager for every active bot. Decides what to do based on
- * current state, then delegates actions to TargetService / CombatService.
+ * Modes: {@link BotState#TRAVEL}, {@link BotState#FARM_MOB}, {@link BotState#CITY_IDLE}.<br>
+ * FARM_MOB has two internal sub-phases: {@link BotState#SEARCHING} and {@link BotState#ATTACKING}.<br>
  * No game internals are accessed here — only BotInstance API and service calls.
  */
 public class ThinkService
@@ -42,12 +43,8 @@ public class ThinkService
 	/** Duration of a human-like combat pause (ms). */
 	private static final long PAUSE_DURATION_MIN = 1000;
 	private static final long PAUSE_DURATION_MAX = 3000;
-	/** Pause chance per minute (%). ~1% means roughly once every 100 minutes of combat. */
+	/** Pause chance per minute (%). */
 	private static final float PAUSE_CHANCE_PER_MIN = 1.5f;
-
-	// --- Stuck detection ---
-	private static final long STUCK_CHECK_INTERVAL = 5000;
-	private static final int STUCK_MIN_DISTANCE = 50;
 
 	// --- Mistake ---
 	/** "Тупняк" chance range per minute (%). Randomised per check to vary between bots. */
@@ -56,6 +53,9 @@ public class ThinkService
 
 	/** Approximate ticks per minute at ~325ms average tick interval. */
 	private static final float TICKS_PER_MINUTE = 185f;
+
+	/** Arrival radius for TRAVEL destinations (units). */
+	private static final int TRAVEL_ARRIVAL_RADIUS = 200;
 
 	private ThinkService()
 	{
@@ -91,49 +91,47 @@ public class ThinkService
 		// --- 2. Session expired? (NOISE bots) ---
 		if (bot.isSessionExpired())
 		{
-			bot.setState(BotState.IDLE);
+			bot.setState(BotState.FARM_MOB);
 			return;
 		}
 
-		// --- 3. Out of zone? Return (skip if in city states). ---
+		// --- 3. Out of zone? Start travel back (skip during city/travel states). ---
+		final BotState state = bot.getState();
 		if (!bot.isInZone()
-			&& (bot.getState() != BotState.RETURNING)
-			&& (bot.getState() != BotState.BUYING)
-			&& (bot.getState() != BotState.CITY_IDLE)
-			&& (bot.getState() != BotState.SELLING))
+			&& (state != BotState.TRAVEL)
+			&& (state != BotState.CITY_IDLE))
 		{
-			startReturn(bot);
+			startTravel(bot, bot.getZone().getCenter(), TravelAction.RETURN_TO_ZONE);
 			return;
 		}
 
-		// --- 4. "Тупняк" — random mistake (skip during city phases). ---
-		if ((bot.getState() != BotState.BUYING) && (bot.getState() != BotState.CITY_IDLE) && (bot.getState() != BotState.SELLING) && shouldMakeMistake())
+		// --- 4. "Тупняк" — random mistake (skip during city/travel). ---
+		if ((state != BotState.TRAVEL)
+			&& (state != BotState.CITY_IDLE)
+			&& shouldMakeMistake())
 		{
 			bot.clearTarget();
 			bot.setState(BotState.SEARCHING);
 			return;
 		}
 
-		// --- 5a. Inventory full? Sell before anything else. ---
+		// --- 5a. Inventory full? Head to city to sell. ---
 		if (SellService.needsSell(bot)
-			&& (bot.getState() != BotState.SELLING)
-			&& (bot.getState() != BotState.BUYING)
-			&& (bot.getState() != BotState.CITY_IDLE))
+			&& (state != BotState.TRAVEL)
+			&& (state != BotState.CITY_IDLE))
 		{
 			bot.clearTarget();
-			bot.setState(BotState.SELLING);
+			startTravel(bot, bot.getZone().getHomeLocation(), TravelAction.SELL);
 			return;
 		}
 
-		// --- 5b. Out of supplies? Restock before farming. ---
+		// --- 5b. Out of supplies? Head to city to restock. ---
 		if (SupplyService.needsRestock(bot)
-			&& (bot.getState() != BotState.BUYING)
-			&& (bot.getState() != BotState.CITY_IDLE)
-			&& (bot.getState() != BotState.SELLING)
-			&& (bot.getState() != BotState.RETURNING))
+			&& (state != BotState.TRAVEL)
+			&& (state != BotState.CITY_IDLE))
 		{
 			bot.clearTarget();
-			SupplyService.restock(bot);
+			startTravel(bot, bot.getZone().getHomeLocation(), TravelAction.BUY);
 			return;
 		}
 
@@ -142,40 +140,12 @@ public class ThinkService
 		{
 			case DEAD:
 			{
-				bot.setState(BotState.IDLE);
+				bot.setState(BotState.SEARCHING);
 				break;
 			}
-			case RETURNING:
+			case TRAVEL:
 			{
-				if (PathService.tickPath(bot) && bot.isInZone())
-				{
-					bot.setState(BotState.IDLE);
-				}
-				else if (!bot.isInZone() && !bot.hasPath())
-				{
-					startReturn(bot);
-				}
-				break;
-			}
-			case SELLING:
-			{
-				// Sell trash, then immediately restock (shots etc.) and idle.
-				final boolean hasValuables = SellService.sell(bot);
-				if (hasValuables)
-				{
-					// TODO Step 9: open private shop for A/S gear and recipes.
-					LOGGER.info("ThinkService: " + bot.getPlayer().getName() + " has valuables — private shop TBD.");
-				}
-				// After selling: equip any looted upgrades, then restock.
-				EquipService.equip(bot);
-				SupplyService.restock(bot); // transitions to CITY_IDLE
-				break;
-			}
-			case BUYING:
-			{
-				// Safety: restock() transitions to CITY_IDLE immediately,
-				// so this branch only runs if something went wrong.
-				SupplyService.restock(bot);
+				handleTravel(bot, now);
 				break;
 			}
 			case CITY_IDLE:
@@ -183,7 +153,7 @@ public class ThinkService
 				if (now >= bot.getCityIdleEndTime())
 				{
 					LOGGER.info("ThinkService: " + bot.getPlayer().getName() + " leaving city, heading to zone.");
-					bot.setState(BotState.IDLE); // out of zone → next tick triggers RETURNING
+					startTravel(bot, bot.getZone().getCenter(), TravelAction.RETURN_TO_ZONE);
 				}
 				break;
 			}
@@ -192,7 +162,7 @@ public class ThinkService
 				handleAttacking(bot, now);
 				break;
 			}
-			case IDLE:
+			case FARM_MOB:
 			case SEARCHING:
 			default:
 			{
@@ -222,20 +192,75 @@ public class ThinkService
 		if (now >= bot.getNextSearchTime())
 		{
 			bot.getPlayer().doRevive();
-			bot.setState(BotState.RETURNING);
-			PathService.navigateTo(bot, bot.getZone().getX(), bot.getZone().getY(), bot.getZone().getZ());
+			bot.getPlayer().setRunning();
+			startTravel(bot, bot.getZone().getCenter(), TravelAction.RETURN_TO_ZONE);
 			LOGGER.info("ThinkService: " + bot.getPlayer().getName() + " revived, returning to zone");
 		}
 	}
 
-	private static void startReturn(BotInstance bot)
+	/**
+	 * Starts TRAVEL mode toward {@code dest}, executing {@code action} on arrival.
+	 *
+	 * @param bot    the bot to move
+	 * @param dest   destination location
+	 * @param action what to do when the destination is reached
+	 */
+	private static void startTravel(BotInstance bot, org.l2jmobius.gameserver.model.Location dest, TravelAction action)
 	{
-		bot.setState(BotState.RETURNING);
-		bot.clearTarget();
-		final int cx = bot.getZone().getX();
-		final int cy = bot.getZone().getY();
-		final int cz = bot.getZone().getZ();
-		PathService.navigateTo(bot, cx, cy, cz);
+		bot.setState(BotState.TRAVEL);
+		bot.clearPath();
+		bot.setMoveDestination(dest);
+		bot.setTravelAction(action);
+		LOGGER.info("ThinkService: " + bot.getPlayer().getName() + " → TRAVEL (" + action + ") to " + bot.getZone().getName());
+	}
+
+	/**
+	 * Handles the TRAVEL state: walks toward destination each tick;
+	 * on arrival executes the registered {@link TravelAction}.
+	 */
+	private static void handleTravel(BotInstance bot, long now)
+	{
+		final org.l2jmobius.gameserver.model.Location dest = bot.getMoveDestination();
+		if (dest != null)
+		{
+			PathService.thinkMove(bot, dest.getX(), dest.getY(), dest.getZ());
+		}
+
+		if (!bot.hasReachedDestination(TRAVEL_ARRIVAL_RADIUS))
+		{
+			return;
+		}
+
+		// Arrived — execute the action.
+		bot.setMoveDestination(null);
+		switch (bot.getTravelAction())
+		{
+			case SELL:
+			{
+				final boolean hasValuables = SellService.sell(bot);
+				if (hasValuables)
+				{
+					// TODO Step 9: open private shop for A/S gear and recipes.
+					LOGGER.info("ThinkService: " + bot.getPlayer().getName() + " has valuables — private shop TBD.");
+				}
+				EquipService.equip(bot);
+				SupplyService.restock(bot);
+				onEnterCityIdle(bot);
+				break;
+			}
+			case BUY:
+			{
+				SupplyService.restock(bot);
+				onEnterCityIdle(bot);
+				break;
+			}
+			case RETURN_TO_ZONE:
+			default:
+			{
+				bot.setState(BotState.SEARCHING);
+				break;
+			}
+		}
 	}
 
 	private static void handleAttacking(BotInstance bot, long now)
@@ -258,29 +283,6 @@ public class ThinkService
 			return;
 		}
 
-		// Stuck detection: bot hasn't moved enough in STUCK_CHECK_INTERVAL.
-		if ((now - bot.getLastMoveCheckTime()) > STUCK_CHECK_INTERVAL)
-		{
-			final int dx = bot.getPlayer().getX() - bot.getLastX();
-			final int dy = bot.getPlayer().getY() - bot.getLastY();
-			if (Math.sqrt(dx * dx + dy * dy) < STUCK_MIN_DISTANCE)
-			{
-				final Creature stuckTarget = bot.getTarget();
-				if (stuckTarget != null)
-				{
-					// Try to path around the obstacle.
-					PathService.navigateTo(bot, stuckTarget.getX(), stuckTarget.getY(), stuckTarget.getZ());
-				}
-				else
-				{
-					bot.setState(BotState.SEARCHING);
-				}
-				bot.updatePositionSnapshot();
-				return;
-			}
-			bot.updatePositionSnapshot();
-		}
-
 		// Occasional human-like pause (1–3s, ~1.5%/min chance).
 		if (shouldPause())
 		{
@@ -289,6 +291,9 @@ public class ThinkService
 			bot.getPlayer().getAI().setIntention(Intention.IDLE);
 			return;
 		}
+
+		// Move toward target (geodata-aware, with A* fallback and anti-stuck).
+		PathService.thinkMove(bot, target.getX(), target.getY(), target.getZ());
 
 		// Try a damage skill first; fall back to autoattack if nothing is ready.
 		if (!SkillService.tryDamageSkill(bot))
@@ -302,7 +307,7 @@ public class ThinkService
 		// NOISE bots don't hunt — handled separately.
 		if (bot.getProfile().getType() == BotType.NOISE)
 		{
-			bot.setState(BotState.IDLE);
+			bot.setState(BotState.FARM_MOB);
 			return;
 		}
 
@@ -326,7 +331,11 @@ public class ThinkService
 			}
 			else
 			{
-				LOGGER.info("ThinkService: " + bot.getPlayer().getName() + " found no targets in range");
+				// No target found — wander to a random spot in the zone to find mobs.
+				CombatService.moveTo(bot, bot.getZone().randomPointInside());
+				// Wait 3–6s before searching again (time to reach the new spot).
+				final long wanderDelay = 3000 + ThreadLocalRandom.current().nextLong(3000);
+				bot.setNextSearchTime(now + wanderDelay);
 			}
 		}
 	}
@@ -334,6 +343,20 @@ public class ThinkService
 	// -------------------------------------------------------------------------
 	// Helpers
 	// -------------------------------------------------------------------------
+
+	/**
+	 * Called once when the bot enters CITY_IDLE (after selling or buying).
+	 * Good time to give new skills — happens at most a few times per hour.
+	 *
+	 * @param bot the bot that just entered city idle
+	 */
+	private static void onEnterCityIdle(BotInstance bot)
+	{
+		if (bot.hasLeveledUp())
+		{
+			SkillService.setup(bot);
+		}
+	}
 
 	/** @return true with 3–7% probability per minute, evaluated per tick. */
 	private static boolean shouldMakeMistake()

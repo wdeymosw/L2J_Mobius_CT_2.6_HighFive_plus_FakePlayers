@@ -32,6 +32,7 @@ public class BotConfig
 	public static boolean BOTS_ENABLED;
 	public static int MAX_BOTS_ONLINE;
 	public static int BOTS_SPAWN_BATCH_SIZE;
+	public static int BOTS_INITIAL_DELAY_SECONDS;
 	public static int BOTS_SPAWN_INTERVAL_SECONDS;
 	public static int BOT_CORE_PERCENT;
 	public static double BOT_XP_MULTIPLIER;
@@ -45,6 +46,7 @@ public class BotConfig
 		BOTS_ENABLED = config.getBoolean("EnableBots", false);
 		MAX_BOTS_ONLINE = config.getInt("MaxBotsOnline", 50);
 		BOTS_SPAWN_BATCH_SIZE = config.getInt("BotsSpawnBatchSize", 3);
+		BOTS_INITIAL_DELAY_SECONDS = config.getInt("BotsInitialDelaySeconds", 1);
 		BOTS_SPAWN_INTERVAL_SECONDS = config.getInt("BotsSpawnIntervalSeconds", 60);
 		BOT_CORE_PERCENT = config.getInt("BotCorePercent", 30);
 		BOT_XP_MULTIPLIER = config.getDouble("BotXpMultiplier", 0.1);

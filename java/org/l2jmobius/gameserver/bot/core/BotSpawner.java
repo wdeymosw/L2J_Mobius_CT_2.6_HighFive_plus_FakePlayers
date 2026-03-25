@@ -47,6 +47,24 @@ public class BotSpawner
 	}
 
 	/**
+	 * Moves the bot to the given coordinates without requiring a client.
+	 * Uses decayMe → setXYZ → spawnMe so the world region is updated correctly.
+	 *
+	 * @param bot the bot to move
+	 * @param x   destination X
+	 * @param y   destination Y
+	 * @param z   destination Z
+	 */
+	public static void teleportBot(BotInstance bot, int x, int y, int z)
+	{
+		final Player player = bot.getPlayer();
+		player.decayMe();
+		player.setXYZ(x, y, z);
+		player.spawnMe(x, y, z);
+		LOGGER.info("BotSpawner: teleported " + player.getName() + " to " + x + "," + y + "," + z);
+	}
+
+	/**
 	 * Saves the bot's data and removes it from the world.
 	 * Safe to call even if the bot is already offline.
 	 *

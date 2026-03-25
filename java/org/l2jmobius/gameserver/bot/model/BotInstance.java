@@ -7,6 +7,7 @@ import java.util.List;
 
 import org.l2jmobius.gameserver.bot.zone.FarmZone;
 import org.l2jmobius.gameserver.geoengine.pathfinding.GeoLocation;
+import org.l2jmobius.gameserver.model.Location;
 import org.l2jmobius.gameserver.model.actor.Creature;
 import org.l2jmobius.gameserver.model.actor.Player;
 
@@ -34,6 +35,9 @@ public class BotInstance
 	private long _targetExpireTime = 0;  // 0 = no limit; set when target is acquired
 	private long _cityIdleEndTime = 0;   // when to leave city and head to zone
 
+	// --- Level tracking ---
+	private int _lastKnownLevel;
+
 	// --- Stuck detection ---
 	private int _lastX;
 	private int _lastY;
@@ -42,12 +46,19 @@ public class BotInstance
 	// --- Pathfinding ---
 	private List<GeoLocation> _currentPath = null;
 	private int _pathIndex = 0;
+	private long _lastPathTime = 0;
+	private Location _lastTargetPos = null;
+
+	// --- TRAVEL mode ---
+	private Location _moveDestination = null;
+	private TravelAction _travelAction = TravelAction.RETURN_TO_ZONE;
 
 	public BotInstance(Player player, BotProfile profile)
 	{
 		_player = player;
 		_profile = profile;
 		_role = RoleResolver.resolve(player.getActiveClass());
+		_lastKnownLevel = player.getLevel();
 		_lastX = player.getX();
 		_lastY = player.getY();
 		// Initialize to now so stuck detection doesn't fire on the very first tick.
@@ -211,11 +222,80 @@ public class BotInstance
 		_pathIndex = 0;
 	}
 
+	public long getLastPathTime()
+	{
+		return _lastPathTime;
+	}
+
+	public void setLastPathTime(long time)
+	{
+		_lastPathTime = time;
+	}
+
+	public Location getLastTargetPos()
+	{
+		return _lastTargetPos;
+	}
+
+	public void setLastTargetPos(Location pos)
+	{
+		_lastTargetPos = pos;
+	}
+
+	public Location getMoveDestination()
+	{
+		return _moveDestination;
+	}
+
+	public void setMoveDestination(Location dest)
+	{
+		_moveDestination = dest;
+	}
+
+	public TravelAction getTravelAction()
+	{
+		return _travelAction;
+	}
+
+	public void setTravelAction(TravelAction action)
+	{
+		_travelAction = action;
+	}
+
+	/** Returns true if the bot is within {@code radius} units of its move destination. */
+	public boolean hasReachedDestination(int radius)
+	{
+		if (_moveDestination == null)
+		{
+			return true;
+		}
+		final int dx = _player.getX() - _moveDestination.getX();
+		final int dy = _player.getY() - _moveDestination.getY();
+		return (dx * dx + dy * dy) <= (radius * radius);
+	}
+
 	public void updatePositionSnapshot()
 	{
 		_lastX = _player.getX();
 		_lastY = _player.getY();
 		_lastMoveCheckTime = System.currentTimeMillis();
+	}
+
+	// --- Level tracking ---
+
+	/**
+	 * Returns true if the player's level has increased since the last call,
+	 * and updates the cached level. Called once per think tick.
+	 */
+	public boolean hasLeveledUp()
+	{
+		final int current = _player.getLevel();
+		if (current > _lastKnownLevel)
+		{
+			_lastKnownLevel = current;
+			return true;
+		}
+		return false;
 	}
 
 	// --- Convenience delegates (thin wrappers — no game logic here) ---
@@ -228,6 +308,15 @@ public class BotInstance
 	public boolean isInZone()
 	{
 		return _profile.getZone().contains(_player.getX(), _player.getY());
+	}
+
+	/** Returns true if the bot is close enough to the city home point to buy/sell. */
+	public boolean isAtHome()
+	{
+		final org.l2jmobius.gameserver.model.Location home = _profile.getZone().getHomeLocation();
+		final int dx = _player.getX() - home.getX();
+		final int dy = _player.getY() - home.getY();
+		return (dx * dx + dy * dy) <= (300 * 300);
 	}
 
 	public float getMistakeRate()

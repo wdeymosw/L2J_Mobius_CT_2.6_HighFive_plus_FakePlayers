@@ -110,13 +110,12 @@ public class SupplyService
 			LOGGER.info("SupplyService: " + player.getName() + " restocked consumables.");
 		}
 
-		// Enter city idle phase regardless — even if adena ran out.
 		final long minMs = BotConfig.BOT_CITY_IDLE_MIN_SECONDS * 1000L;
 		final long maxMs = BotConfig.BOT_CITY_IDLE_MAX_SECONDS * 1000L;
 		final long idleMs = minMs + ThreadLocalRandom.current().nextLong(Math.max(1, maxMs - minMs));
 		bot.setCityIdleEndTime(System.currentTimeMillis() + idleMs);
 		bot.setState(BotState.CITY_IDLE);
-		LOGGER.info("SupplyService: " + player.getName() + " entering city idle for " + (idleMs / 60000) + " min.");
+		LOGGER.info("SupplyService: " + player.getName() + " heading to city, idle for " + (idleMs / 60000) + " min.");
 	}
 
 	// -------------------------------------------------------------------------
@@ -164,12 +163,13 @@ public class SupplyService
 
 	/**
 	 * Returns the appropriate shot item ID for the bot's role and equipped weapon grade.
+	 * Public so other services (e.g. SkillService) can enable auto-shot for the same item.
 	 * Returns 0 if no shot applies (e.g. unarmed or unknown role).
 	 *
 	 * @param bot the bot
 	 * @return shot item ID, or 0
 	 */
-	private static int getShotId(BotInstance bot)
+	public static int getShotId(BotInstance bot)
 	{
 		final int gradeIdx = weaponGradeIndex(bot);
 		if (gradeIdx < 0)

@@ -105,6 +105,7 @@ public class AdminEditChar implements IAdminCommandHandler
 		"admin_unsummon",
 		"admin_summon_setlvl",
 		"admin_show_pet_inv",
+		"admin_show_player_inv",
 		"admin_partyinfo",
 		"admin_setnoble",
 		"admin_set_hp",
@@ -831,6 +832,31 @@ public class AdminEditChar implements IAdminCommandHandler
 			else
 			{
 				activeChar.sendSysMessage("Usable only with Pets");
+			}
+		}
+		else if (command.startsWith("admin_show_player_inv"))
+		{
+			Player target = null;
+			try
+			{
+				final String val = command.substring(22).trim();
+				target = World.getInstance().getPlayer(val);
+			}
+			catch (Exception e)
+			{
+				// ignore — fall back to targeted player
+			}
+			if ((target == null) && (activeChar.getTarget() != null) && activeChar.getTarget().isPlayer())
+			{
+				target = activeChar.getTarget().asPlayer();
+			}
+			if (target != null)
+			{
+				activeChar.sendPacket(new GMViewItemList(target));
+			}
+			else
+			{
+				activeChar.sendSysMessage("Target a player or provide a name: //show_player_inv <name>");
 			}
 		}
 		else if (command.startsWith("admin_partyinfo"))

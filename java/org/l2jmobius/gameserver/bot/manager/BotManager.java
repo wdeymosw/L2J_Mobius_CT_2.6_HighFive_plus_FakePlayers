@@ -103,8 +103,8 @@ public class BotManager
 		_tickTask = _scheduler.scheduleAtFixedRate(this::tick, TICK_INTERVAL_MS, TICK_INTERVAL_MS, TimeUnit.MILLISECONDS);
 
 		final long spawnIntervalMs = BotConfig.BOTS_SPAWN_INTERVAL_SECONDS * 1000L;
-		// Initial delay 10s so the world finishes loading before first spawn attempt.
-		_spawnTask = _scheduler.scheduleAtFixedRate(this::spawnBatch, 10_000L, spawnIntervalMs, TimeUnit.MILLISECONDS);
+		final long initialDelayMs = BotConfig.BOTS_INITIAL_DELAY_SECONDS * 1000L;
+		_spawnTask = _scheduler.scheduleAtFixedRate(this::spawnBatch, initialDelayMs, spawnIntervalMs, TimeUnit.MILLISECONDS);
 
 		LOGGER.info("BotManager: started. Pool size: " + _availablePool.size() + ", max online: " + BotConfig.MAX_BOTS_ONLINE);
 	}

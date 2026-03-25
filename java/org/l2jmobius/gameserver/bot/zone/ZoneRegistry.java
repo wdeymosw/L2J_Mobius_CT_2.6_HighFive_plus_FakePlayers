@@ -114,15 +114,18 @@ public class ZoneRegistry
 
 	private void registerDefaultZones()
 	{
-		register(new FarmZone("Talking Island",   -84318,  243572, -3728,  500,  1, 20, 5));
-		register(new FarmZone("Gludin Village",   -81168,  149888, -3043,  500, 15, 30, 5));
-		register(new FarmZone("Gludio",           -14168,  123688, -3119,  500, 25, 40, 5));
-		register(new FarmZone("Dion",              17768,  144624, -3096,  500, 30, 50, 5));
-		register(new FarmZone("Giran",             83400,  147720, -3403,  500, 45, 60, 8));
-		register(new FarmZone("Oren",              82608,   53120, -1506,  500, 50, 65, 5));
-		register(new FarmZone("Aden",             147456,  -55360, -2979,  500, 58, 75, 8));
-		register(new FarmZone("Rune",              43648,  -47744,  -800,  500, 65, 80, 5));
-		register(new FarmZone("Goddard",          -79264,  150400, -3651,  500, 68, 80, 5));
-		register(new FarmZone("Schuttgart",        87360, -142976, -1293,  500, 70, 80, 5));
+		// Format: name, farmX, farmY, farmZ, farmRadius, homeX (city), homeY, homeZ, minLevel, maxLevel, maxBots
+		// Home = city shop NPC area. Farm = actual mob spawn center (from XML spawn data).
+		// Distance doesn't matter — bots teleport between home and farm.
+		register(new FarmZone("Talking Island", -82000,  255000, -3500, 1000, -84318,  243572, -3728,  1, 20, 5)); // beach mobs near TI
+		register(new FarmZone("Gludin Village", -99404,  102154, -3342, 1000, -81168,  149888, -3043, 15, 30, 5)); // Turek Orcs
+		register(new FarmZone("Gludio",          28818,  135149, -2889, 1000, -14168,  123688, -3119, 25, 40, 5)); // Plains of Dion (low end)
+		register(new FarmZone("Dion",            39000,  146000, -3461, 1000,  17768,  144624, -3096, 30, 50, 5)); // Execution Grounds
+		register(new FarmZone("Giran",           79000,  121000, -2220, 1000,  83400,  147720, -3403, 45, 60, 8)); // Breka's Stronghold
+		register(new FarmZone("Oren",            61000,   11000, -3668, 1000,  82608,   53120, -1506, 50, 65, 5)); // Sea of Spores
+		register(new FarmZone("Aden",           135143,     841, -3872, 1000, 147456,  -55360, -2979, 58, 75, 8)); // Plains of Glory
+		register(new FarmZone("Rune",           176140,  -23000, -3256, 1000,  43648,  -47744,  -800, 65, 80, 5)); // Fields of Massacre
+		register(new FarmZone("Goddard",        147736, -112290, -2238, 1000, -79264,  150400, -3651, 68, 80, 5)); // Hot Springs
+		register(new FarmZone("Schuttgart",     167785,  -49088, -3421, 1000,  87360, -142976, -1293, 70, 80, 5)); // Wall of Argos
 	}
 }

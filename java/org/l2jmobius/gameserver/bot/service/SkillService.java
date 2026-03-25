@@ -3,6 +3,8 @@
  */
 package org.l2jmobius.gameserver.bot.service;
 
+import java.util.logging.Logger;
+
 import org.l2jmobius.gameserver.bot.model.BotInstance;
 import org.l2jmobius.gameserver.model.actor.Player;
 import org.l2jmobius.gameserver.model.skill.Skill;
@@ -25,6 +27,8 @@ import org.l2jmobius.gameserver.model.skill.targets.TargetType;
  */
 public class SkillService
 {
+	private static final Logger LOGGER = Logger.getLogger(SkillService.class.getName());
+
 	/** Target types that indicate an offensive single/area skill we can use in combat. */
 	private static final TargetType[] COMBAT_TARGET_TYPES =
 	{
@@ -41,6 +45,45 @@ public class SkillService
 
 	private SkillService()
 	{
+	}
+
+	/**
+	 * One-time setup called when a bot enters the world.
+	 * Gives all class/level-appropriate skills and enables the correct auto-shot.
+	 *
+	 * @param bot the bot to set up
+	 */
+	public static void setup(BotInstance bot)
+	{
+		final Player player = bot.getPlayer();
+
+		// Give every skill the character is eligible to learn at current level.
+		final int learned = player.giveAvailableSkills(true, true, true);
+		LOGGER.info("SkillService: gave " + learned + " skills to " + player.getName());
+
+		// Enable auto-shot matching the equipped weapon (soulshot or spiritshot).
+		final int shotId = SupplyService.getShotId(bot);
+		if (shotId > 0)
+		{
+			player.addAutoSoulShot(shotId);
+			LOGGER.info("SkillService: enabled auto-shot id=" + shotId + " for " + player.getName());
+		}
+	}
+
+	/**
+	 * Re-applies auto-shot after equipment changes (e.g. weapon grade upgrade).
+	 * Clears any previously registered shot IDs first to avoid stale entries.
+	 *
+	 * @param bot the bot whose auto-shot should be refreshed
+	 */
+	public static void refreshAutoShot(BotInstance bot)
+	{
+		bot.getPlayer().getAutoSoulShot().clear();
+		final int shotId = SupplyService.getShotId(bot);
+		if (shotId > 0)
+		{
+			bot.getPlayer().addAutoSoulShot(shotId);
+		}
 	}
 
 	/**

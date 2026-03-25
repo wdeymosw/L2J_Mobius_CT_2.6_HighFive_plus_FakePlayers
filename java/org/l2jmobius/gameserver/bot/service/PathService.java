@@ -7,121 +7,181 @@ import java.util.List;
 import java.util.logging.Logger;
 
 import org.l2jmobius.gameserver.bot.model.BotInstance;
+import org.l2jmobius.gameserver.geoengine.GeoEngine;
 import org.l2jmobius.gameserver.geoengine.pathfinding.GeoLocation;
 import org.l2jmobius.gameserver.geoengine.pathfinding.PathFinding;
 import org.l2jmobius.gameserver.model.Location;
 import org.l2jmobius.gameserver.model.actor.Player;
 
 /**
- * Path-finding navigation for bots.
+ * Universal movement engine for bots.
  * <p>
- * Uses the server's A* {@link PathFinding} to compute multi-waypoint routes.
- * Bots follow the path waypoint by waypoint each ThinkService tick.
- * Falls back to a direct MOVE_TO if no path is found.
+ * {@link #thinkMove(BotInstance, int, int, int)} is the single entry point
+ * called every tick for any movement goal — combat, returning to zone,
+ * walking to city, wandering. No special cases per state.
+ * <p>
+ * Algorithm per tick:
+ * <ol>
+ *   <li>Anti-stuck check (every {@value #STUCK_CHECK_SECONDS}s): if the bot
+ *       covered less than {@value #STUCK_FRACTION} × expected speed × time,
+ *       the current path is cleared so it is recalculated.</li>
+ *   <li>If geodata line-of-movement is clear → move directly, drop stale path.</li>
+ *   <li>Otherwise → build or reuse an A* path; recalculate if destination
+ *       shifted more than {@value #TARGET_MOVE_THRESHOLD} units.</li>
+ *   <li>Follow path waypoint by waypoint; fall back to direct nudge if A* fails.</li>
+ * </ol>
  */
 public class PathService
 {
 	private static final Logger LOGGER = Logger.getLogger(PathService.class.getName());
 
-	/** Distance (units) considered "arrived" at a waypoint. */
-	private static final int WAYPOINT_ARRIVAL_RADIUS = 150;
+	/** Radius (units) to consider "arrived" at a waypoint. */
+	private static final int WAYPOINT_ARRIVAL_RADIUS = 50;
+
+	/** Minimum time (ms) between two A* path calculations. */
+	private static final long PATH_RECALC_COOLDOWN_MS = 1000;
+
+	/**
+	 * Recalculate path when destination shifts further than this (units).
+	 * Relevant for moving targets (combat). Static destinations never trigger this.
+	 */
+	private static final int TARGET_MOVE_THRESHOLD = 100;
+
+	// -------------------------------------------------------------------------
+	// Movement check timings — edit here to tune bot responsiveness
+	// -------------------------------------------------------------------------
+
+	/**
+	 * How often (ms) to drop a stale A* path once a direct line becomes clear.
+	 * Lower = snappier reaction to cleared obstacles.
+	 */
+	private static final long DIRECT_CLEAR_CHECK_MS = 500;
+
+	/**
+	 * How often (seconds) to verify the bot is actually moving.
+	 * Longer than DIRECT_CLEAR_CHECK_MS to avoid false positives on short pauses.
+	 */
+	private static final double STUCK_CHECK_SECONDS = 2.0;
+
+	/**
+	 * Bot is considered stuck if it covered less than this fraction of the
+	 * distance expected from its current run speed × elapsed time.
+	 */
+	private static final double STUCK_FRACTION = 0.3;
 
 	private PathService()
 	{
 	}
 
 	// -------------------------------------------------------------------------
-	// Public API
+	// Public API — single method for all bot movement
 	// -------------------------------------------------------------------------
 
 	/**
-	 * Starts navigating the bot to the given world coordinates.
-	 * Computes an A* path and stores it in the bot; the first waypoint
-	 * movement is issued immediately.
+	 * Moves the bot one step toward ({@code tx}, {@code ty}, {@code tz}).
+	 * Call every tick regardless of whether the destination is a moving target
+	 * or a fixed world point. The method is stateless externally — all path
+	 * state is stored in {@link BotInstance}.
 	 *
-	 * @param bot the bot that should navigate
-	 * @param x   destination X
-	 * @param y   destination Y
-	 * @param z   destination Z
-	 * @return {@code true} if a path was found, {@code false} if falling back to direct movement
+	 * @param bot the bot to move
+	 * @param tx  destination X
+	 * @param ty  destination Y
+	 * @param tz  destination Z
 	 */
-	public static boolean navigateTo(BotInstance bot, int x, int y, int z)
+	public static void thinkMove(BotInstance bot, int tx, int ty, int tz)
 	{
 		final Player player = bot.getPlayer();
-		final List<GeoLocation> path = PathFinding.getInstance().findPath(player.getX(), player.getY(), player.getZ(), x, y, z, player.getInstanceId(), true);
+		final long now = System.currentTimeMillis();
 
-		if ((path == null) || path.isEmpty())
+		final int px = player.getX();
+		final int py = player.getY();
+		final int pz = player.getZ();
+
+		// --- 1. Anti-stuck: clear path if bot hasn't moved enough ---
+		handleStuck(bot, now, px, py);
+
+		// --- 2. Direct geodata line available? ---
+		if (GeoEngine.getInstance().canMoveToTarget(px, py, pz, tx, ty, tz, player.getInstanceId()))
 		{
-			// No A* path — fall back to direct movement intention.
-			bot.clearPath();
-			CombatService.moveTo(bot, new Location(x, y, z));
-			LOGGER.fine("PathService: no path for " + player.getName() + " → direct MOVE_TO");
-			return false;
+			if (bot.hasPath() && ((now - bot.getLastPathTime()) > DIRECT_CLEAR_CHECK_MS))
+			{
+				bot.clearPath();
+			}
+			CombatService.moveTo(bot, new Location(tx, ty, tz));
+			return;
 		}
 
-		bot.setPath(path);
-		issueNextWaypoint(bot);
-		LOGGER.fine("PathService: " + player.getName() + " path " + path.size() + " nodes → " + x + "," + y + "," + z);
-		return true;
-	}
+		// --- 3. Need a new A* path? ---
+		boolean needNewPath = !bot.hasPath();
 
-	/**
-	 * Advances waypoint following each ThinkService tick.
-	 * Call this every tick while the bot is in RETURNING state.
-	 *
-	 * @param bot the bot following a path
-	 * @return {@code true} if the path is complete (no more waypoints), {@code false} otherwise
-	 */
-	public static boolean tickPath(BotInstance bot)
-	{
-		if (!bot.hasPath())
+		if (!needNewPath)
 		{
-			return true;
+			final Location last = bot.getLastTargetPos();
+			if (last != null)
+			{
+				final int ldx = last.getX() - tx;
+				final int ldy = last.getY() - ty;
+				if (((ldx * ldx) + (ldy * ldy)) > (TARGET_MOVE_THRESHOLD * TARGET_MOVE_THRESHOLD))
+				{
+					needNewPath = true;
+				}
+			}
 		}
 
-		final GeoLocation wp = bot.getCurrentWaypoint();
-		if (wp == null)
+		if (needNewPath && ((now - bot.getLastPathTime()) > PATH_RECALC_COOLDOWN_MS))
 		{
-			bot.clearPath();
-			return true;
+			final List<GeoLocation> path = PathFinding.getInstance().findPath(px, py, pz, tx, ty, tz, player.getInstanceId(), true);
+			bot.setPath(path);
+			bot.setLastPathTime(now);
+			bot.setLastTargetPos(new Location(tx, ty, tz));
 		}
 
-		// Check if bot has arrived at the current waypoint.
-		final Player player = bot.getPlayer();
-		final int dx = player.getX() - wp.getX();
-		final int dy = player.getY() - wp.getY();
-		final boolean arrived = ((dx * dx) + (dy * dy)) < (WAYPOINT_ARRIVAL_RADIUS * WAYPOINT_ARRIVAL_RADIUS);
-
-		if (!arrived)
+		// --- 4. Follow A* path waypoint by waypoint ---
+		if (bot.hasPath())
 		{
-			// Still moving — re-issue the movement in case the intention was reset.
-			issueNextWaypoint(bot);
-			return false;
+			final GeoLocation wp = bot.getCurrentWaypoint();
+			if (wp != null)
+			{
+				final int dx = px - wp.getX();
+				final int dy = py - wp.getY();
+				if (((dx * dx) + (dy * dy)) < (WAYPOINT_ARRIVAL_RADIUS * WAYPOINT_ARRIVAL_RADIUS))
+				{
+					bot.advanceWaypoint();
+				}
+				else
+				{
+					CombatService.moveTo(bot, new Location(wp.getX(), wp.getY(), wp.getZ()));
+				}
+			}
 		}
-
-		// Arrived — advance to the next waypoint.
-		if (bot.hasNextWaypoint())
+		else
 		{
-			bot.advanceWaypoint();
-			issueNextWaypoint(bot);
-			return false;
+			// Fallback: A* returned nothing — nudge directly.
+			CombatService.moveTo(bot, new Location(tx, ty, tz));
 		}
-
-		// All waypoints visited — path complete.
-		bot.clearPath();
-		return true;
 	}
 
 	// -------------------------------------------------------------------------
 	// Internal
 	// -------------------------------------------------------------------------
 
-	private static void issueNextWaypoint(BotInstance bot)
+	private static void handleStuck(BotInstance bot, long now, int px, int py)
 	{
-		final GeoLocation wp = bot.getCurrentWaypoint();
-		if (wp != null)
+		final double elapsed = (now - bot.getLastMoveCheckTime()) / 1000.0;
+		if (elapsed < STUCK_CHECK_SECONDS)
 		{
-			CombatService.moveTo(bot, new Location(wp.getX(), wp.getY(), wp.getZ()));
+			return;
 		}
+
+		final double traveled = Math.hypot(px - bot.getLastX(), py - bot.getLastY());
+		final double expected = bot.getPlayer().getMoveSpeed() * elapsed;
+
+		if ((expected > 0) && (traveled < expected * STUCK_FRACTION))
+		{
+			bot.clearPath();
+			LOGGER.fine("PathService: " + bot.getPlayer().getName() + " stuck (moved " + (int) traveled + " / expected " + (int) expected + ") — recalculating");
+		}
+
+		bot.updatePositionSnapshot();
 	}
 }
