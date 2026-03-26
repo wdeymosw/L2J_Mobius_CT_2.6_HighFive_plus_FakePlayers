@@ -51,6 +51,40 @@ public class SupplyService
 	}
 
 	/**
+	 * Gives the bot an initial supply of shots/arrows at startup without
+	 * triggering a city trip or state change. Called once from BotFactory.
+	 *
+	 * @param bot the bot to supply
+	 */
+	public static void giveInitialSupplies(BotInstance bot)
+	{
+		final Player player = bot.getPlayer();
+		final int shotId = getShotId(bot);
+		if (shotId > 0)
+		{
+			final long current = player.getInventory().getInventoryItemCount(shotId, -1);
+			if (current < RESTOCK_THRESHOLD)
+			{
+				player.getInventory().addItem(ItemProcessType.REWARD, shotId, RESTOCK_TARGET - current, player, null);
+				LOGGER.info("SupplyService: gave initial shots id=" + shotId + " to " + player.getName());
+			}
+		}
+		if (bot.getRole() == BotRole.ARCHER)
+		{
+			final int arrowId = getArrowId(bot);
+			if (arrowId > 0)
+			{
+				final long current = player.getInventory().getInventoryItemCount(arrowId, -1);
+				if (current < RESTOCK_THRESHOLD)
+				{
+					player.getInventory().addItem(ItemProcessType.REWARD, arrowId, RESTOCK_TARGET - current, player, null);
+					LOGGER.info("SupplyService: gave initial arrows id=" + arrowId + " to " + player.getName());
+				}
+			}
+		}
+	}
+
+	/**
 	 * Returns {@code true} if the bot needs to restock consumables.
 	 * Checked each tick so the bot can interrupt farming when supplies run out.
 	 *

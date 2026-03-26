@@ -10,6 +10,7 @@ import org.l2jmobius.gameserver.bot.model.BotProfile;
 import org.l2jmobius.gameserver.bot.service.EquipService;
 import org.l2jmobius.gameserver.bot.service.GearService;
 import org.l2jmobius.gameserver.bot.service.SkillService;
+import org.l2jmobius.gameserver.bot.service.SupplyService;
 import org.l2jmobius.gameserver.model.actor.Player;
 import org.l2jmobius.gameserver.model.item.enums.ItemProcessType;
 
@@ -63,6 +64,7 @@ public class BotFactory
 
 		EquipService.equip(bot);
 		SkillService.setup(bot);
+		SupplyService.giveInitialSupplies(bot);
 
 		// Bot spawns at its last saved DB position.
 		// ThinkService handles navigation on the first tick:

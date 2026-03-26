@@ -8,6 +8,7 @@ import java.util.Collections;
 import java.util.List;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
+import java.util.logging.Logger;
 
 /**
  * Registry of all available FarmZones.
@@ -16,6 +17,8 @@ import java.util.concurrent.ConcurrentHashMap;
  */
 public class ZoneRegistry
 {
+	private static final Logger LOGGER = Logger.getLogger(ZoneRegistry.class.getName());
+
 	private final List<FarmZone> _zones = new ArrayList<>();
 
 	/** objectId → zone mapping for fast lookup when a bot is removed */
@@ -28,6 +31,7 @@ public class ZoneRegistry
 	private ZoneRegistry()
 	{
 		registerDefaultZones();
+		loadCityData();
 	}
 
 	public static ZoneRegistry getInstance()
@@ -55,14 +59,19 @@ public class ZoneRegistry
 	}
 
 	/**
-	 * Selects a zone suitable for a bot of the given level.
-	 * Filters by minLevel..maxLevel, then picks the zone with the lowest fill ratio.
-	 * Returns null if no zone matches or all matching zones are full.
+	 * Selects a zone suitable for a bot at the given level and position.
+	 * Filters by minLevel..maxLevel and capacity, then picks the zone whose
+	 * homeLocation is closest to (x, y). Ties broken by lowest fill ratio.
+	 *
 	 * @param level bot character level
+	 * @param x     bot's current X coordinate
+	 * @param y     bot's current Y coordinate
+	 * @return the best matching FarmZone, or {@code null} if none available
 	 */
-	public FarmZone selectZone(int level)
+	public FarmZone selectZone(int level, int x, int y)
 	{
 		FarmZone best = null;
+		double bestDist = Double.MAX_VALUE;
 		double bestFill = Double.MAX_VALUE;
 
 		for (FarmZone zone : _zones)
@@ -79,8 +88,15 @@ public class ZoneRegistry
 			}
 
 			final double fill = (double) count / zone.getMaxBots();
-			if (fill < bestFill)
+			final org.l2jmobius.gameserver.model.Location home = zone.getHomeLocation();
+			final int dx = home.getX() - x;
+			final int dy = home.getY() - y;
+			final double dist = Math.sqrt((dx * dx) + (dy * dy));
+
+			// Prefer closest home; use fill as tiebreaker.
+			if ((dist < bestDist) || ((dist == bestDist) && (fill < bestFill)))
 			{
+				bestDist = dist;
 				bestFill = fill;
 				best = zone;
 			}
@@ -88,19 +104,31 @@ public class ZoneRegistry
 		return best;
 	}
 
-	/** Records that a bot has been assigned to a zone. */
+	/**
+	 * Records that a bot has been assigned to a zone.
+	 *
+	 * @param objectId bot's character objectId
+	 * @param zone     the zone assigned
+	 */
 	public void assignBot(int objectId, FarmZone zone)
 	{
 		_botZoneMap.put(objectId, zone);
 	}
 
-	/** Removes bot's zone assignment when the bot is removed. */
+	/**
+	 * Removes bot's zone assignment when the bot is removed.
+	 *
+	 * @param objectId bot's character objectId
+	 */
 	public void unassignBot(int objectId)
 	{
 		_botZoneMap.remove(objectId);
 	}
 
-	/** Returns how many bots are currently assigned to the given zone. */
+	/**
+	 * @param zone the zone to count bots for
+	 * @return how many bots are currently assigned to the given zone
+	 */
 	public int getBotCount(FarmZone zone)
 	{
 		return (int) _botZoneMap.values().stream().filter(z -> z == zone).count();
@@ -127,5 +155,29 @@ public class ZoneRegistry
 		register(new FarmZone("Rune",           176140,  -23000, -3256, 1000,  43648,  -47744,  -800, 65, 80, 5)); // Fields of Massacre
 		register(new FarmZone("Goddard",        147736, -112290, -2238, 1000, -79264,  150400, -3651, 68, 80, 5)); // Hot Springs
 		register(new FarmZone("Schuttgart",     167785,  -49088, -3421, 1000,  87360, -142976, -1293, 70, 80, 5)); // Wall of Argos
+	}
+
+	// -------------------------------------------------------------------------
+	// City data — loaded from BotZones.xml
+	// -------------------------------------------------------------------------
+
+	private void loadCityData()
+	{
+		final Map<String, BotZoneData> data = BotZoneDataLoader.load();
+		int matched = 0;
+		for (FarmZone zone : _zones)
+		{
+			final BotZoneData cityData = data.get(zone.getName());
+			if (cityData != null)
+			{
+				zone.setCityData(cityData);
+				matched++;
+			}
+			else
+			{
+				LOGGER.warning("ZoneRegistry: no city data for zone '" + zone.getName() + "' — city walk disabled for this zone.");
+			}
+		}
+		LOGGER.info("ZoneRegistry: city data attached to " + matched + "/" + _zones.size() + " zone(s).");
 	}
 }

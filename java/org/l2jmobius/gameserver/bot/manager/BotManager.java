@@ -16,6 +16,7 @@ import java.util.concurrent.Executors;
 import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.ScheduledFuture;
 import java.util.concurrent.TimeUnit;
+import java.util.logging.Level;
 import java.util.logging.Logger;
 
 import org.l2jmobius.commons.database.DatabaseFactory;
@@ -39,14 +40,16 @@ public class BotManager
 {
 	private static final Logger LOGGER = Logger.getLogger(BotManager.class.getName());
 
-	private static final String LOAD_BOTS = "SELECT charId, level FROM characters WHERE is_bot=1";
+	private static final String LOAD_BOTS = "SELECT charId, level, x, y FROM characters WHERE is_bot=1";
 	private static final long TICK_INTERVAL_MS = 300;
+	private static final long STATUS_LOG_INTERVAL_MS = 5000;
+	private long _lastStatusLog = 0;
 
 	/** objectId → active bot */
 	private final Map<Integer, BotInstance> _bots = new ConcurrentHashMap<>();
 
-	/** charId → level for bots not yet spawned */
-	private final Map<Integer, Integer> _availablePool = new ConcurrentHashMap<>();
+	/** charId → pool entry for bots not yet spawned */
+	private final Map<Integer, PoolEntry> _availablePool = new ConcurrentHashMap<>();
 
 	private final ScheduledExecutorService _scheduler = Executors.newSingleThreadScheduledExecutor(r ->
 	{
@@ -74,6 +77,24 @@ public class BotManager
 	private static class SingletonHolder
 	{
 		static final BotManager INSTANCE = new BotManager();
+	}
+
+	// -------------------------------------------------------------------------
+	// Pool entry — level + last known position for zone selection
+	// -------------------------------------------------------------------------
+
+	private static class PoolEntry
+	{
+		final int level;
+		final int x;
+		final int y;
+
+		PoolEntry(int level, int x, int y)
+		{
+			this.level = level;
+			this.x = x;
+			this.y = y;
+		}
 	}
 
 	// -------------------------------------------------------------------------
@@ -165,9 +186,11 @@ public class BotManager
 		if (bot != null)
 		{
 			final int level = bot.getPlayer().getLevel();
+			final int x = bot.getPlayer().getX();
+			final int y = bot.getPlayer().getY();
 			BotSpawner.removeBot(bot);
 			ZoneRegistry.getInstance().unassignBot(objectId);
-			_availablePool.put(objectId, level);
+			_availablePool.put(objectId, new PoolEntry(level, x, y));
 		}
 	}
 
@@ -205,12 +228,11 @@ public class BotManager
 			return;
 		}
 
-		// Snapshot entries to avoid ConcurrentModificationException.
-		final List<Map.Entry<Integer, Integer>> entries = new ArrayList<>(_availablePool.entrySet());
+		final List<Map.Entry<Integer, PoolEntry>> entries = new ArrayList<>(_availablePool.entrySet());
 		final int toSpawn = Math.min(needed, Math.min(BotConfig.BOTS_SPAWN_BATCH_SIZE, entries.size()));
 		int spawned = 0;
 
-		for (Map.Entry<Integer, Integer> entry : entries)
+		for (Map.Entry<Integer, PoolEntry> entry : entries)
 		{
 			if (spawned >= toSpawn)
 			{
@@ -218,12 +240,13 @@ public class BotManager
 			}
 
 			final int charId = entry.getKey();
-			final int level = entry.getValue();
+			final PoolEntry pe = entry.getValue();
 
-			final FarmZone zone = ZoneRegistry.getInstance().selectZone(level);
+			// Pick zone closest to the bot's last saved position (among level-appropriate zones).
+			final FarmZone zone = ZoneRegistry.getInstance().selectZone(pe.level, pe.x, pe.y);
 			if (zone == null)
 			{
-				LOGGER.warning("BotManager: no zone found for level " + level + ", skipping charId=" + charId);
+				LOGGER.warning("BotManager: no zone found for level " + pe.level + ", skipping charId=" + charId);
 				continue;
 			}
 
@@ -237,7 +260,6 @@ public class BotManager
 			}
 			else
 			{
-				// Failed to load — discard this character.
 				LOGGER.warning("BotManager: failed to spawn charId=" + charId + ", discarding.");
 			}
 		}
@@ -261,7 +283,7 @@ public class BotManager
 		{
 			while (rs.next())
 			{
-				_availablePool.put(rs.getInt("charId"), rs.getInt("level"));
+				_availablePool.put(rs.getInt("charId"), new PoolEntry(rs.getInt("level"), rs.getInt("x"), rs.getInt("y")));
 			}
 		}
 		catch (Exception e)
@@ -276,6 +298,13 @@ public class BotManager
 
 	private void tick()
 	{
+		final long now = System.currentTimeMillis();
+		final boolean doStatus = (now - _lastStatusLog) >= STATUS_LOG_INTERVAL_MS;
+		if (doStatus)
+		{
+			_lastStatusLog = now;
+		}
+
 		for (BotInstance bot : _bots.values())
 		{
 			try
@@ -285,11 +314,15 @@ public class BotManager
 					removeBot(bot.getPlayer().getObjectId());
 					continue;
 				}
+				if (doStatus)
+				{
+					LOGGER.info("BotManager: [" + bot.getPlayer().getName() + "] state=" + bot.getState() + " pos=" + bot.getPlayer().getX() + "," + bot.getPlayer().getY() + " isMoving=" + bot.getPlayer().isMoving());
+				}
 				ThinkService.think(bot);
 			}
-			catch (Exception e)
+			catch (Throwable e)
 			{
-				LOGGER.warning("BotManager: tick error for " + bot.getPlayer().getName() + " — " + e.getMessage());
+				LOGGER.log(Level.SEVERE, "BotManager: tick error for " + bot.getPlayer().getName(), e);
 			}
 		}
 	}

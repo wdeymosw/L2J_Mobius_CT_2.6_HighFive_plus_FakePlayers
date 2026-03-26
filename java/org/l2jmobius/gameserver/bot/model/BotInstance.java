@@ -25,33 +25,42 @@ public class BotInstance
 	private final BotRole _role;
 
 	// --- Runtime state ---
-	private BotState _state = BotState.IDLE;
+	private BotState _state = BotState.SEARCHING;
 	private Creature _target;
 
 	// --- Timing (epoch ms) ---
 	private long _nextThinkTime = 0;
 	private long _nextSearchTime = 0;
-	private long _sessionEndTime = 0;    // 0 = no session limit (CORE bots)
-	private long _targetExpireTime = 0;  // 0 = no limit; set when target is acquired
-	private long _cityIdleEndTime = 0;   // when to leave city and head to zone
+	private long _sessionEndTime = 0;   // 0 = no session limit (CORE bots)
+	private long _targetExpireTime = 0; // 0 = no limit; set when target is acquired
+	private long _cityIdleEndTime = 0;  // when to leave city and head to zone
 
 	// --- Level tracking ---
 	private int _lastKnownLevel;
 
-	// --- Stuck detection ---
-	private int _lastX;
-	private int _lastY;
-	private long _lastMoveCheckTime = 0;
+	// --- Global path (long-range segment endpoints) ---
+	private List<Location> _globalPath = null;
+	private int _globalIndex = 0;
 
-	// --- Pathfinding ---
+	// --- Local path (PathFinding waypoints for current segment) ---
 	private List<GeoLocation> _currentPath = null;
 	private int _pathIndex = 0;
 	private long _lastPathTime = 0;
-	private Location _lastTargetPos = null;
+	private long _lastDirectCheckTime = 0;
+
+	// --- Stuck detection (position snapshot) ---
+	private long _stuckCheckTime = 0;
+	private int _lastStuckX = Integer.MIN_VALUE;
+	private int _lastStuckY = Integer.MIN_VALUE;
 
 	// --- TRAVEL mode ---
 	private Location _moveDestination = null;
 	private TravelAction _travelAction = TravelAction.RETURN_TO_ZONE;
+
+	// --- City walk (waypoints from BotZones.xml, used before teleporting to farm) ---
+	private List<Location> _cityPath = null;
+	private int _cityPathIdx = 0;
+	private long _gateWaitEndTime = 0; // >0 while waiting at gatekeeper before teleport
 
 	public BotInstance(Player player, BotProfile profile)
 	{
@@ -59,13 +68,11 @@ public class BotInstance
 		_profile = profile;
 		_role = RoleResolver.resolve(player.getActiveClass());
 		_lastKnownLevel = player.getLevel();
-		_lastX = player.getX();
-		_lastY = player.getY();
-		// Initialize to now so stuck detection doesn't fire on the very first tick.
-		_lastMoveCheckTime = System.currentTimeMillis();
 	}
 
-	// --- Accessors ---
+	// -------------------------------------------------------------------------
+	// Core accessors
+	// -------------------------------------------------------------------------
 
 	public Player getPlayer()
 	{
@@ -123,7 +130,9 @@ public class BotInstance
 		_targetExpireTime = time;
 	}
 
-	// --- Timing ---
+	// -------------------------------------------------------------------------
+	// Timing
+	// -------------------------------------------------------------------------
 
 	public long getNextThinkTime()
 	{
@@ -155,7 +164,6 @@ public class BotInstance
 		_cityIdleEndTime = time;
 	}
 
-	/** Session end time for NOISE bots. 0 means no limit. */
 	public long getSessionEndTime()
 	{
 		return _sessionEndTime;
@@ -171,24 +179,61 @@ public class BotInstance
 		return (_sessionEndTime > 0) && (System.currentTimeMillis() >= _sessionEndTime);
 	}
 
-	// --- Stuck detection ---
+	// -------------------------------------------------------------------------
+	// Global path (long-range segment endpoints)
+	// -------------------------------------------------------------------------
 
-	public int getLastX()
+	public void setGlobalPath(List<Location> path)
 	{
-		return _lastX;
+		_globalPath = path;
+		_globalIndex = 0;
+		clearPath(); // local path must be reset when destination changes
 	}
 
-	public int getLastY()
+	public boolean hasGlobalPath()
 	{
-		return _lastY;
+		return (_globalPath != null) && (_globalIndex < _globalPath.size());
 	}
 
-	public long getLastMoveCheckTime()
+	public Location getCurrentGlobalPoint()
 	{
-		return _lastMoveCheckTime;
+		return hasGlobalPath() ? _globalPath.get(_globalIndex) : null;
 	}
 
-	// --- Pathfinding ---
+	/** Advances to the next segment and clears the local path. */
+	public void advanceGlobalIndex()
+	{
+		_globalIndex++;
+		clearPath();
+	}
+
+	public void clearGlobalPath()
+	{
+		_globalPath = null;
+		_globalIndex = 0;
+		clearPath();
+	}
+
+	/**
+	 * Returns true if the global path's last waypoint matches the given coordinates.
+	 * Used to detect when the travel destination has changed.
+	 * @param tx destination X
+	 * @param ty destination Y
+	 * @return true if path leads to (tx, ty)
+	 */
+	public boolean isGlobalPathTo(int tx, int ty)
+	{
+		if ((_globalPath == null) || _globalPath.isEmpty())
+		{
+			return false;
+		}
+		final Location last = _globalPath.get(_globalPath.size() - 1);
+		return (last.getX() == tx) && (last.getY() == ty);
+	}
+
+	// -------------------------------------------------------------------------
+	// Local path (PathFinding waypoints for current segment)
+	// -------------------------------------------------------------------------
 
 	public void setPath(List<GeoLocation> path)
 	{
@@ -199,11 +244,6 @@ public class BotInstance
 	public boolean hasPath()
 	{
 		return (_currentPath != null) && (_pathIndex < _currentPath.size());
-	}
-
-	public boolean hasNextWaypoint()
-	{
-		return (_currentPath != null) && ((_pathIndex + 1) < _currentPath.size());
 	}
 
 	public GeoLocation getCurrentWaypoint()
@@ -232,15 +272,49 @@ public class BotInstance
 		_lastPathTime = time;
 	}
 
-	public Location getLastTargetPos()
+	public long getLastDirectCheckTime()
 	{
-		return _lastTargetPos;
+		return _lastDirectCheckTime;
 	}
 
-	public void setLastTargetPos(Location pos)
+	public void setLastDirectCheckTime(long time)
 	{
-		_lastTargetPos = pos;
+		_lastDirectCheckTime = time;
 	}
+
+	// -------------------------------------------------------------------------
+	// Stuck detection (position snapshot)
+	// -------------------------------------------------------------------------
+
+	public long getStuckCheckTime()
+	{
+		return _stuckCheckTime;
+	}
+
+	public void setStuckCheckTime(long time)
+	{
+		_stuckCheckTime = time;
+	}
+
+	public int getLastStuckX()
+	{
+		return _lastStuckX;
+	}
+
+	public int getLastStuckY()
+	{
+		return _lastStuckY;
+	}
+
+	public void setStuckSnapshot(int x, int y)
+	{
+		_lastStuckX = x;
+		_lastStuckY = y;
+	}
+
+	// -------------------------------------------------------------------------
+	// TRAVEL mode
+	// -------------------------------------------------------------------------
 
 	public Location getMoveDestination()
 	{
@@ -262,30 +336,81 @@ public class BotInstance
 		_travelAction = action;
 	}
 
-	/** Returns true if the bot is within {@code radius} units of its move destination. */
+	/**
+	 * @param radius arrival radius in units
+	 * @return true if the bot is within {@code radius} units of its move destination
+	 */
 	public boolean hasReachedDestination(int radius)
 	{
 		if (_moveDestination == null)
 		{
 			return true;
 		}
-		final int dx = _player.getX() - _moveDestination.getX();
-		final int dy = _player.getY() - _moveDestination.getY();
-		return (dx * dx + dy * dy) <= (radius * radius);
+		final long dx = _player.getX() - _moveDestination.getX();
+		final long dy = _player.getY() - _moveDestination.getY();
+		return (dx * dx + dy * dy) <= ((long) radius * radius);
 	}
 
-	public void updatePositionSnapshot()
-	{
-		_lastX = _player.getX();
-		_lastY = _player.getY();
-		_lastMoveCheckTime = System.currentTimeMillis();
-	}
-
-	// --- Level tracking ---
+	// -------------------------------------------------------------------------
+	// City walk (waypoints through city to gatekeeper, before farm teleport)
+	// -------------------------------------------------------------------------
 
 	/**
-	 * Returns true if the player's level has increased since the last call,
-	 * and updates the cached level. Called once per think tick.
+	 * @param path ordered waypoints through the city leading to the gatekeeper
+	 */
+	public void setCityPath(List<Location> path)
+	{
+		_cityPath = path;
+		_cityPathIdx = 0;
+	}
+
+	/** @return true if there are remaining city-walk waypoints to visit */
+	public boolean hasCityPath()
+	{
+		return (_cityPath != null) && (_cityPathIdx < _cityPath.size());
+	}
+
+	/** @return the current city-walk waypoint, or {@code null} if none remain */
+	public Location getCurrentCityWaypoint()
+	{
+		return hasCityPath() ? _cityPath.get(_cityPathIdx) : null;
+	}
+
+	/** Advances to the next city-walk waypoint. */
+	public void advanceCityPath()
+	{
+		_cityPathIdx++;
+	}
+
+	/** Clears the city walk path. */
+	public void clearCityPath()
+	{
+		_cityPath = null;
+		_cityPathIdx = 0;
+	}
+
+	/**
+	 * @return the time (epoch ms) when the gate wait expires, or 0 if not waiting
+	 */
+	public long getGateWaitEndTime()
+	{
+		return _gateWaitEndTime;
+	}
+
+	/**
+	 * @param time epoch ms when the wait at the gatekeeper should end (0 to clear)
+	 */
+	public void setGateWaitEndTime(long time)
+	{
+		_gateWaitEndTime = time;
+	}
+
+	// -------------------------------------------------------------------------
+	// Level tracking
+	// -------------------------------------------------------------------------
+
+	/**
+	 * @return true if the player leveled up since the last call; updates cache
 	 */
 	public boolean hasLeveledUp()
 	{
@@ -298,7 +423,9 @@ public class BotInstance
 		return false;
 	}
 
-	// --- Convenience delegates (thin wrappers — no game logic here) ---
+	// -------------------------------------------------------------------------
+	// Convenience delegates
+	// -------------------------------------------------------------------------
 
 	public boolean isDead()
 	{
@@ -308,15 +435,6 @@ public class BotInstance
 	public boolean isInZone()
 	{
 		return _profile.getZone().contains(_player.getX(), _player.getY());
-	}
-
-	/** Returns true if the bot is close enough to the city home point to buy/sell. */
-	public boolean isAtHome()
-	{
-		final org.l2jmobius.gameserver.model.Location home = _profile.getZone().getHomeLocation();
-		final int dx = _player.getX() - home.getX();
-		final int dy = _player.getY() - home.getY();
-		return (dx * dx + dy * dy) <= (300 * 300);
 	}
 
 	public float getMistakeRate()

@@ -29,6 +29,8 @@ public class FarmZone
 	private final int _minLevel;
 	private final int _maxLevel;
 	private final int _maxBots;
+	// City-side NPC coordinates and walk path — loaded from BotZones.xml after construction.
+	private BotZoneData _cityData = null;
 
 	public FarmZone(String name, int x, int y, int z, int radius, int homeX, int homeY, int homeZ, int minLevel, int maxLevel, int maxBots)
 	{
@@ -85,27 +87,37 @@ public class FarmZone
 		return _maxBots;
 	}
 
-	/** Returns the farm area center as a Location. */
+	/**
+	 * @return the farm area center
+	 */
 	public Location getCenter()
 	{
 		return new Location(_x, _y, _z);
 	}
 
-	/** Returns the city (home) location where the bot buys/sells supplies. */
+	/**
+	 * @return the city (home) location where the bot buys/sells supplies
+	 */
 	public Location getHomeLocation()
 	{
 		return new Location(_homeX, _homeY, _homeZ);
 	}
 
-	/** Returns true if the given coordinates are within this zone's radius. */
+	/**
+	 * @param x coordinate to test
+	 * @param y coordinate to test
+	 * @return true if the given coordinates are within this zone's radius
+	 */
 	public boolean contains(int x, int y)
 	{
-		final int dx = x - _x;
-		final int dy = y - _y;
+		final long dx = x - _x;
+		final long dy = y - _y;
 		return (dx * dx + dy * dy) <= ((long) _radius * _radius);
 	}
 
-	/** Returns a random Location inside this zone (uniform distribution in circle). */
+	/**
+	 * @return a random Location inside this zone (uniform distribution in circle)
+	 */
 	public Location randomPointInside()
 	{
 		final ThreadLocalRandom rnd = ThreadLocalRandom.current();
@@ -114,5 +126,21 @@ public class FarmZone
 		final int x = _x + (int) (r * Math.cos(angle));
 		final int y = _y + (int) (r * Math.sin(angle));
 		return new Location(x, y, _z);
+	}
+
+	/**
+	 * @return city-side NPC coordinates and walk path, or {@code null} if not loaded
+	 */
+	public BotZoneData getCityData()
+	{
+		return _cityData;
+	}
+
+	/**
+	 * @param cityData city-side NPC coordinates loaded from BotZones.xml
+	 */
+	public void setCityData(BotZoneData cityData)
+	{
+		_cityData = cityData;
 	}
 }
