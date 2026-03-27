@@ -20,8 +20,6 @@ import java.util.logging.Level;
 import java.util.logging.Logger;
 
 import org.l2jmobius.commons.database.DatabaseFactory;
-import org.l2jmobius.gameserver.bot.manager.BotFactory;
-import org.l2jmobius.gameserver.bot.manager.BotSpawner;
 import org.l2jmobius.gameserver.bot.core.model.BotInstance;
 import org.l2jmobius.gameserver.bot.core.model.BotProfile;
 import org.l2jmobius.gameserver.bot.core.model.BotType;
@@ -251,7 +249,7 @@ public class BotManager
 
 			_availablePool.remove(charId);
 			final BotType type = pickType();
-			final BotProfile profile = new BotProfile(charId, type, zone, type == BotType.CORE ? 0.1f : 0.4f);
+			final BotProfile profile = new BotProfile(charId, type, zone, type == BotType.ACTIVE ? 0.1f : 0.4f);
 
 			if (spawnBot(profile) != null)
 			{
@@ -264,10 +262,10 @@ public class BotManager
 		}
 	}
 
-	/** Picks CORE or NOISE based on configured percentage. */
+	/** Picks ACTIVE or PASSIVE based on configured percentage. */
 	private BotType pickType()
 	{
-		return (Math.random() * 100) < BotConfig.BOT_CORE_PERCENT ? BotType.CORE : BotType.NOISE;
+		return (Math.random() * 100) < BotConfig.BOT_ACTIVE_PERCENT ? BotType.ACTIVE : BotType.PASSIVE;
 	}
 
 	// -------------------------------------------------------------------------

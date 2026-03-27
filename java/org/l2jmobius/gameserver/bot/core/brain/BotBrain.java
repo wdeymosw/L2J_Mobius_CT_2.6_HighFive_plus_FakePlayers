@@ -23,7 +23,7 @@ public class BotBrain
 	 * @param state current bot state
 	 * @return the decision for this tick
 	 */
-	public BotDecision decide(BotContext ctx, BotState state)
+	public static BotDecision decide(BotContext ctx, BotState state)
 	{
 		// Retreat — highest priority, overrides everything
 		if (ctx.lowHp || ctx.inventoryFull || ctx.outOfAmmo)

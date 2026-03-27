@@ -4,12 +4,12 @@
 package org.l2jmobius.gameserver.bot.core.model;
 
 /**
- * Type of bot behaviour.
- * CORE — active farmer, hunts mobs, gains XP.
- * NOISE — ambient bot, walks around, creates population feel.
+ * Режим бота — назначается BotManager'ом и может меняться.
+ * ACTIVE  — бот активно фармит мобов, набирает опыт.
+ * PASSIVE — бот в пассивном режиме: ходит по городу, создаёт население.
  */
 public enum BotType
 {
-	CORE,
-	NOISE
+	ACTIVE,
+	PASSIVE
 }
