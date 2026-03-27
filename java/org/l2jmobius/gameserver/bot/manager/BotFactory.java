@@ -1,16 +1,16 @@
 /*
  * Bot Orchestrator — internal bot management system.
  */
-package org.l2jmobius.gameserver.bot.core;
+package org.l2jmobius.gameserver.bot.manager;
 
 import java.util.logging.Logger;
 
-import org.l2jmobius.gameserver.bot.model.BotInstance;
-import org.l2jmobius.gameserver.bot.model.BotProfile;
-import org.l2jmobius.gameserver.bot.service.EquipService;
-import org.l2jmobius.gameserver.bot.service.GearService;
-import org.l2jmobius.gameserver.bot.service.SkillService;
-import org.l2jmobius.gameserver.bot.service.SupplyService;
+import org.l2jmobius.gameserver.bot.core.model.BotInstance;
+import org.l2jmobius.gameserver.bot.core.model.BotProfile;
+import org.l2jmobius.gameserver.bot.core.service.EquipService;
+import org.l2jmobius.gameserver.bot.core.service.GearService;
+import org.l2jmobius.gameserver.bot.core.service.SkillService;
+import org.l2jmobius.gameserver.bot.core.service.SupplyService;
 import org.l2jmobius.gameserver.model.actor.Player;
 import org.l2jmobius.gameserver.model.item.enums.ItemProcessType;
 

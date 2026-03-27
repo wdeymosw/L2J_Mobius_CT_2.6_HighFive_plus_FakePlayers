@@ -1,14 +1,12 @@
 /*
  * Bot Orchestrator — internal bot management system.
  */
-package org.l2jmobius.gameserver.bot.service;
+package org.l2jmobius.gameserver.bot.core.service;
 
-import java.util.concurrent.ThreadLocalRandom;
 import java.util.logging.Logger;
 
-import org.l2jmobius.gameserver.bot.model.BotInstance;
-import org.l2jmobius.gameserver.bot.model.BotRole;
-import org.l2jmobius.gameserver.bot.model.BotState;
+import org.l2jmobius.gameserver.bot.core.model.BotInstance;
+import org.l2jmobius.gameserver.bot.core.model.BotRole;
 import org.l2jmobius.gameserver.config.custom.BotConfig;
 import org.l2jmobius.gameserver.model.actor.Player;
 import org.l2jmobius.gameserver.model.item.enums.ItemGrade;
@@ -144,12 +142,7 @@ public class SupplyService
 			LOGGER.info("SupplyService: " + player.getName() + " restocked consumables.");
 		}
 
-		final long minMs = BotConfig.BOT_CITY_IDLE_MIN_SECONDS * 1000L;
-		final long maxMs = BotConfig.BOT_CITY_IDLE_MAX_SECONDS * 1000L;
-		final long idleMs = minMs + ThreadLocalRandom.current().nextLong(Math.max(1, maxMs - minMs));
-		bot.setCityIdleEndTime(System.currentTimeMillis() + idleMs);
-		bot.setState(BotState.CITY_IDLE);
-		LOGGER.info("SupplyService: " + player.getName() + " heading to city, idle for " + (idleMs / 60000) + " min.");
+		LOGGER.info("SupplyService: " + player.getName() + " restocked.");
 	}
 
 	// -------------------------------------------------------------------------

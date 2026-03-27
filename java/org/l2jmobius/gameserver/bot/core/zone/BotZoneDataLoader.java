@@ -1,7 +1,7 @@
 /*
  * Bot Orchestrator — internal bot management system.
  */
-package org.l2jmobius.gameserver.bot.zone;
+package org.l2jmobius.gameserver.bot.core.zone;
 
 import java.io.File;
 import java.util.ArrayList;
@@ -29,8 +29,8 @@ public class BotZoneDataLoader
 {
 	private static final Logger LOGGER = Logger.getLogger(BotZoneDataLoader.class.getName());
 
-	/** Path relative to the working directory (same convention as IXmlReader). */
-	private static final String XML_PATH = "data/BotZones.xml";
+	/** Path relative to the working directory — isolated in the bot data folder. */
+	private static final String XML_PATH = "data/bot/BotZones.xml";
 
 	private BotZoneDataLoader()
 	{

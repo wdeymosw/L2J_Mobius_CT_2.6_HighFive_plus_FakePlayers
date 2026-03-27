@@ -1,7 +1,7 @@
 /*
  * Bot Orchestrator — internal bot management system.
  */
-package org.l2jmobius.gameserver.bot.service;
+package org.l2jmobius.gameserver.bot.core.service;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -9,7 +9,7 @@ import java.util.concurrent.atomic.AtomicInteger;
 import java.util.logging.Logger;
 
 import org.l2jmobius.gameserver.ai.Intention;
-import org.l2jmobius.gameserver.bot.model.BotInstance;
+import org.l2jmobius.gameserver.bot.core.model.BotInstance;
 import org.l2jmobius.gameserver.geoengine.GeoEngine;
 import org.l2jmobius.gameserver.geoengine.pathfinding.GeoLocation;
 import org.l2jmobius.gameserver.geoengine.pathfinding.PathFinding;

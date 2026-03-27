@@ -20,14 +20,13 @@ import java.util.logging.Level;
 import java.util.logging.Logger;
 
 import org.l2jmobius.commons.database.DatabaseFactory;
-import org.l2jmobius.gameserver.bot.core.BotFactory;
-import org.l2jmobius.gameserver.bot.core.BotSpawner;
-import org.l2jmobius.gameserver.bot.model.BotInstance;
-import org.l2jmobius.gameserver.bot.model.BotProfile;
-import org.l2jmobius.gameserver.bot.model.BotType;
-import org.l2jmobius.gameserver.bot.service.ThinkService;
-import org.l2jmobius.gameserver.bot.zone.FarmZone;
-import org.l2jmobius.gameserver.bot.zone.ZoneRegistry;
+import org.l2jmobius.gameserver.bot.manager.BotFactory;
+import org.l2jmobius.gameserver.bot.manager.BotSpawner;
+import org.l2jmobius.gameserver.bot.core.model.BotInstance;
+import org.l2jmobius.gameserver.bot.core.model.BotProfile;
+import org.l2jmobius.gameserver.bot.core.model.BotType;
+import org.l2jmobius.gameserver.bot.core.zone.FarmZone;
+import org.l2jmobius.gameserver.bot.core.zone.ZoneRegistry;
 import org.l2jmobius.gameserver.config.custom.BotConfig;
 
 /**
@@ -318,7 +317,7 @@ public class BotManager
 				{
 					LOGGER.info("BotManager: [" + bot.getPlayer().getName() + "] state=" + bot.getState() + " pos=" + bot.getPlayer().getX() + "," + bot.getPlayer().getY() + " isMoving=" + bot.getPlayer().isMoving());
 				}
-				ThinkService.think(bot);
+				bot.update(now);
 			}
 			catch (Throwable e)
 			{

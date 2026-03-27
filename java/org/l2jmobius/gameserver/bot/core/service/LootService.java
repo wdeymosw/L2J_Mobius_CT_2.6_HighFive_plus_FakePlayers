@@ -1,10 +1,10 @@
 /*
  * Bot Orchestrator — internal bot management system.
  */
-package org.l2jmobius.gameserver.bot.service;
+package org.l2jmobius.gameserver.bot.core.service;
 
 import org.l2jmobius.gameserver.ai.Intention;
-import org.l2jmobius.gameserver.bot.model.BotInstance;
+import org.l2jmobius.gameserver.bot.core.model.BotInstance;
 import org.l2jmobius.gameserver.geoengine.GeoEngine;
 import org.l2jmobius.gameserver.model.World;
 import org.l2jmobius.gameserver.model.actor.Player;

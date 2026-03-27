@@ -1,7 +1,7 @@
 /*
  * Bot Orchestrator — internal bot management system.
  */
-package org.l2jmobius.gameserver.bot.model;
+package org.l2jmobius.gameserver.bot.core.model;
 
 /**
  * Combat role of a bot character, derived from its active class.

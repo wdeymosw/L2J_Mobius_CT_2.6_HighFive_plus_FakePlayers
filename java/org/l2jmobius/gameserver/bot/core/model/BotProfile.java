@@ -1,9 +1,9 @@
 /*
  * Bot Orchestrator — internal bot management system.
  */
-package org.l2jmobius.gameserver.bot.model;
+package org.l2jmobius.gameserver.bot.core.model;
 
-import org.l2jmobius.gameserver.bot.zone.FarmZone;
+import org.l2jmobius.gameserver.bot.core.zone.FarmZone;
 
 /**
  * Immutable template describing a bot character.

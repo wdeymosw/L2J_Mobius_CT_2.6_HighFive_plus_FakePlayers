@@ -1,7 +1,7 @@
 /*
  * Bot Orchestrator — internal bot management system.
  */
-package org.l2jmobius.gameserver.bot.zone;
+package org.l2jmobius.gameserver.bot.core.zone;
 
 import java.util.ArrayList;
 import java.util.Collections;
