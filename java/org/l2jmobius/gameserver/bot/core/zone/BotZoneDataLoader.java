@@ -72,6 +72,7 @@ public class BotZoneDataLoader
 
 				final Location gatekeeper = parseFirst(zone, "gatekeeper");
 				final Location shop = parseFirst(zone, "shop");
+				final Location guildmaster = parseFirst(zone, "guildmaster");
 				final List<Location> cityPath = parsePath(zone);
 
 				if (gatekeeper == null)
@@ -80,7 +81,7 @@ public class BotZoneDataLoader
 					continue;
 				}
 
-				result.put(name, new BotZoneData(gatekeeper, shop != null ? shop : gatekeeper, cityPath));
+				result.put(name, new BotZoneData(gatekeeper, shop != null ? shop : gatekeeper, guildmaster != null ? guildmaster : gatekeeper, cityPath));
 			}
 
 			LOGGER.info("BotZoneDataLoader: loaded " + result.size() + " zone(s) from " + XML_PATH);

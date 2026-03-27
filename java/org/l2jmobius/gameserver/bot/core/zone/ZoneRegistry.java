@@ -153,7 +153,7 @@ public class ZoneRegistry
 		register(new FarmZone("Oren",            61000,   11000, -3668, 1000,  82608,   53120, -1506, 50, 65, 5)); // Sea of Spores
 		register(new FarmZone("Aden",           135143,     841, -3872, 1000, 147456,  -55360, -2979, 58, 75, 8)); // Plains of Glory
 		register(new FarmZone("Rune",           176140,  -23000, -3256, 1000,  43648,  -47744,  -800, 65, 80, 5)); // Fields of Massacre
-		register(new FarmZone("Goddard",        147736, -112290, -2238, 1000, -79264,  150400, -3651, 68, 80, 5)); // Hot Springs
+		register(new FarmZone("Goddard",        147736, -112290, -2238, 1000, 111000,  219000, -3500, 68, 80, 5)); // Hot Springs
 		register(new FarmZone("Schuttgart",     167785,  -49088, -3421, 1000,  87360, -142976, -1293, 70, 80, 5)); // Wall of Argos
 	}
 

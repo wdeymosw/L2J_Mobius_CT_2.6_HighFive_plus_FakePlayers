@@ -4,10 +4,10 @@
 	Each <zone> must match the name used in ZoneRegistry.registerDefaultZones().
 
 	<gatekeeper>   — Teleporter NPC position. Bot walks here before teleporting to farm zone.
-	<shop>         — Grocer/Merchant position. Bot walks here when buying supplies.
+	<shop>         — Grocer position. Bot walks here when buying supplies.
+	<guildmaster>  — Adventure Guildsman position. Used for NOISE bot city walk waypoint.
 	<cityPath>     — Ordered waypoints bot follows when walking through the city.
 	               The last point should be at or near the gatekeeper.
-	               Used when distance to destination exceeds TELEPORT_THRESHOLD.
 -->
 <botZones>
 
@@ -17,10 +17,13 @@
 	<zone name="Talking Island">
 		<!-- Roxxy, Gatekeeper, id=30006 -->
 		<gatekeeper x="-84108" y="244604" z="-3728"/>
-		<!-- TODO: add grocer NPC coords -->
-		<shop x="-84108" y="244604" z="-3728"/>
+		<!-- Katerina, Grocer, id=30004 -->
+		<shop x="-84204" y="240403" z="-3720"/>
+		<!-- Adventure Guildsman id=31775 -->
+		<guildmaster x="-83472" y="242896" z="-3728"/>
 		<cityPath>
 			<point x="-84318" y="243572" z="-3728"/>
+			<point x="-83472" y="242896" z="-3728"/>
 			<point x="-84108" y="244604" z="-3728"/>
 		</cityPath>
 	</zone>
@@ -33,6 +36,8 @@
 		<gatekeeper x="-80752" y="149776" z="-3044"/>
 		<!-- Poesia, Grocer, id=30315 -->
 		<shop x="-79405" y="153963" z="-3160"/>
+		<!-- Adventure Guildsman id=31790 -->
+		<guildmaster x="-83160" y="150844" z="-3127"/>
 		<cityPath>
 			<point x="-81168" y="149888" z="-3043"/>
 			<point x="-80752" y="149776" z="-3044"/>
@@ -43,12 +48,16 @@
 	<!-- Gludio  (farm: Plains of Dion, home: Gludio city)                  -->
 	<!-- ═══════════════════════════════════════════════════════════════════ -->
 	<zone name="Gludio">
-		<!-- Clarissa, Gatekeeper, id=30080 -->
-		<gatekeeper x="-14168" y="123688" z="-3119"/>
-		<!-- TODO: add grocer NPC coords -->
-		<shop x="-14168" y="123688" z="-3119"/>
+		<!-- Bella, Gatekeeper, id=30256 -->
+		<gatekeeper x="-12736" y="122816" z="-3114"/>
+		<!-- Harmony, Grocer, id=30254 -->
+		<shop x="-14934" y="124468" z="-3114"/>
+		<!-- Adventure Guildsman id=31792 -->
+		<guildmaster x="-13328" y="122720" z="-3055"/>
 		<cityPath>
 			<point x="-14168" y="123688" z="-3119"/>
+			<point x="-13328" y="122720" z="-3055"/>
+			<point x="-12736" y="122816" z="-3114"/>
 		</cityPath>
 	</zone>
 
@@ -56,11 +65,16 @@
 	<!-- Dion  (farm: Execution Grounds, home: Dion city)                   -->
 	<!-- ═══════════════════════════════════════════════════════════════════ -->
 	<zone name="Dion">
-		<!-- TODO: find Gatekeeper NPC coords for Dion -->
-		<gatekeeper x="17768" y="144624" z="-3096"/>
-		<shop x="17768" y="144624" z="-3096"/>
+		<!-- Trisha, Gatekeeper, id=30059 -->
+		<gatekeeper x="15631" y="142885" z="-2704"/>
+		<!-- Lara, Grocer, id=30063 -->
+		<shop x="19223" y="146228" z="-3069"/>
+		<!-- Adventure Guildsman id=31797 -->
+		<guildmaster x="15856" y="142816" z="-2704"/>
 		<cityPath>
 			<point x="17768" y="144624" z="-3096"/>
+			<point x="15856" y="142816" z="-2704"/>
+			<point x="15631" y="142885" z="-2704"/>
 		</cityPath>
 	</zone>
 
@@ -68,11 +82,16 @@
 	<!-- Giran  (farm: Breka's Stronghold, home: Giran city)                -->
 	<!-- ═══════════════════════════════════════════════════════════════════ -->
 	<zone name="Giran">
-		<!-- TODO: find Gatekeeper NPC coords for Giran -->
-		<gatekeeper x="83400" y="147720" z="-3403"/>
-		<shop x="83400" y="147720" z="-3403"/>
+		<!-- Clarissa, Gatekeeper, id=30080 -->
+		<gatekeeper x="83396" y="147904" z="-3404"/>
+		<!-- Helvetia, Grocer, id=30081 -->
+		<shop x="80518" y="147922" z="-3506"/>
+		<!-- Adventure Guildsman id=31805 -->
+		<guildmaster x="82840" y="147796" z="-3472"/>
 		<cityPath>
 			<point x="83400" y="147720" z="-3403"/>
+			<point x="82840" y="147796" z="-3472"/>
+			<point x="83396" y="147904" z="-3404"/>
 		</cityPath>
 	</zone>
 
@@ -80,11 +99,15 @@
 	<!-- Oren  (farm: Sea of Spores, home: Oren city)                       -->
 	<!-- ═══════════════════════════════════════════════════════════════════ -->
 	<zone name="Oren">
-		<!-- TODO: find Gatekeeper NPC coords for Oren -->
-		<gatekeeper x="82608" y="53120" z="-1506"/>
-		<shop x="82608" y="53120" z="-1506"/>
+		<!-- Valentina, Gatekeeper, id=30177 -->
+		<gatekeeper x="82992" y="53171" z="-1492"/>
+		<!-- Sara, Grocer, id=30180 -->
+		<shop x="79451" y="54973" z="-1541"/>
+		<!-- Adventure Guildsman id=31814 -->
+		<guildmaster x="80848" y="53168" z="-1558"/>
 		<cityPath>
 			<point x="82608" y="53120" z="-1506"/>
+			<point x="82992" y="53171" z="-1492"/>
 		</cityPath>
 	</zone>
 
@@ -92,23 +115,31 @@
 	<!-- Aden  (farm: Plains of Glory, home: Aden city)                     -->
 	<!-- ═══════════════════════════════════════════════════════════════════ -->
 	<zone name="Aden">
-		<!-- TODO: find Gatekeeper NPC coords for Aden -->
-		<gatekeeper x="147456" y="-55360" z="-2979"/>
-		<shop x="147456" y="-55360" z="-2979"/>
+		<!-- Tatiana, Gatekeeper, id=31275 -->
+		<gatekeeper x="147966" y="-55228" z="-2728"/>
+		<!-- Liesel, Grocer, id=31263 -->
+		<shop x="149312" y="-57360" z="-2966"/>
+		<!-- Adventure Guildsman id=31839 -->
+		<guildmaster x="148548" y="-56376" z="-2779"/>
 		<cityPath>
 			<point x="147456" y="-55360" z="-2979"/>
+			<point x="147966" y="-55228" z="-2728"/>
 		</cityPath>
 	</zone>
 
 	<!-- ═══════════════════════════════════════════════════════════════════ -->
-	<!-- Rune  (farm: Fields of Massacre, home: Rune city)                  -->
+	<!-- Rune  (farm: Fields of Massacre, home: Rune Township)              -->
 	<!-- ═══════════════════════════════════════════════════════════════════ -->
 	<zone name="Rune">
-		<!-- Tatiana, Gatekeeper, id=31275 -->
-		<gatekeeper x="43648" y="-47744" z="-800"/>
-		<shop x="43648" y="-47744" z="-800"/>
+		<!-- Ilyana, Gatekeeper, id=31320 -->
+		<gatekeeper x="43824" y="-47664" z="-800"/>
+		<!-- Weber, Grocer, id=31307 -->
+		<shop x="45120" y="-47452" z="-796"/>
+		<!-- Adventure Guildsman id=31833 -->
+		<guildmaster x="42912" y="-47648" z="-800"/>
 		<cityPath>
 			<point x="43648" y="-47744" z="-800"/>
+			<point x="43824" y="-47664" z="-800"/>
 		</cityPath>
 	</zone>
 
@@ -116,23 +147,33 @@
 	<!-- Goddard  (farm: Hot Springs, home: Goddard city)                   -->
 	<!-- ═══════════════════════════════════════════════════════════════════ -->
 	<zone name="Goddard">
-		<!-- TODO: find Gatekeeper NPC coords for Goddard -->
-		<gatekeeper x="-79264" y="150400" z="-3651"/>
-		<shop x="-79264" y="150400" z="-3651"/>
+		<!-- Flauen, Gatekeeper, id=30899 -->
+		<gatekeeper x="111386" y="219413" z="-3536"/>
+		<!-- Anabel, Grocer area, id=30909 -->
+		<shop x="111549" y="217381" z="-3458"/>
+		<!-- Adventure Guildsman id=31820 -->
+		<guildmaster x="111296" y="218472" z="-3459"/>
 		<cityPath>
-			<point x="-79264" y="150400" z="-3651"/>
+			<point x="111000" y="219000" z="-3500"/>
+			<point x="111296" y="218472" z="-3459"/>
+			<point x="111386" y="219413" z="-3536"/>
 		</cityPath>
 	</zone>
 
 	<!-- ═══════════════════════════════════════════════════════════════════ -->
-	<!-- Schuttgart  (farm: Wall of Argos, home: Schuttgart city)           -->
+	<!-- Schuttgart  (farm: Wall of Argos, home: Schuttgart city)          -->
 	<!-- ═══════════════════════════════════════════════════════════════════ -->
 	<zone name="Schuttgart">
-		<!-- TODO: find Gatekeeper NPC coords for Schuttgart -->
-		<gatekeeper x="87360" y="-142976" z="-1293"/>
-		<shop x="87360" y="-142976" z="-1293"/>
+		<!-- Bilia, Gatekeeper, id=31964 -->
+		<gatekeeper x="87048" y="-143448" z="-1293"/>
+		<!-- Pele, Grocer, id=31952 -->
+		<shop x="85753" y="-141360" z="-1528"/>
+		<!-- Adventure Guildsman id=31732 -->
+		<guildmaster x="86514" y="-142340" z="-1343"/>
 		<cityPath>
 			<point x="87360" y="-142976" z="-1293"/>
+			<point x="86514" y="-142340" z="-1343"/>
+			<point x="87048" y="-143448" z="-1293"/>
 		</cityPath>
 	</zone>
 
