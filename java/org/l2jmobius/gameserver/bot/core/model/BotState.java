@@ -4,42 +4,31 @@
 package org.l2jmobius.gameserver.bot.core.model;
 
 /**
- * Operating modes of a bot.
+ * Operating states of a bot.
  *
  * <pre>
- * IDLE  ──► SEARCHING ──► ATTACKING
- *  ▲              │             │
- *  │         (no target)   (target dead)
- *  │              ▼             ▼
- *  └──── RESTING ◄── TRAVELING ◄── (RETREAT decision)
- *                        │
- *                   DEAD (revive) ──► TRAVELING
+ * IDLE ──► SEARCH_TARGET ──► MOVE_TO_TARGET ──► ATTACK
+ *  ▲              │                  │               │
+ *  └──── REST ◄───┴───────────────── ┴───(RETREAT)──┘
  * </pre>
+ *
+ * Dead is not a state — it is detected via {@code player.isDead()} in
+ * {@link org.l2jmobius.gameserver.bot.core.BotController} before the normal pipeline runs.
  */
 public enum BotState
 {
-	/** No task — waiting. Initial state after spawn or brief pause. */
+	/** No task — brief pause between decisions. */
 	IDLE,
 
-	/** Scanning the farm zone for the next target. */
-	SEARCHING,
+	/** Scanning the farm zone for the next target or loot. */
+	SEARCH_TARGET,
+
+	/** Moving: walking to city waypoints, teleporting to farm, or approaching a target. */
+	MOVE_TO_TARGET,
 
 	/** Actively fighting the current target. */
-	ATTACKING,
+	ATTACK,
 
-	/**
-	 * Complex navigation: walking to city, returning to farm, patrolling.
-	 * Not a combat state — Bot uses {@link org.l2jmobius.gameserver.bot.core.brain.TravelReason}
-	 * to know what to do on arrival.
-	 */
-	TRAVELING,
-
-	/**
-	 * In city or safe zone after a sell/restock trip.
-	 * Bot is limited in actions and waits for the rest timer to expire.
-	 */
-	RESTING,
-
-	/** Bot died and is waiting for the revive delay. */
-	DEAD
+	/** In city after a sell/restock trip — waiting for the rest timer. */
+	REST
 }

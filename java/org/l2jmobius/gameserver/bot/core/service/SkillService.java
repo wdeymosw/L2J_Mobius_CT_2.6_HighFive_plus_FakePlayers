@@ -7,6 +7,7 @@ import java.util.logging.Logger;
 
 import org.l2jmobius.gameserver.bot.core.model.BotInstance;
 import org.l2jmobius.gameserver.model.actor.Player;
+import org.l2jmobius.gameserver.model.effects.EffectType;
 import org.l2jmobius.gameserver.model.skill.Skill;
 import org.l2jmobius.gameserver.model.skill.targets.TargetType;
 
@@ -84,6 +85,40 @@ public class SkillService
 		{
 			bot.getPlayer().addAutoSoulShot(shotId);
 		}
+	}
+
+	/**
+	 * Tries to cast a SELF-targeting heal skill.
+	 * Called before retreating on low HP — one attempt per tick.
+	 *
+	 * @param bot the bot that needs healing
+	 * @return {@code true} if a heal was cast, {@code false} if none available
+	 */
+	public static boolean tryHealSkill(BotInstance bot)
+	{
+		final Player player = bot.getPlayer();
+		for (Skill skill : player.getAllSkills())
+		{
+			if (skill.getTargetType() != TargetType.SELF)
+			{
+				continue;
+			}
+			if (!skill.hasEffectType(EffectType.HEAL))
+			{
+				continue;
+			}
+			if (player.isSkillDisabled(skill))
+			{
+				continue;
+			}
+			if (player.getCurrentMp() < skill.getMpConsume())
+			{
+				continue;
+			}
+			player.useMagic(skill, false, false);
+			return true;
+		}
+		return false;
 	}
 
 	/**

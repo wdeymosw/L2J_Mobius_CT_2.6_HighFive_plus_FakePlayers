@@ -1,11 +1,11 @@
 /*
  * Bot Orchestrator — internal bot management system.
  */
-package org.l2jmobius.gameserver.bot.core.action;
+package org.l2jmobius.gameserver.bot.core.model;
 
 /**
- * Reason for entering {@link org.l2jmobius.gameserver.bot.core.model.BotState#TRAVELING}.
- * Used by the bot's update loop to determine behaviour on arrival.
+ * Reason for entering {@link BotState#MOVE_TO_TARGET}.
+ * Used by BotController to determine behaviour on arrival.
  */
 public enum TravelReason
 {

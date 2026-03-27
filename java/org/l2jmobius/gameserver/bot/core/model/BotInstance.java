@@ -5,8 +5,8 @@ package org.l2jmobius.gameserver.bot.core.model;
 
 import java.util.List;
 
+import org.l2jmobius.gameserver.bot.core.action.BotAction;
 import org.l2jmobius.gameserver.bot.core.action.BotExecutor;
-import org.l2jmobius.gameserver.bot.core.action.TravelReason;
 import org.l2jmobius.gameserver.bot.core.zone.FarmZone;
 import org.l2jmobius.gameserver.geoengine.pathfinding.GeoLocation;
 import org.l2jmobius.gameserver.model.Location;
@@ -55,6 +55,8 @@ public class BotInstance
 	private long _nextSearchTime = 0;
 	/** Session limit for PASSIVE bots (0 = unlimited). */
 	private long _sessionEndTime = 0;
+	/** Time to revive after death (0 = alive). */
+	private long _reviveTime = 0;
 
 	// -------------------------------------------------------------------------
 	// Level tracking
@@ -114,7 +116,15 @@ public class BotInstance
 	public Player getPlayer() { return _player; }
 	public BotProfile getProfile() { return _profile; }
 	public BotRole getRole() { return _role; }
-	public BotExecutor getExecutor() { return _executor; }
+
+	// =========================================================================
+	// Executor delegates (prefer these over exposing the executor directly)
+	// =========================================================================
+
+	public void queueAction(BotAction action) { _executor.add(action); }
+	public void clearQueue() { _executor.clear(); }
+	public boolean isQueueIdle() { return _executor.isIdle(); }
+	public void tickExecutor(long now) { _executor.tick(this, now); }
 
 	public BotState getState() { return _state; }
 	public void setState(BotState state) { _state = state; }
@@ -156,6 +166,9 @@ public class BotInstance
 
 	public long getSessionEndTime() { return _sessionEndTime; }
 	public void setSessionEndTime(long time) { _sessionEndTime = time; }
+
+	public long getReviveTime() { return _reviveTime; }
+	public void setReviveTime(long time) { _reviveTime = time; }
 
 	public boolean isSessionExpired()
 	{

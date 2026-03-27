@@ -48,7 +48,7 @@ public class TargetService
 		final Player player = bot.getPlayer();
 
 		// Find all Attackable mobs within search radius.
-		final List<Attackable> candidates = World.getInstance().getVisibleObjectsInRange(player, Attackable.class, SEARCH_RADIUS, mob -> isValidTarget(mob));
+		final List<Attackable> candidates = World.getInstance().getVisibleObjectsInRange(player, Attackable.class, SEARCH_RADIUS, mob -> isValidTarget(bot, mob));
 
 		if (candidates.isEmpty())
 		{
@@ -71,8 +71,8 @@ public class TargetService
 		bot.setTarget(nearest);
 	}
 
-	private static boolean isValidTarget(Attackable mob)
+	private static boolean isValidTarget(BotInstance bot, Attackable mob)
 	{
-		return !mob.isDead();
+		return !mob.isDead() && bot.getZone().contains(mob.getX(), mob.getY());
 	}
 }

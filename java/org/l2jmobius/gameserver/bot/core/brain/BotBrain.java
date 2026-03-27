@@ -3,6 +3,7 @@
  */
 package org.l2jmobius.gameserver.bot.core.brain;
 
+import org.l2jmobius.gameserver.bot.core.model.BotContext;
 import org.l2jmobius.gameserver.bot.core.model.BotState;
 
 /**
@@ -34,7 +35,7 @@ public class BotBrain
 		// Not in farm zone — handled outside Brain (out-of-zone check in update loop)
 
 		// TRAVELING or RESTING — do not interrupt with new combat decisions
-		if ((state == BotState.TRAVELING) || (state == BotState.RESTING))
+		if ((state == BotState.MOVE_TO_TARGET) || (state == BotState.REST))
 		{
 			return BotDecision.IDLE;
 		}

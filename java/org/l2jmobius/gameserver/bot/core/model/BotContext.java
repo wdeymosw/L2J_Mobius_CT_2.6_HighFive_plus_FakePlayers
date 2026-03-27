@@ -1,10 +1,8 @@
 /*
  * Bot Orchestrator — internal bot management system.
  */
-package org.l2jmobius.gameserver.bot.core.brain;
+package org.l2jmobius.gameserver.bot.core.model;
 
-import org.l2jmobius.gameserver.bot.core.model.BotInstance;
-import org.l2jmobius.gameserver.bot.core.model.BotRole;
 import org.l2jmobius.gameserver.bot.core.service.SupplyService;
 import org.l2jmobius.gameserver.model.Location;
 import org.l2jmobius.gameserver.model.actor.Creature;
@@ -13,7 +11,7 @@ import org.l2jmobius.gameserver.model.actor.Player;
 /**
  * Immutable snapshot of a bot's world state, built once per tick.
  * <p>
- * {@link BotBrain} reads only this — never the {@link Player} directly.
+ * {@link org.l2jmobius.gameserver.bot.core.brain.BotBrain} reads only this — never the {@link Player} directly.
  */
 public class BotContext
 {

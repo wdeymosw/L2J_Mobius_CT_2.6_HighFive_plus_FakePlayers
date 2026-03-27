@@ -1,8 +1,9 @@
 /*
  * Bot Orchestrator — internal bot management system.
  */
-package org.l2jmobius.gameserver.bot.core.brain;
+package org.l2jmobius.gameserver.bot.core.behavior;
 
+import org.l2jmobius.gameserver.bot.core.brain.BotDecision;
 import org.l2jmobius.gameserver.bot.core.model.BotInstance;
 
 /**
@@ -13,8 +14,8 @@ import org.l2jmobius.gameserver.bot.core.model.BotInstance;
 public class PassiveBehavior implements BotBehavior
 {
 	@Override
-	public void think(BotInstance bot, BotContext ctx, long now)
+	public void think(BotInstance bot, BotDecision decision, long now)
 	{
-		bot.getExecutor().tick(bot, now);
+		// TODO: Шаг E — city walk
 	}
 }

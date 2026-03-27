@@ -5,6 +5,7 @@ package org.l2jmobius.gameserver.bot.core.service;
 
 import org.l2jmobius.gameserver.ai.Intention;
 import org.l2jmobius.gameserver.bot.core.model.BotInstance;
+import org.l2jmobius.gameserver.bot.core.model.BotRole;
 import org.l2jmobius.gameserver.bot.core.service.SkillService;
 import org.l2jmobius.gameserver.model.Location;
 import org.l2jmobius.gameserver.model.actor.Creature;
@@ -59,7 +60,8 @@ public class CombatService
 		final Player player = bot.getPlayer();
 		if (!player.isAttackingNow())
 		{
-			player.rechargeShots(true, false);
+			final boolean magic = (bot.getRole() == BotRole.MAGE) || (bot.getRole() == BotRole.HEALER) || (bot.getRole() == BotRole.BUFFER) || (bot.getRole() == BotRole.SUMMONER);
+			player.rechargeShots(!magic, magic);
 			player.doAttack(target);
 		}
 	}
