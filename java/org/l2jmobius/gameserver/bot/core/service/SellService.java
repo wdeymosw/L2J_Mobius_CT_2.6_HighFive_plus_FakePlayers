@@ -14,6 +14,7 @@ import org.l2jmobius.gameserver.model.item.ItemTemplate;
 import org.l2jmobius.gameserver.model.item.enums.ItemGrade;
 import org.l2jmobius.gameserver.model.item.enums.ItemProcessType;
 import org.l2jmobius.gameserver.model.item.instance.Item;
+import org.l2jmobius.gameserver.model.item.type.CrystalType;
 import org.l2jmobius.gameserver.model.item.type.EtcItemType;
 import org.l2jmobius.gameserver.model.itemcontainer.Inventory;
 
@@ -22,14 +23,15 @@ import org.l2jmobius.gameserver.model.itemcontainer.Inventory;
  * <p>
  * Strategy:
  * <ol>
- *   <li>Identify <em>valuable</em> items: A/S-grade weapons/armour and recipes.</li>
- *   <li>Keep the top {@value #MAX_VALUABLE_KEEP} most expensive valuables (by
- *       reference price) — they will be listed in a player private store by
- *       {@link ShopService}.</li>
- *   <li>Sell everything else (trash and excess valuables) to a virtual NPC at
- *       {@value #SELL_RATE} × reference price.</li>
+ *   <li>Identify <em>valuable</em> items: B/A/S-grade weapons/armour, craft
+ *       materials and crystals; recipes of any grade.</li>
+ *   <li>Among valuables, discard those whose reference price is below
+ *       {@value #MIN_SHOP_PRICE} — not worth a shop slot.</li>
+ *   <li>Keep up to {@code player.getPrivateSellStoreLimit()} of the most
+ *       expensive remaining valuables for {@link ShopService}.</li>
+ *   <li>Sell everything else (trash and overflow valuables) to a virtual NPC
+ *       at {@value #SELL_RATE} × reference price.</li>
  * </ol>
- * Selling is virtual (no NPC walk required).
  */
 public class SellService
 {
@@ -38,8 +40,11 @@ public class SellService
 	/** NPC sell price = reference price × this multiplier (retail ≈ 50 %). */
 	private static final double SELL_RATE = 0.5;
 
-	/** Maximum number of valuable items kept for the private store. */
-	static final int MAX_VALUABLE_KEEP = 4;
+	/**
+	 * Minimum reference price for an item to be worth listing in a private store.
+	 * Items below this threshold are sold to NPC even if technically "valuable".
+	 */
+	private static final long MIN_SHOP_PRICE = 5_000;
 
 	private SellService()
 	{
@@ -57,31 +62,28 @@ public class SellService
 	}
 
 	/**
-	 * Sells all items except equipped gear, adena, and the top
-	 * {@value #MAX_VALUABLE_KEEP} most expensive valuables.
+	 * Sells all items except equipped gear, adena, and the top-N most expensive
+	 * shop-worthy valuables (N = player's private store slot limit).
 	 *
 	 * @param bot the bot selling items
 	 */
 	public static void sell(BotInstance bot)
 	{
 		final Player player = bot.getPlayer();
-
-		// Snapshot to avoid ConcurrentModificationException.
 		final List<Item> all = new ArrayList<>(player.getInventory().getItems());
 
-		// Collect and sort valuables by reference price descending.
-		final List<Item> valuables = new ArrayList<>();
+		// Collect valuables that meet the price floor, sorted most expensive first.
+		final List<Item> keepCandidates = new ArrayList<>();
 		for (Item item : all)
 		{
-			if (!item.isEquipped() && isValuable(item))
+			if (!item.isEquipped() && isValuable(item) && (item.getTemplate().getReferencePrice() >= MIN_SHOP_PRICE))
 			{
-				valuables.add(item);
+				keepCandidates.add(item);
 			}
 		}
-		valuables.sort(Comparator.comparingLong((Item i) -> i.getTemplate().getReferencePrice()).reversed());
+		keepCandidates.sort(Comparator.comparingLong((Item i) -> i.getTemplate().getReferencePrice()).reversed());
 
-		// Items to keep: first MAX_VALUABLE_KEEP by price.
-		final int keepCount = Math.min(valuables.size(), MAX_VALUABLE_KEEP);
+		final int keepCount = Math.min(keepCandidates.size(), player.getPrivateSellStoreLimit());
 
 		long totalEarned = 0;
 		int soldCount = 0;
@@ -97,8 +99,9 @@ public class SellService
 				continue;
 			}
 
-			// Keep top-N valuables; sell the rest (including excess valuables).
-			if (isValuable(item) && (valuables.indexOf(item) < keepCount))
+			// Keep the top-N shop-worthy valuables; sell everything else.
+			final int candidateIndex = keepCandidates.indexOf(item);
+			if ((candidateIndex >= 0) && (candidateIndex < keepCount))
 			{
 				continue;
 			}
@@ -124,8 +127,8 @@ public class SellService
 	// -------------------------------------------------------------------------
 
 	/**
-	 * Returns {@code true} for items the bot should not sell to an NPC:
-	 * A/S-grade weapons/armour and recipes.
+	 * Returns {@code true} for items worth listing in a player private store
+	 * (high-grade gear, craft materials, crystals, and recipes).
 	 *
 	 * @param item the item to classify
 	 * @return true if valuable
@@ -134,18 +137,31 @@ public class SellService
 	{
 		final ItemTemplate template = item.getTemplate();
 
+		// Recipes of any grade.
 		if (template.getItemType() == EtcItemType.RECIPE)
 		{
 			return true;
 		}
 
+		// Craft materials B-grade and above.
+		if (template.getItemType() == EtcItemType.MATERIAL)
+		{
+			final ItemGrade grade = template.getItemGrade();
+			return (grade == ItemGrade.B) || (grade == ItemGrade.A) || (grade == ItemGrade.S);
+		}
+
+		// Crystals B/A/S — identified by their specific item IDs.
+		final int id = item.getId();
+		if ((id == CrystalType.B.getCrystalId()) || (id == CrystalType.A.getCrystalId()) || (id == CrystalType.S.getCrystalId()))
+		{
+			return true;
+		}
+
+		// B/A/S-grade weapons and armour.
 		if (item.isWeapon() || item.isArmor())
 		{
 			final ItemGrade grade = template.getItemGrade();
-			if ((grade == ItemGrade.A) || (grade == ItemGrade.S))
-			{
-				return true;
-			}
+			return (grade == ItemGrade.B) || (grade == ItemGrade.A) || (grade == ItemGrade.S);
 		}
 
 		return false;

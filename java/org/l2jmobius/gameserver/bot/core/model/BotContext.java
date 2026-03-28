@@ -33,6 +33,9 @@ public class BotContext
 	/** {@code true} when shots/arrows are below the restock threshold. */
 	public final boolean outOfAmmo;
 
+	/** {@code true} when inventory weight penalty ≥ 2 (load > 66 %). */
+	public final boolean overweight;
+
 	/** {@code true} when the target is alive and within physical attack range. */
 	public final boolean canAttackTarget;
 
@@ -44,7 +47,7 @@ public class BotContext
 
 	private static final double LOW_HP_THRESHOLD = 20.0;
 
-	private BotContext(double hpPercent, Creature target, boolean isInFarmZone, boolean lowHp, boolean inventoryFull, boolean outOfAmmo, boolean canAttackTarget, Location position, BotRole role)
+	private BotContext(double hpPercent, Creature target, boolean isInFarmZone, boolean lowHp, boolean inventoryFull, boolean outOfAmmo, boolean overweight, boolean canAttackTarget, Location position, BotRole role)
 	{
 		this.hpPercent = hpPercent;
 		this.target = target;
@@ -52,6 +55,7 @@ public class BotContext
 		this.lowHp = lowHp;
 		this.inventoryFull = inventoryFull;
 		this.outOfAmmo = outOfAmmo;
+		this.overweight = overweight;
 		this.canAttackTarget = canAttackTarget;
 		this.position = position;
 		this.role = role;
@@ -82,6 +86,7 @@ public class BotContext
 			hp < LOW_HP_THRESHOLD,
 			!player.isInventoryUnder90(false),
 			SupplyService.needsRestock(bot),
+			player.getWeightPenalty() >= 2,
 			canAttack,
 			new Location(player.getX(), player.getY(), player.getZ()),
 			bot.getRole());

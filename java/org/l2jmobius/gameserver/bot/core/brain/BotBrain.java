@@ -25,32 +25,24 @@ public class BotBrain
 	 * @return the decision for this tick
 	 */
 	public static BotDecision decide(BotContext ctx, BotState state)
-	{
-		// Retreat — highest priority, overrides everything
-		if (ctx.lowHp || ctx.inventoryFull || ctx.outOfAmmo)
-		{
-			return BotDecision.RETREAT;
-		}
+{
+    if (ctx.lowHp || ctx.inventoryFull || ctx.outOfAmmo || ctx.overweight)
+        return BotDecision.RETREAT;
 
-		// Not in farm zone — handled outside Brain (out-of-zone check in update loop)
+    if ((state == BotState.MOVE_TO_TARGET) || (state == BotState.REST))
+        return BotDecision.IDLE;
 
-		// TRAVELING or RESTING — do not interrupt with new combat decisions
-		if ((state == BotState.MOVE_TO_TARGET) || (state == BotState.REST))
-		{
-			return BotDecision.IDLE;
-		}
+    if (state == BotState.ATTACK && !ctx.hasTarget())
+        return BotDecision.SEARCH_TARGET;
 
-		// Valid target → attack (only if within range)
-		if (ctx.hasTarget())
-		{
-			if (!ctx.canAttackTarget)
-			{
-				return BotDecision.SEARCH_TARGET;
-			}
-			return BotDecision.ATTACK_TARGET;
-		}
+    if (ctx.hasTarget())
+    {
+        if (!ctx.canAttackTarget)
+            return BotDecision.SEARCH_TARGET;
 
-		// Default: look for something to do
-		return BotDecision.SEARCH_TARGET;
-	}
+        return BotDecision.ATTACK_TARGET;
+    }
+
+    return BotDecision.SEARCH_TARGET;
+}
 }

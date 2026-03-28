@@ -20,13 +20,12 @@ import org.l2jmobius.gameserver.network.serverpackets.PrivateStoreMsgSell;
  * <p>
  * Flow:
  * <ol>
- *   <li>{@link SellService#sell} keeps the top-4 valuables in inventory.</li>
- *   <li>{@link #openShop} lists them in a sell store at 2× reference price.</li>
- *   <li>{@link #closeShop} is called before the bot leaves the city.</li>
+ *   <li>{@link SellService#sell} retains the most expensive shop-worthy
+ *       valuables in inventory (up to the store slot limit).</li>
+ *   <li>{@link #openShop} lists them at {@value #SHOP_PRICE_RATE}× reference
+ *       price and sits the bot down.</li>
+ *   <li>{@link #closeShop} stands the bot up before it leaves the city.</li>
  * </ol>
- * Price factor 2× is intentionally above the NPC buy price (0.5×) but below
- * player-market rates for A/S gear — making it attractive to buyers while
- * keeping implementation price-table-free.
  */
 public class ShopService
 {
@@ -40,8 +39,9 @@ public class ShopService
 	}
 
 	/**
-	 * Opens a private sell store with all valuable items currently in the bot's
-	 * inventory (up to {@link SellService#MAX_VALUABLE_KEEP} items).
+	 * Opens a private sell store with all valuable items in the bot's inventory.
+	 * Items are listed most expensive first; the number of slots is capped by
+	 * {@code player.getPrivateSellStoreLimit()}.
 	 * Does nothing if no valuables are present.
 	 *
 	 * @param bot the bot opening the shop
@@ -49,8 +49,9 @@ public class ShopService
 	public static void openShop(BotInstance bot)
 	{
 		final Player player = bot.getPlayer();
+		final int slotLimit = player.getPrivateSellStoreLimit();
 
-		// Collect valuables, sorted most expensive first.
+		// Collect and sort valuables most expensive first.
 		final List<Item> valuables = new ArrayList<>();
 		for (Item item : player.getInventory().getItems())
 		{
@@ -67,14 +68,14 @@ public class ShopService
 
 		valuables.sort(Comparator.comparingLong((Item i) -> i.getTemplate().getReferencePrice()).reversed());
 
-		// Populate sell list.
+		// Populate sell list up to the slot limit.
 		final TradeList sellList = player.getSellList();
 		sellList.clear();
 
 		int listed = 0;
 		for (Item item : valuables)
 		{
-			if (listed >= SellService.MAX_VALUABLE_KEEP)
+			if (listed >= slotLimit)
 			{
 				break;
 			}
@@ -95,7 +96,7 @@ public class ShopService
 		player.broadcastUserInfo();
 		player.broadcastPacket(new PrivateStoreMsgSell(player));
 
-		LOGGER.info("ShopService: " + player.getName() + " opened private shop with " + listed + " item(s).");
+		LOGGER.info("ShopService: " + player.getName() + " opened private shop (" + listed + "/" + slotLimit + " slots).");
 	}
 
 	/**
