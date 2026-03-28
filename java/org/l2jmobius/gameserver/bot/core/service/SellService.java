@@ -4,6 +4,7 @@
 package org.l2jmobius.gameserver.bot.core.service;
 
 import java.util.ArrayList;
+import java.util.Comparator;
 import java.util.List;
 import java.util.logging.Logger;
 
@@ -17,23 +18,28 @@ import org.l2jmobius.gameserver.model.item.type.EtcItemType;
 import org.l2jmobius.gameserver.model.itemcontainer.Inventory;
 
 /**
- * Sells "trash" items to an imaginary NPC shop and returns adena to the bot.
+ * Sells items when a bot visits the city.
  * <p>
- * Items are split into two categories:
- * <ul>
- *   <li><b>Trash</b> — sold immediately at 50 % of reference price.</li>
- *   <li><b>Valuable</b> — kept in inventory for a future private-shop stage
- *       (A/S-grade weapons/armour, recipes).</li>
- * </ul>
- * Selling is virtual (no NPC walk required). This keeps the service simple
- * and reliable; real NPC interaction can be layered on top later.
+ * Strategy:
+ * <ol>
+ *   <li>Identify <em>valuable</em> items: A/S-grade weapons/armour and recipes.</li>
+ *   <li>Keep the top {@value #MAX_VALUABLE_KEEP} most expensive valuables (by
+ *       reference price) — they will be listed in a player private store by
+ *       {@link ShopService}.</li>
+ *   <li>Sell everything else (trash and excess valuables) to a virtual NPC at
+ *       {@value #SELL_RATE} × reference price.</li>
+ * </ol>
+ * Selling is virtual (no NPC walk required).
  */
 public class SellService
 {
 	private static final Logger LOGGER = Logger.getLogger(SellService.class.getName());
 
-	/** NPC sell price = reference price × this multiplier (retail is ~50 %). */
+	/** NPC sell price = reference price × this multiplier (retail ≈ 50 %). */
 	private static final double SELL_RATE = 0.5;
+
+	/** Maximum number of valuable items kept for the private store. */
+	static final int MAX_VALUABLE_KEEP = 4;
 
 	private SellService()
 	{
@@ -41,10 +47,9 @@ public class SellService
 
 	/**
 	 * Returns {@code true} if the bot should head to the shop now.
-	 * Triggered when inventory slots reach 90 % capacity.
 	 *
 	 * @param bot the bot to check
-	 * @return true if inventory is >= 90 % full
+	 * @return true if inventory is ≥ 90 % full
 	 */
 	public static boolean needsSell(BotInstance bot)
 	{
@@ -52,39 +57,49 @@ public class SellService
 	}
 
 	/**
-	 * Sells all trash items from the bot's inventory and credits adena.
-	 * Valuable items (A/S gear, recipes) are left untouched for the
-	 * private-shop stage.
+	 * Sells all items except equipped gear, adena, and the top
+	 * {@value #MAX_VALUABLE_KEEP} most expensive valuables.
 	 *
 	 * @param bot the bot selling items
-	 * @return true if any valuable items remain that warrant a private shop
 	 */
-	public static boolean sell(BotInstance bot)
+	public static void sell(BotInstance bot)
 	{
 		final Player player = bot.getPlayer();
-		long totalEarned = 0;
-		int soldCount = 0;
-		boolean hasValuables = false;
 
 		// Snapshot to avoid ConcurrentModificationException.
-		final List<Item> snapshot = new ArrayList<>(player.getInventory().getItems());
+		final List<Item> all = new ArrayList<>(player.getInventory().getItems());
 
-		for (Item item : snapshot)
+		// Collect and sort valuables by reference price descending.
+		final List<Item> valuables = new ArrayList<>();
+		for (Item item : all)
+		{
+			if (!item.isEquipped() && isValuable(item))
+			{
+				valuables.add(item);
+			}
+		}
+		valuables.sort(Comparator.comparingLong((Item i) -> i.getTemplate().getReferencePrice()).reversed());
+
+		// Items to keep: first MAX_VALUABLE_KEEP by price.
+		final int keepCount = Math.min(valuables.size(), MAX_VALUABLE_KEEP);
+
+		long totalEarned = 0;
+		int soldCount = 0;
+
+		for (Item item : all)
 		{
 			if (item.isEquipped())
 			{
 				continue;
 			}
-
-			// Never sell adena.
 			if ((item.getId() == Inventory.ADENA_ID) || (item.getId() == Inventory.ANCIENT_ADENA_ID))
 			{
 				continue;
 			}
 
-			if (isValuable(item))
+			// Keep top-N valuables; sell the rest (including excess valuables).
+			if (isValuable(item) && (valuables.indexOf(item) < keepCount))
 			{
-				hasValuables = true;
 				continue;
 			}
 
@@ -101,36 +116,29 @@ public class SellService
 
 		if (soldCount > 0)
 		{
-			LOGGER.info("SellService: " + player.getName()
-				+ " sold " + soldCount + " item(s), earned " + totalEarned + " adena."
-				+ (hasValuables ? " Valuable loot remains for private shop." : ""));
+			LOGGER.info("SellService: " + player.getName() + " sold " + soldCount + " item(s), earned " + totalEarned + " adena"
+				+ (keepCount > 0 ? ", kept " + keepCount + " valuable(s) for shop" : "") + ".");
 		}
-
-		return hasValuables;
 	}
 
 	// -------------------------------------------------------------------------
-	// Classification
-	// -------------------------------------------------------------------------
 
 	/**
-	 * Returns {@code true} for items the bot should NOT sell to an NPC
-	 * (high-grade gear and recipes — saved for a private shop).
+	 * Returns {@code true} for items the bot should not sell to an NPC:
+	 * A/S-grade weapons/armour and recipes.
 	 *
 	 * @param item the item to classify
-	 * @return true if valuable (keep), false if trash (sell)
+	 * @return true if valuable
 	 */
-	private static boolean isValuable(Item item)
+	static boolean isValuable(Item item)
 	{
 		final ItemTemplate template = item.getTemplate();
 
-		// Recipes → private shop.
 		if (template.getItemType() == EtcItemType.RECIPE)
 		{
 			return true;
 		}
 
-		// A/S-grade weapons and armour → private shop.
 		if (item.isWeapon() || item.isArmor())
 		{
 			final ItemGrade grade = template.getItemGrade();

@@ -22,6 +22,7 @@ import org.l2jmobius.gameserver.bot.core.model.TravelReason;
 import org.l2jmobius.gameserver.bot.core.service.EquipService;
 import org.l2jmobius.gameserver.bot.core.service.LevelUpService;
 import org.l2jmobius.gameserver.bot.core.service.SellService;
+import org.l2jmobius.gameserver.bot.core.service.ShopService;
 import org.l2jmobius.gameserver.bot.core.service.SkillService;
 import org.l2jmobius.gameserver.bot.core.service.SupplyService;
 import org.l2jmobius.gameserver.bot.core.zone.BotZoneData;
@@ -183,6 +184,7 @@ public class BotController
 			EquipService.equip(bot);
 			SupplyService.restock(bot);
 			LevelUpService.checkAndUpgrade(bot);
+			ShopService.openShop(bot);
 			enterResting(bot, now);
 		}
 	}
@@ -202,6 +204,7 @@ public class BotController
 	 */
 	public static void enterTravel(BotInstance bot, TravelReason reason, long now)
 	{
+		ShopService.closeShop(bot);
 		bot.setState(BotState.MOVE_TO_TARGET);
 		bot.setTravelReason(reason);
 		bot.clearQueue();
