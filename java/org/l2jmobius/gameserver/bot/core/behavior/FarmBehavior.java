@@ -11,6 +11,7 @@ import org.l2jmobius.gameserver.bot.core.action.WaitAction;
 import org.l2jmobius.gameserver.bot.core.brain.BotDecision;
 import org.l2jmobius.gameserver.bot.core.model.BotInstance;
 import org.l2jmobius.gameserver.bot.core.model.BotState;
+import org.l2jmobius.gameserver.bot.core.service.BuffService;
 import org.l2jmobius.gameserver.bot.core.service.LootService;
 import org.l2jmobius.gameserver.bot.core.service.TargetService;
 import org.l2jmobius.gameserver.model.Location;
@@ -65,13 +66,19 @@ public class FarmBehavior implements BotBehavior
 					break;
 				}
 
-				// 1. лут
+				// 1. самобафф
+				if (BuffService.tryBuffSelf(bot))
+				{
+					break;
+				}
+
+				// 2. лут
 				if (LootService.pickupNearest(bot))
 				{
 					break;
 				}
 
-				// 2. таргет
+				// 3. таргет
 				TargetService.findTarget(bot);
 				if (bot.hasTarget())
 				{
@@ -81,7 +88,7 @@ public class FarmBehavior implements BotBehavior
 					break;
 				}
 
-				// 3. wander
+				// 4. wander
 				wander(bot, now);
 				break;
 			}
