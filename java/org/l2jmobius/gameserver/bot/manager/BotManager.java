@@ -112,6 +112,9 @@ public class BotManager
 
 		loadBots();
 
+		// Enable per-tick debug logging — disable in production.
+		org.l2jmobius.gameserver.bot.core.BotController.DEBUG_TICKS = true;
+
 		if (_availablePool.isEmpty())
 		{
 			LOGGER.warning("BotManager: no bot characters found in DB (is_bot=1). Nothing to spawn.");
