@@ -33,6 +33,9 @@ public class BotContext
 	/** {@code true} when shots/arrows are below the restock threshold. */
 	public final boolean outOfAmmo;
 
+	/** {@code true} when the target is alive and within physical attack range. */
+	public final boolean canAttackTarget;
+
 	/** Bot's current coordinates. */
 	public final Location position;
 
@@ -41,7 +44,7 @@ public class BotContext
 
 	private static final double LOW_HP_THRESHOLD = 20.0;
 
-	private BotContext(double hpPercent, Creature target, boolean isInFarmZone, boolean lowHp, boolean inventoryFull, boolean outOfAmmo, Location position, BotRole role)
+	private BotContext(double hpPercent, Creature target, boolean isInFarmZone, boolean lowHp, boolean inventoryFull, boolean outOfAmmo, boolean canAttackTarget, Location position, BotRole role)
 	{
 		this.hpPercent = hpPercent;
 		this.target = target;
@@ -49,6 +52,7 @@ public class BotContext
 		this.lowHp = lowHp;
 		this.inventoryFull = inventoryFull;
 		this.outOfAmmo = outOfAmmo;
+		this.canAttackTarget = canAttackTarget;
 		this.position = position;
 		this.role = role;
 	}
@@ -69,13 +73,16 @@ public class BotContext
 	{
 		final Player player = bot.getPlayer();
 		final double hp = (player.getMaxHp() > 0) ? (player.getCurrentHp() / player.getMaxHp() * 100.0) : 0;
+		final Creature target = bot.getTarget();
+		final boolean canAttack = (target != null) && !target.isDead() && (player.calculateDistance3D(target) < player.getPhysicalAttackRange());
 		return new BotContext(
 			hp,
-			bot.getTarget(),
+			target,
 			bot.isInZone(),
 			hp < LOW_HP_THRESHOLD,
 			!player.isInventoryUnder90(false),
 			SupplyService.needsRestock(bot),
+			canAttack,
 			new Location(player.getX(), player.getY(), player.getZ()),
 			bot.getRole());
 	}

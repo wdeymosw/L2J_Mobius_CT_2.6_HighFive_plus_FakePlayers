@@ -40,9 +40,13 @@ public class BotBrain
 			return BotDecision.IDLE;
 		}
 
-		// Valid target → attack
+		// Valid target → attack (only if within range)
 		if (ctx.hasTarget())
 		{
+			if (!ctx.canAttackTarget)
+			{
+				return BotDecision.SEARCH_TARGET;
+			}
 			return BotDecision.ATTACK_TARGET;
 		}
 
