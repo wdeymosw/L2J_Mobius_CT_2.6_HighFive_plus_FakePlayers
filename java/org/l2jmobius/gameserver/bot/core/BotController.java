@@ -20,6 +20,7 @@ import org.l2jmobius.gameserver.bot.core.model.BotState;
 import org.l2jmobius.gameserver.bot.core.model.BotType;
 import org.l2jmobius.gameserver.bot.core.model.TravelReason;
 import org.l2jmobius.gameserver.bot.core.service.EquipService;
+import org.l2jmobius.gameserver.bot.core.service.LevelUpService;
 import org.l2jmobius.gameserver.bot.core.service.SellService;
 import org.l2jmobius.gameserver.bot.core.service.SkillService;
 import org.l2jmobius.gameserver.bot.core.service.SupplyService;
@@ -181,10 +182,7 @@ public class BotController
 			SellService.sell(bot);
 			EquipService.equip(bot);
 			SupplyService.restock(bot);
-			if (bot.hasLeveledUp())
-			{
-				SkillService.setup(bot);
-			}
+			LevelUpService.checkAndUpgrade(bot);
 			enterResting(bot, now);
 		}
 	}
