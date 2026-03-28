@@ -15,8 +15,8 @@ import org.l2jmobius.gameserver.model.item.enums.ItemProcessType;
  * Provides grade-appropriate gear sets for bots by role.
  * <p>
  * Gear roles:
- *   TANK    — heavy armor + sword + shield
- *   FIGHTER — heavy armor + sword or dagger (MELEE, CRAFTER)
+ *   TANK    — heavy armor + 1H sword + shield
+ *   FIGHTER — light/heavy armor + sword (no offhand)
  *   ARCHER  — light armor + bow
  *   CASTER  — robe + staff/blunt (MAGE, HEALER, BUFFER, SUMMONER)
  * <p>
@@ -24,6 +24,7 @@ import org.l2jmobius.gameserver.model.item.enums.ItemProcessType;
  * <p>
  * After giving items, call {@link EquipService#equip(BotInstance)} to put them on.
  * Item IDs are mid-tier — intentionally NOT top/masterwork gear.
+ * All IDs verified against dist/game/data/stats/items/*.xml.
  */
 public class GearService
 {
@@ -32,7 +33,7 @@ public class GearService
 	// -------------------------------------------------------------------------
 	// Gear set slots: [weapon, offhand, chest, legs, gloves, boots, helmet]
 	// offhand = 0  → no offhand
-	// chest   = -1 → onepiece armor (legs slot unused)
+	// legs    = 0  → onepiece armor (chest covers both)
 	// -------------------------------------------------------------------------
 	private static final int WEAPON  = 0;
 	private static final int OFFHAND = 1;
@@ -43,63 +44,63 @@ public class GearService
 	private static final int HELMET  = 6;
 
 	// -------------------------------------------------------------------------
-	// TANK  (heavy armor + 1H sword + shield)
+	// TANK  (HEAVY armor + 1H sword + shield)
 	// -------------------------------------------------------------------------
 	private static final int[][] TANK_SETS =
 	{
 		// D-grade
-		{ 123,  626,  432,  413,  604,   40,   45 }, // Saber / Bronze Shield / mid D set
+		{  123,  626,  352,  377,  604,   40,   45 }, // Saber / Bronze Shield / Brigandine Tunic(HEAVY) / Scale Gaiters(HEAVY) / Crafted Leather Gloves / Leather Boots / Bone Helmet
 		// C-grade
-		{  49,  107,   60,    0,   61,   64,  517 }, // (C sword TBD) / Composite Shield / Composite Armor (onepiece→0 legs)
+		{   74,  107,   60,    0,   61,   64,  517 }, // Katana(1H) / Composite Shield / Composite Armor(HEAVY onepiece) / 0 / Mithril Plate Gloves / Composite Boots / Composite Helmet
 		// B-grade
-		{ 218,  673, 2376, 2379,    0, 2439, 2415 }, // (B sword TBD) / Avadon Shield / Avadon heavy set
+		{   79,  673, 2376, 2379,    0, 2439, 2415 }, // Sword of Damascus(1H) / Avadon Shield / Avadon Breastplate(HEAVY) / Avadon Gaiters(HEAVY) / 0 / Sealed Blue Wolf Boots / Avadon Circlet
 		// A-grade
-		{2500,  673,    0,    0,    0, 2440, 2418 }, // Dark Legion's Edge / Avadon Shield / (A heavy TBD)
+		{ 2500,  673,  365,  388,    0, 2440, 2418 }, // Dark Legion's Edge(1H) / Avadon Shield / Dark Crystal Breastplate(HEAVY) / Dark Crystal Gaiters(HEAVY) / 0 / Boots of Nightmare / Helm of Nightmare
 	};
 
 	// -------------------------------------------------------------------------
-	// FIGHTER  (heavy/light armor + sword or dagger)
+	// FIGHTER  (LIGHT/HEAVY armor + sword, no offhand)
 	// -------------------------------------------------------------------------
 	private static final int[][] FIGHTER_SETS =
 	{
 		// D-grade
-		{ 123,    0,  432,  413,  604,   40,   45 }, // Saber / no offhand / mid D set
+		{  123,    0,  394,  416,  604,   40,   45 }, // Saber / / Reinforced Leather Shirt(LIGHT) / Reinforced Leather Gaiters(LIGHT) / Crafted Leather Gloves / Leather Boots / Bone Helmet
 		// C-grade
-		{  49,    0,   60,    0,   61,   64,  517 }, // Composite Armor onepiece
+		{   75,    0,   60,    0,   61,   64,  517 }, // Caliburs(1H) / / Composite Armor(HEAVY onepiece) / 0 / Mithril Plate Gloves / Composite Boots / Composite Helmet
 		// B-grade
-		{ 218,    0, 2391,    0,    0, 2439, 2416 }, // Blue Wolf Leather Armor onepiece
+		{   79,    0, 2391,    0,    0, 2439, 2416 }, // Sword of Damascus(1H) / / Blue Wolf Leather Armor(LIGHT onepiece) / 0 / 0 / Sealed Blue Wolf Boots / Blue Wolf Helmet
 		// A-grade
-		{2500,    0,    0,    0,    0, 2441, 2418 }, // Dark Legion's Edge / (A light TBD)
+		{ 2500,    0, 2385, 2389,    0, 2441, 2418 }, // Dark Legion's Edge(1H) / / Dark Crystal Leather Armor(LIGHT) / Dark Crystal Leggings(LIGHT) / 0 / Dark Legion Boots / Helm of Nightmare
 	};
 
 	// -------------------------------------------------------------------------
-	// ARCHER  (light armor + bow — NO offhand, bow is lrhand)
+	// ARCHER  (LIGHT armor + bow — NO offhand, bow is lrhand)
 	// -------------------------------------------------------------------------
 	private static final int[][] ARCHER_SETS =
 	{
 		// D-grade
-		{ 274,    0,  432,  413,  604,   40,   45 }, // Reinforced Bow / mid D light set
+		{  274,    0,  394,  416,  604,   40,   45 }, // Reinforced Bow / / Reinforced Leather Shirt(LIGHT) / Reinforced Leather Gaiters(LIGHT) / Crafted Leather Gloves / Leather Boots / Bone Helmet
 		// C-grade
-		{ 273,    0,  398,  418,   61, 2431,  499 }, // Composite Bow / Plated Leather set
+		{  273,    0,  398,  418,   61, 2431,  499 }, // Composite Bow / / Plated Leather(LIGHT) / Plated Leather Gaiters(LIGHT) / Mithril Plate Gloves / Plated Leather Boots / Mithril Helmet
 		// B-grade
-		{   0,    0, 2391,    0,    0, 2439, 2416 }, // (B bow TBD) / Blue Wolf Leather
+		{  284,    0, 2391,    0,    0, 2439, 2416 }, // Dark Elven Long Bow / / Blue Wolf Leather Armor(LIGHT onepiece) / 0 / 0 / Sealed Blue Wolf Boots / Blue Wolf Helmet
 		// A-grade
-		{   0,    0,    0,    0,    0, 2443, 2419 }, // (A bow TBD) / Dragon Leather Boots
+		{  288,    0, 2385, 2389,    0,  563, 2419 }, // Carnage Bow / / Dark Crystal Leather Armor(LIGHT) / Dark Crystal Leggings(LIGHT) / 0 / Dark Crystal Boots / Majestic Circlet
 	};
 
 	// -------------------------------------------------------------------------
-	// CASTER  (robe + 2H staff/blunt — mage, healer, buffer, summoner)
+	// CASTER  (MAGIC robe + staff/blunt — mage, healer, buffer, summoner)
 	// -------------------------------------------------------------------------
 	private static final int[][] CASTER_SETS =
 	{
 		// D-grade
-		{ 178,    0,  432,  413,  604,   40,   45 }, // Bone Staff / mid D set (robes TBD at D)
+		{  178,    0,  432,  465,  604,   40,   45 }, // Bone Staff / / Cursed Tunic(MAGIC) / Cursed Stockings(MAGIC) / Crafted Leather Gloves / Leather Boots / Bone Helmet
 		// C-grade
-		{2503,    0,   -1,    0,   61, 2430,  549 }, // Yaksa Mace / Karmian Boots / Helm of Avadon (-1 = robe onepiece TBD)
-		// B-grade
-		{2503,    0,2406,    0,    0, 2439, 2415 }, // Yaksa Mace / Avadon Robe (onepiece)
+		{ 2503,    0,  439,  471, 2454, 2430,  549 }, // Yaksa Mace / / Karmian Tunic(MAGIC) / Karmian Stockings(MAGIC) / Karmian Gloves / Karmian Boots / Helm of Avadon
+		// B-grade (weapon is C-grade Yaksa Mace — TODO: replace with B-grade blunt)
+		{ 2503,    0, 2406,    0,    0, 2439, 2415 }, // Yaksa Mace / / Avadon Robe(MAGIC onepiece) / 0 / 0 / Sealed Blue Wolf Boots / Avadon Circlet
 		// A-grade
-		{2504,    0,2408,    0,    0, 2440, 2419 }, // Meteor Shower / Robe of Nightmare
+		{ 2504,    0, 2408,    0,    0, 2440, 2419 }, // Meteor Shower / / Robe of Nightmare(MAGIC onepiece) / 0 / 0 / Boots of Nightmare / Majestic Circlet
 	};
 
 	// -------------------------------------------------------------------------
@@ -198,7 +199,7 @@ public class GearService
 	{
 		if (itemId <= 0)
 		{
-			return; // 0 = no item for this slot, -1 = onepiece (legs not needed)
+			return; // 0 = no item for this slot
 		}
 		player.getInventory().addItem(ItemProcessType.REWARD, itemId, 1, player, null);
 	}
