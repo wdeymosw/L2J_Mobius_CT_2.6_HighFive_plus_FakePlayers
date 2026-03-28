@@ -56,6 +56,9 @@ public class BotController
 	private static final BotBehavior FARM_BEHAVIOR = new FarmBehavior();
 	private static final BotBehavior PASSIVE_BEHAVIOR = new PassiveBehavior();
 
+	/** Set to {@code true} to log every tick — disable in production. */
+	public static volatile boolean DEBUG_TICKS = false;
+
 	private BotController()
 	{
 	}
@@ -114,6 +117,11 @@ public class BotController
 		// Build context and decide.
 		final BotContext ctx = BotContext.of(bot);
 		final BotDecision decision = BotBrain.decide(ctx, bot.getState());
+
+		if (DEBUG_TICKS)
+		{
+			logTick(bot, ctx, decision);
+		}
 
 		// RETREAT — handled here, not by behavior.
 		if (decision == BotDecision.RETREAT)
@@ -280,6 +288,20 @@ public class BotController
 			enterTravel(bot, TravelReason.RETURN_TO_FARM, now);
 			LOGGER.info("BotController: " + bot.getPlayer().getName() + " revived");
 		}
+	}
+
+	private static void logTick(BotInstance bot, BotContext ctx, BotDecision decision)
+	{
+		final String target = (ctx.target != null)
+			? ctx.target.getName() + "(d=" + (int) bot.getPlayer().calculateDistance3D(ctx.target) + (ctx.canAttackTarget ? ",ok" : ",far") + ")"
+			: "none";
+		final String flags = (ctx.lowHp ? " LOW_HP" : "") + (ctx.inventoryFull ? " INV_FULL" : "") + (ctx.outOfAmmo ? " NO_AMMO" : "") + (ctx.overweight ? " OVERWEIGHT" : "");
+		LOGGER.info("[BOT] " + bot.getPlayer().getName()
+			+ " | " + bot.getState() + " → " + decision
+			+ " | hp=" + (int) ctx.hpPercent + "%"
+			+ " tgt=" + target
+			+ " q=" + (bot.isQueueIdle() ? "idle" : "busy")
+			+ (flags.isEmpty() ? "" : " |" + flags));
 	}
 
 	private static boolean shouldMakeMistake()
