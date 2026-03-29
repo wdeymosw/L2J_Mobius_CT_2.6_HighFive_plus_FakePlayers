@@ -39,6 +39,8 @@ public class BotConfig
 	public static double BOT_DROP_MULTIPLIER;
 	public static int BOT_CITY_IDLE_MIN_SECONDS;
 	public static int BOT_CITY_IDLE_MAX_SECONDS;
+	public static int BOT_GATE_WAIT_MIN_SECONDS;
+	public static int BOT_GATE_WAIT_MAX_SECONDS;
 
 	public static void load()
 	{
@@ -53,5 +55,7 @@ public class BotConfig
 		BOT_DROP_MULTIPLIER = config.getDouble("BotDropMultiplier", 0.1);
 		BOT_CITY_IDLE_MIN_SECONDS = config.getInt("BotCityIdleMinSeconds", 300);
 		BOT_CITY_IDLE_MAX_SECONDS = config.getInt("BotCityIdleMaxSeconds", 600);
+		BOT_GATE_WAIT_MIN_SECONDS = config.getInt("BotGateWaitMinSeconds", 15);
+		BOT_GATE_WAIT_MAX_SECONDS = config.getInt("BotGateWaitMaxSeconds", 25);
 	}
 }

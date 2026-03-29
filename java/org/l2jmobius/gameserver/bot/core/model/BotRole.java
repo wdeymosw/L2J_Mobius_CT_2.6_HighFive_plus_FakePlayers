@@ -10,8 +10,11 @@ package org.l2jmobius.gameserver.bot.core.model;
  */
 public enum BotRole
 {
-	/** Melee DPS — warriors, gladiators, destroyers, etc. */
+	/** Melee DPS — warriors, destroyers, etc. (1H weapon). */
 	MELEE,
+
+	/** Dual-sword melee DPS — gladiators, duelists. */
+	DUAL,
 
 	/** Ranged physical — archers, rogues, assassins, etc. */
 	ARCHER,

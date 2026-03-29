@@ -40,8 +40,8 @@ public class BotInstance
 	// -------------------------------------------------------------------------
 
 	private BotState _state = BotState.IDLE;
+	private BotPhase _phase = BotPhase.FARMING;
 	private Creature _target;
-	private TravelReason _travelReason;
 
 	// -------------------------------------------------------------------------
 	// Timing
@@ -57,6 +57,8 @@ public class BotInstance
 	private long _sessionEndTime = 0;
 	/** Time to revive after death (0 = alive). */
 	private long _reviveTime = 0;
+	/** Earliest time the bot may attempt to drink another potion (reuse guard). */
+	private long _nextPotionTime = 0;
 
 	// -------------------------------------------------------------------------
 	// Level tracking
@@ -87,6 +89,7 @@ public class BotInstance
 	private long _stuckCheckTime = 0;
 	private int _lastStuckX = Integer.MIN_VALUE;
 	private int _lastStuckY = Integer.MIN_VALUE;
+	private int _stuckCount = 0;
 
 	// =========================================================================
 	// Constructor
@@ -122,25 +125,49 @@ public class BotInstance
 	// =========================================================================
 
 	public void queueAction(BotAction action) { _executor.add(action); }
-	public void clearQueue() { _executor.clear(); }
+	public void clearQueue()
+	{
+		_executor.clear();
+		// Reset stuck detection so the next movement starts fresh.
+		_stuckCount = 0;
+		_stuckCheckTime = 0;
+		_lastStuckX = Integer.MIN_VALUE;
+		_lastStuckY = Integer.MIN_VALUE;
+	}
 	public boolean isQueueIdle() { return _executor.isIdle(); }
 	public void tickExecutor(long now) { _executor.tick(this, now); }
 
 	public BotState getState() { return _state; }
 	public void setState(BotState state) { _state = state; }
 
+	/**
+	 * Instantly moves the bot to the given world coordinates.
+	 * Uses the server's spawn/despawn cycle (decayMe → setXYZ → spawnMe).
+	 *
+	 * @param x target X
+	 * @param y target Y
+	 * @param z target Z
+	 */
+	public void teleport(int x, int y, int z)
+	{
+		_player.decayMe();
+		_player.setXYZ(x, y, z);
+		_player.spawnMe(x, y, z);
+	}
+
 	public FarmZone getZone() { return _profile.getZone(); }
 
 	public Creature getTarget() { return _target; }
-	public void setTarget(Creature target) { _target = target; }
-	public void clearTarget() { _target = null; }
+	public void setTarget(Creature target) { _target = target; _player.setTarget(target); }
+	public void clearTarget() { _target = null; _player.setTarget(null); }
 	public boolean hasTarget() { return (_target != null) && !_target.isDead(); }
 
-	public TravelReason getTravelReason() { return _travelReason; }
-	public void setTravelReason(TravelReason reason) { _travelReason = reason; }
+	public BotPhase getPhase() { return _phase; }
+	public void setPhase(BotPhase phase) { _phase = phase; }
 
 	public float getMistakeRate() { return _profile.getMistakeRate(); }
 	public boolean isDead() { return _player.isDead(); }
+	public int getPhysicalAttackRange() { return _player.getPhysicalAttackRange(); }
 
 	public boolean isInZone()
 	{
@@ -169,6 +196,9 @@ public class BotInstance
 
 	public long getReviveTime() { return _reviveTime; }
 	public void setReviveTime(long time) { _reviveTime = time; }
+
+	public long getNextPotionTime() { return _nextPotionTime; }
+	public void setNextPotionTime(long time) { _nextPotionTime = time; }
 
 	public boolean isSessionExpired()
 	{
@@ -276,4 +306,7 @@ public class BotInstance
 	public int getLastStuckX() { return _lastStuckX; }
 	public int getLastStuckY() { return _lastStuckY; }
 	public void setStuckSnapshot(int x, int y) { _lastStuckX = x; _lastStuckY = y; }
+	public int getStuckCount() { return _stuckCount; }
+	public void incrementStuckCount() { _stuckCount++; }
+	public void resetStuckCount() { _stuckCount = 0; }
 }

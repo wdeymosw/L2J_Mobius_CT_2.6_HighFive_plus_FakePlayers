@@ -3,7 +3,6 @@
  */
 package org.l2jmobius.gameserver.bot.core.action;
 
-import org.l2jmobius.gameserver.bot.manager.BotSpawner;
 import org.l2jmobius.gameserver.bot.core.model.BotInstance;
 
 /**
@@ -27,7 +26,7 @@ public class TeleportAction implements BotAction
 	@Override
 	public void execute(BotInstance bot, long now)
 	{
-		BotSpawner.teleportBot(bot, _x, _y, _z);
+		bot.teleport(_x, _y, _z);
 		_done = true;
 	}
 

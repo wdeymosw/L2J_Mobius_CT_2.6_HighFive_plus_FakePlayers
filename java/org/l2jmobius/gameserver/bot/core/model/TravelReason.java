@@ -4,14 +4,10 @@
 package org.l2jmobius.gameserver.bot.core.model;
 
 /**
- * Reason for entering {@link BotState#MOVE_TO_TARGET}.
- * Used by BotController to determine behaviour on arrival.
+ * @deprecated Superseded by {@link BotPhase}. Travel direction is now encoded in the phase:
+ *             {@link BotPhase#TRAVELING_OUT} (→ farm) and {@link BotPhase#TRAVELING_BACK} (→ city).
  */
+@Deprecated
 public enum TravelReason
 {
-	/** Returning to farm zone after city visit or fleeing. */
-	RETURN_TO_FARM,
-
-	/** Going to city: sell loot, restock consumables. */
-	GO_TO_CITY
 }

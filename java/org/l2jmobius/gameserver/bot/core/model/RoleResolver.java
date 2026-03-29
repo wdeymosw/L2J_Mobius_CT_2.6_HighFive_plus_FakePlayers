@@ -30,7 +30,6 @@ public class RoleResolver
 			// ----------------------------------------------------------------
 			case 0:   // Human Fighter
 			case 1:   // Warrior
-			case 2:   // Gladiator
 			case 3:   // Warlord
 			case 18:  // Elven Fighter
 			case 31:  // Dark Fighter
@@ -39,7 +38,6 @@ public class RoleResolver
 			case 46:  // Destroyer
 			case 47:  // Monk
 			case 48:  // Tyrant
-			case 88:  // Duelist
 			case 89:  // Dreadnought
 			case 113: // Titan
 			case 114: // Grand Khavatari
@@ -50,6 +48,13 @@ public class RoleResolver
 			case 127: // Berserker
 			case 131: // Doombringer
 				return BotRole.MELEE;
+
+			// ----------------------------------------------------------------
+			// DUAL — gladiators and duelists (dual sword)
+			// ----------------------------------------------------------------
+			case 2:   // Gladiator
+			case 88:  // Duelist
+				return BotRole.DUAL;
 
 			// ----------------------------------------------------------------
 			// ARCHER — scouts, rangers, assassins

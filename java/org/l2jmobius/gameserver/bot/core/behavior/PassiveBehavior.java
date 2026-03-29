@@ -9,13 +9,13 @@ import java.util.concurrent.ThreadLocalRandom;
 
 import org.l2jmobius.gameserver.bot.core.action.MoveToAction;
 import org.l2jmobius.gameserver.bot.core.action.WaitAction;
-import org.l2jmobius.gameserver.bot.core.brain.BotDecision;
+import org.l2jmobius.gameserver.bot.core.brain.BotIntention;
 import org.l2jmobius.gameserver.bot.core.model.BotInstance;
 import org.l2jmobius.gameserver.bot.core.zone.BotZoneData;
 import org.l2jmobius.gameserver.model.Location;
 
 /**
- * Tick behavior for PASSIVE bots: walk between city POIs to create ambient population.
+ * Behavioral style for PASSIVE bots: walk between city POIs to create ambient population.
  * <p>
  * Passive bots never farm or attack — they exist solely to populate city areas.
  * The bot cycles through available POIs (shop, guildmaster, gatekeeper) with
@@ -33,9 +33,9 @@ public class PassiveBehavior implements BotBehavior
 	private static final long STAY_WAIT_MAX = 15_000;
 
 	@Override
-	public void think(BotInstance bot, BotDecision decision, long now)
+	public void think(BotInstance bot, BotIntention intention, long now)
 	{
-		// All decisions collapse to city-walking; no state transitions ever.
+		// All intentions collapse to city-walking; no state transitions ever.
 		if (bot.isQueueIdle())
 		{
 			cityWalk(bot);
@@ -49,7 +49,6 @@ public class PassiveBehavior implements BotBehavior
 		final BotZoneData city = bot.getProfile().getZone().getCityData();
 		if (city == null)
 		{
-			// No city data — just idle in place.
 			bot.queueAction(new WaitAction(STAY_WAIT_MIN + ThreadLocalRandom.current().nextLong(STAY_WAIT_MAX - STAY_WAIT_MIN)));
 			return;
 		}
@@ -61,7 +60,6 @@ public class PassiveBehavior implements BotBehavior
 			return;
 		}
 
-		// Brief pause → walk to POI → linger at destination.
 		bot.queueAction(new WaitAction(WALK_WAIT_MIN + ThreadLocalRandom.current().nextLong(WALK_WAIT_MAX - WALK_WAIT_MIN)));
 		bot.queueAction(new MoveToAction(dest));
 		bot.queueAction(new WaitAction(STAY_WAIT_MIN + ThreadLocalRandom.current().nextLong(STAY_WAIT_MAX - STAY_WAIT_MIN)));

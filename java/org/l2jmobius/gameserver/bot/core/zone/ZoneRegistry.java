@@ -89,9 +89,9 @@ public class ZoneRegistry
 
 			final double fill = (double) count / zone.getMaxBots();
 			final org.l2jmobius.gameserver.model.Location home = zone.getHomeLocation();
-			final int dx = home.getX() - x;
-			final int dy = home.getY() - y;
-			final double dist = Math.sqrt((dx * dx) + (dy * dy));
+			final double dx = (double) home.getX() - x;
+			final double dy = (double) home.getY() - y;
+			final double dist = Math.sqrt(dx * dx + dy * dy);
 
 			// Prefer closest home; use fill as tiebreaker.
 			if ((dist < bestDist) || ((dist == bestDist) && (fill < bestFill)))
@@ -123,6 +123,12 @@ public class ZoneRegistry
 	public void unassignBot(int objectId)
 	{
 		_botZoneMap.remove(objectId);
+	}
+
+	/** Clears all bot-zone assignments. Call at server startup to discard stale state. */
+	public void resetBotAssignments()
+	{
+		_botZoneMap.clear();
 	}
 
 	/**

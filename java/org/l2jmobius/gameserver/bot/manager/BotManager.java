@@ -110,6 +110,7 @@ public class BotManager
 			return;
 		}
 
+		ZoneRegistry.getInstance().resetBotAssignments();
 		loadBots();
 
 		// Enable per-tick debug logging — disable in production.
@@ -265,7 +266,7 @@ public class BotManager
 		}
 	}
 
-	/** Picks ACTIVE or PASSIVE based on configured percentage. */
+	// Picks ACTIVE or PASSIVE based on configured percentage.
 	private BotType pickType()
 	{
 		return (Math.random() * 100) < BotConfig.BOT_ACTIVE_PERCENT ? BotType.ACTIVE : BotType.PASSIVE;

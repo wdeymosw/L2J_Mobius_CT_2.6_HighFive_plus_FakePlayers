@@ -104,6 +104,37 @@ public class GearService
 	};
 
 	// -------------------------------------------------------------------------
+	// DUAL  (LIGHT armor + dual sword — gladiator, duelist)
+	// -------------------------------------------------------------------------
+	private static final int[][] DUAL_SETS =
+	{
+		// D-grade
+		{ 2525,    0,  394,  416,  604,   40,   45 }, // Bastard Sword*Bastard Sword / / Reinforced Leather Shirt(LIGHT) / Reinforced Leather Gaiters(LIGHT) / Crafted Leather Gloves / Leather Boots / Bone Helmet
+		// C-grade
+		{ 2560,    0,   60,    0,   61,   64,  517 }, // Elven Long Sword*Elven Long Sword / / Composite Armor(HEAVY onepiece) / 0 / Mithril Plate Gloves / Composite Boots / Composite Helmet
+		// B-grade
+		{ 2606,    0, 2391,    0,    0, 2439, 2416 }, // Caliburs*Caliburs / / Blue Wolf Leather Armor(LIGHT onepiece) / 0 / 0 / Sealed Blue Wolf Boots / Blue Wolf Helmet
+		// A-grade
+		{ 5705,    0, 2385, 2389,    0, 2441, 2418 }, // Keshanberk*Damascus / / Dark Crystal Leather Armor(LIGHT) / Dark Crystal Leggings(LIGHT) / 0 / Dark Legion Boots / Helm of Nightmare
+	};
+
+	// -------------------------------------------------------------------------
+	// JEWELRY — role-independent (earring × 2, ring × 2, necklace × 1)
+	// -------------------------------------------------------------------------
+	// [0]=earring, [1]=ring, [2]=necklace
+	private static final int[][] JEWELRY_SETS =
+	{
+		// D-grade
+		{ 849, 880, 910 }, // Tiger's Eye Earring / Black Pearl Ring / Necklace of Devotion
+		// C-grade
+		{ 853, 884, 916 }, // Earring of Protection / Ring of Protection / Necklace of Protection
+		// B-grade
+		{ 856, 887, 921 }, // Adamantite Earring / Adamantite Ring / Necklace of Mana
+		// A-grade
+		{ 862, 893, 924 }, // Majestic Earring / Majestic Ring / Majestic Necklace
+	};
+
+	// -------------------------------------------------------------------------
 	// Grade index helper
 	// -------------------------------------------------------------------------
 	private static int gradeIndex(ItemGrade grade)
@@ -155,6 +186,13 @@ public class GearService
 		giveIfValid(player, set[BOOTS],   "boots");
 		giveIfValid(player, set[HELMET],  "helmet");
 
+		final int[] jewelry = JEWELRY_SETS[gradeIndex(grade)];
+		giveIfValid(player, jewelry[0], "earring1");
+		giveIfValid(player, jewelry[0], "earring2"); // two of the same
+		giveIfValid(player, jewelry[1], "ring1");
+		giveIfValid(player, jewelry[1], "ring2");    // two of the same
+		giveIfValid(player, jewelry[2], "necklace");
+
 		LOGGER.info("GearService: gave " + grade + "-grade gear set to " + player.getName() + " (" + bot.getRole() + ")");
 	}
 
@@ -178,6 +216,9 @@ public class GearService
 				break;
 			case ARCHER:
 				sets = ARCHER_SETS;
+				break;
+			case DUAL:
+				sets = DUAL_SETS;
 				break;
 			case MAGE:
 			case HEALER:

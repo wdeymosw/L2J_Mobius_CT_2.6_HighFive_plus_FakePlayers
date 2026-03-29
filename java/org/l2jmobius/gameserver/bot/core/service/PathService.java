@@ -55,7 +55,10 @@ public class PathService
 	private static final long PATH_COOLDOWN_MS = 1000;
 
 	/** Anti-stuck check interval (ms). */
-	private static final long STUCK_CHECK_MS = 2000;
+	private static final long STUCK_CHECK_MS = 3000;
+
+	/** After this many consecutive stuck triggers, teleport to destination. */
+	private static final int STUCK_TELEPORT_THRESHOLD = 8;
 
 	/** Max PathFinding calls across all bots within PATH_RATE_WINDOW_MS. */
 	private static final int MAX_PATH_CALLS_PER_WINDOW = 10;
@@ -107,7 +110,10 @@ public class PathService
 		}
 
 		// --- Anti-stuck ---
-		handleStuck(bot, player, now);
+		if (handleStuck(bot, player, tx, ty, tz, now))
+		{
+			return; // teleported — skip the rest of this tick
+		}
 
 		// --- Global path: build or validate ---
 		final double totalDist = Math.sqrt((double) (adx * adx) + (double) (ady * ady));
@@ -244,16 +250,14 @@ public class PathService
 	// Anti-stuck
 	// -------------------------------------------------------------------------
 
-	/**
-	 * Clears the local path if the bot has not moved enough since the last check.
-	 * Uses an absolute position snapshot rather than distance-to-destination
-	 * so that going around an obstacle does not falsely trigger the check.
-	 */
-	private static void handleStuck(BotInstance bot, Player player, long now)
+	// Clears the local path if the bot has not moved enough since the last check.
+	// After STUCK_TELEPORT_THRESHOLD consecutive triggers, teleports to destination.
+	// Returns true if the bot was teleported (caller should skip the rest of the tick).
+	private static boolean handleStuck(BotInstance bot, Player player, int tx, int ty, int tz, long now)
 	{
 		if ((now - bot.getStuckCheckTime()) < STUCK_CHECK_MS)
 		{
-			return;
+			return false;
 		}
 
 		final double elapsed = (now - bot.getStuckCheckTime()) / 1000.0;
@@ -267,7 +271,7 @@ public class PathService
 
 		if (lx == Integer.MIN_VALUE)
 		{
-			return; // first sample — no comparison yet
+			return false; // first sample — no comparison yet
 		}
 
 		final double moved = Math.hypot(px - lx, py - ly);
@@ -275,10 +279,29 @@ public class PathService
 
 		if (moved < expected)
 		{
+			bot.incrementStuckCount();
+			if (bot.getStuckCount() >= STUCK_TELEPORT_THRESHOLD)
+			{
+				// Too many retries — teleport directly to destination.
+				bot.clearGlobalPath();
+				bot.setLastPathTime(0);
+				bot.setLastDirectCheckTime(0);
+				bot.setStuckCheckTime(0);
+				bot.setStuckSnapshot(Integer.MIN_VALUE, Integer.MIN_VALUE);
+				bot.resetStuckCount();
+				bot.teleport(tx, ty, tz);
+				LOGGER.info("PathService: " + player.getName() + " stuck x" + STUCK_TELEPORT_THRESHOLD + " — teleporting to " + tx + "," + ty + "," + tz);
+				return true;
+			}
 			bot.clearPath();
 			bot.setLastPathTime(0); // allow immediate PathFinding retry
-			LOGGER.info("PathService: " + player.getName() + " stuck (moved " + (int) moved + " < min " + (int) expected + ") — retrying");
+			LOGGER.info("PathService: " + player.getName() + " stuck " + bot.getStuckCount() + "/" + STUCK_TELEPORT_THRESHOLD + " (moved " + (int) moved + " < min " + (int) expected + ") — retrying");
 		}
+		else
+		{
+			bot.resetStuckCount();
+		}
+		return false;
 	}
 
 	// -------------------------------------------------------------------------

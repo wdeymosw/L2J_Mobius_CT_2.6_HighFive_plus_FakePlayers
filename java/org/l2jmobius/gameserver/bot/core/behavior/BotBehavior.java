@@ -3,17 +3,42 @@
  */
 package org.l2jmobius.gameserver.bot.core.behavior;
 
-import org.l2jmobius.gameserver.bot.core.brain.BotDecision;
+import org.l2jmobius.gameserver.bot.core.brain.BotIntention;
 import org.l2jmobius.gameserver.bot.core.model.BotInstance;
+import org.l2jmobius.gameserver.bot.core.model.BotContext;
 
 /**
- * Strategy for bot tick-level behavior, selected by {@link org.l2jmobius.gameserver.bot.core.model.BotType}.
+ * Strategic behavioral style of a bot, selected by {@link org.l2jmobius.gameserver.bot.core.model.BotType}.
  * <p>
- * Receives the current {@link BotDecision} from BotController and queues
- * the appropriate actions. Must not call enterTravel or enterResting —
- * cross-cutting state transitions are owned by BotController.
+ * Responsible for two things:
+ * <ol>
+ *   <li>{@link #think} — queues actions for the current tactical intention.</li>
+ *   <li>{@link #onArrived} — handles arrival at the travel destination (city or farm).</li>
+ * </ol>
+ * Must not change {@code BotState} directly — cross-cutting state transitions belong to BotController.
  */
 public interface BotBehavior
 {
-	void think(BotInstance bot, BotDecision decision, long now);
+	/**
+	 * Called every tick while in the {@link org.l2jmobius.gameserver.bot.core.model.BotPhase#FARMING} phase.
+	 * Queues the appropriate actions for the given intention.
+	 *
+	 * @param bot       the bot to act on
+	 * @param intention tactical intention from BotBrain
+	 * @param now       current time in ms
+	 */
+	void think(BotInstance bot, BotIntention intention, long now);
+
+	/**
+	 * Called when the travel queue empties — the bot has arrived at its destination.
+	 * The current {@link org.l2jmobius.gameserver.bot.core.model.BotPhase} tells the behavior
+	 * whether the bot arrived at the farm ({@code TRAVELING_OUT}) or the city ({@code TRAVELING_BACK}).
+	 *
+	 * @param bot the bot that arrived
+	 * @param ctx perception snapshot for this tick
+	 * @param now current time in ms
+	 */
+	default void onArrived(BotInstance bot, BotContext ctx, long now)
+	{
+	}
 }

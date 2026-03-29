@@ -7,7 +7,6 @@ import java.util.logging.Logger;
 
 import org.l2jmobius.gameserver.bot.core.model.BotInstance;
 import org.l2jmobius.gameserver.bot.core.model.BotRole;
-import org.l2jmobius.gameserver.config.custom.BotConfig;
 import org.l2jmobius.gameserver.model.actor.Player;
 import org.l2jmobius.gameserver.model.item.enums.ItemGrade;
 import org.l2jmobius.gameserver.model.item.instance.Item;
@@ -36,50 +35,20 @@ public class SupplyService
 	// Arrows: NONE→wooden(17), D→bone(1341), C→steel(1342), B→silver(1343), A→mithril(1344), S→shining(1345)
 	private static final int[] ARROW_IDS       = { 17, 1341, 1342, 1343, 1344, 1345 };
 
+
 	/** Restock when remaining quantity drops below this threshold. */
-	private static final long RESTOCK_THRESHOLD = 500;
+	public static final long RESTOCK_THRESHOLD = 500;
 
 	/** Target quantity to maintain after restocking. */
-	private static final long RESTOCK_TARGET = 3000;
+	public static final long RESTOCK_TARGET = 3000;
+
+	/** Target quantity of healing potions to maintain. */
+	public static final long POTION_TARGET = 100;
 
 	// City idle duration is read from BotConfig at runtime (BotCityIdleMinSeconds / BotCityIdleMaxSeconds).
 
 	private SupplyService()
 	{
-	}
-
-	/**
-	 * Gives the bot an initial supply of shots/arrows at startup without
-	 * triggering a city trip or state change. Called once from BotFactory.
-	 *
-	 * @param bot the bot to supply
-	 */
-	public static void giveInitialSupplies(BotInstance bot)
-	{
-		final Player player = bot.getPlayer();
-		final int shotId = getShotId(bot);
-		if (shotId > 0)
-		{
-			final long current = player.getInventory().getInventoryItemCount(shotId, -1);
-			if (current < RESTOCK_THRESHOLD)
-			{
-				player.getInventory().addItem(ItemProcessType.REWARD, shotId, RESTOCK_TARGET - current, player, null);
-				LOGGER.info("SupplyService: gave initial shots id=" + shotId + " to " + player.getName());
-			}
-		}
-		if (bot.getRole() == BotRole.ARCHER)
-		{
-			final int arrowId = getArrowId(bot);
-			if (arrowId > 0)
-			{
-				final long current = player.getInventory().getInventoryItemCount(arrowId, -1);
-				if (current < RESTOCK_THRESHOLD)
-				{
-					player.getInventory().addItem(ItemProcessType.REWARD, arrowId, RESTOCK_TARGET - current, player, null);
-					LOGGER.info("SupplyService: gave initial arrows id=" + arrowId + " to " + player.getName());
-				}
-			}
-		}
 	}
 
 	/**
@@ -136,6 +105,9 @@ public class SupplyService
 				bought |= buyUpTo(player, arrowId, RESTOCK_TARGET);
 			}
 		}
+
+		// --- Healing potions ---
+		bought |= buyUpTo(player, PotionData.HEAL_POTION_IDS[0], POTION_TARGET);
 
 		if (bought)
 		{
@@ -211,6 +183,8 @@ public class SupplyService
 			case BUFFER:
 				return SPIRITSHOT_IDS[gradeIdx];
 			case MELEE:
+			case DUAL:
+			case ARCHER:
 			case TANK:
 			case CRAFTER:
 				return SOULSHOT_IDS[gradeIdx];
@@ -226,7 +200,7 @@ public class SupplyService
 	 * @param bot the bot
 	 * @return arrow item ID, or 0
 	 */
-	private static int getArrowId(BotInstance bot)
+	public static int getArrowId(BotInstance bot)
 	{
 		final int gradeIdx = weaponGradeIndex(bot);
 		return gradeIdx >= 0 ? ARROW_IDS[gradeIdx] : 0;

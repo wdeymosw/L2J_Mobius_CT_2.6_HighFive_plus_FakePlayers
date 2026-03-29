@@ -88,8 +88,16 @@ public class BuffService
 			return false;
 		}
 
-		LOGGER.fine("BuffService: " + player.getName() + " casting self-buff [" + best.getName() + " lv" + best.getLevel() + "]");
 		player.useMagic(best, false, false);
+		if (!player.isCastingNow())
+		{
+			// Cast failed to start (null-client or other condition) — force skill disable
+			// so this skill is skipped next tick and we don't loop forever.
+			player.disableSkill(best, 3000);
+			LOGGER.fine("BuffService: " + player.getName() + " buff cast failed [" + best.getName() + "], skipping for 3s");
+			return false;
+		}
+		LOGGER.fine("BuffService: " + player.getName() + " casting self-buff [" + best.getName() + " lv" + best.getLevel() + "]");
 		return true;
 	}
 

@@ -18,15 +18,24 @@ public class MoveToAction implements BotAction
 	private static final int ARRIVAL_RADIUS = 150;
 
 	private final Location _dest;
+	private final int _arrivalRadius;
 
 	public MoveToAction(Location dest)
 	{
 		_dest = dest;
+		_arrivalRadius = ARRIVAL_RADIUS;
 	}
 
 	public MoveToAction(int x, int y, int z)
 	{
 		_dest = new Location(x, y, z);
+		_arrivalRadius = ARRIVAL_RADIUS;
+	}
+
+	public MoveToAction(int x, int y, int z, int arrivalRadius)
+	{
+		_dest = new Location(x, y, z);
+		_arrivalRadius = arrivalRadius;
 	}
 
 	@Override
@@ -38,6 +47,6 @@ public class MoveToAction implements BotAction
 	@Override
 	public boolean isDone(BotInstance bot, long now)
 	{
-		return bot.getPlayer().isInsideRadius2D(_dest.getX(), _dest.getY(), _dest.getZ(), ARRIVAL_RADIUS);
+		return bot.getPlayer().isInsideRadius2D(_dest.getX(), _dest.getY(), _dest.getZ(), _arrivalRadius);
 	}
 }

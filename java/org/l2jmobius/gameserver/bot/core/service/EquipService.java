@@ -15,6 +15,7 @@ import org.l2jmobius.gameserver.model.item.enums.ItemGrade;
 import org.l2jmobius.gameserver.model.item.instance.Item;
 import org.l2jmobius.gameserver.model.item.type.WeaponType;
 import org.l2jmobius.gameserver.model.itemcontainer.Inventory;
+import org.l2jmobius.gameserver.model.actor.enums.player.PlayerClass;
 
 /**
  * Equips the best available gear from the bot's inventory at spawn.
@@ -46,8 +47,8 @@ public class EquipService
 		EFFECTIVE_SLOT.put(BodyPart.LR_HAND,    Inventory.PAPERDOLL_RHAND);
 		EFFECTIVE_SLOT.put(BodyPart.FULL_ARMOR,  Inventory.PAPERDOLL_CHEST);
 		EFFECTIVE_SLOT.put(BodyPart.ALLDRESS,    Inventory.PAPERDOLL_CHEST);
-		EFFECTIVE_SLOT.put(BodyPart.LR_EAR,      Inventory.PAPERDOLL_REAR);
-		EFFECTIVE_SLOT.put(BodyPart.LR_FINGER,   Inventory.PAPERDOLL_RFINGER);
+		EFFECTIVE_SLOT.put(BodyPart.LR_EAR,      Inventory.PAPERDOLL_LEAR);    // Inventory places LR_EAR in LEAR first, then REAR
+		EFFECTIVE_SLOT.put(BodyPart.LR_FINGER,   Inventory.PAPERDOLL_LFINGER); // Inventory places LR_FINGER in LFINGER first, then RFINGER
 		EFFECTIVE_SLOT.put(BodyPart.HAIRALL,     Inventory.PAPERDOLL_HAIR);
 	}
 
@@ -65,6 +66,7 @@ public class EquipService
 	public static void equip(BotInstance bot)
 	{
 		final Player player = bot.getPlayer();
+		final int maxGradeOrdinal = maxAllowedGrade(player).ordinal();
 
 		// slot index → best candidate found so far
 		final Map<Integer, Item> best = new HashMap<>();
@@ -80,6 +82,13 @@ public class EquipService
 			if (bodyPart == BodyPart.NONE || bodyPart == BodyPart.DECO)
 			{
 				continue; // skip talismans and non-equipable items
+			}
+
+			// Skip items above the bot's current grade limit — would cause grade penalties.
+			final ItemGrade grade = item.getTemplate().getItemGrade();
+			if ((grade != null) && (grade.ordinal() > maxGradeOrdinal))
+			{
+				continue;
 			}
 
 			// For weapons, only accept types appropriate for the bot's role.
@@ -117,6 +126,11 @@ public class EquipService
 					+ " [" + candidate.getTemplate().getItemGrade() + "]");
 			}
 		}
+
+		// Fill secondary jewelry slots with a duplicate of the primary.
+		// Primary slot is LEAR/LFINGER (Inventory fills these first); secondary is REAR/RFINGER.
+		equipSecondarySlot(player, Inventory.PAPERDOLL_LEAR,    Inventory.PAPERDOLL_REAR);
+		equipSecondarySlot(player, Inventory.PAPERDOLL_LFINGER, Inventory.PAPERDOLL_RFINGER);
 	}
 
 	// -------------------------------------------------------------------------
@@ -133,6 +147,45 @@ public class EquipService
 	{
 		final ItemGrade grade = item.getTemplate().getItemGrade();
 		return (grade == null ? 0 : grade.ordinal()) * 100 + item.getEnchantLevel();
+	}
+
+	/**
+	 * Returns the highest item grade the bot may equip without penalty,
+	 * based on its current class transfer level (0=D, 1=C, 2=B, 3+=A).
+	 * @param player the player to check
+	 * @return maximum allowed {@link ItemGrade}
+	 */
+	private static ItemGrade maxAllowedGrade(Player player)
+	{
+		final PlayerClass pc = player.getPlayerClass();
+		switch (pc == null ? 0 : pc.level())
+		{
+			case 3:  return ItemGrade.A;
+			case 2:  return ItemGrade.B;
+			case 1:  return ItemGrade.C;
+			default: return ItemGrade.D;
+		}
+	}
+
+	private static void equipSecondarySlot(Player player, int primarySlot, int secondarySlot)
+	{
+		if (player.getInventory().getPaperdollItem(secondarySlot) != null)
+		{
+			return; // already filled
+		}
+		final Item primary = player.getInventory().getPaperdollItem(primarySlot);
+		if (primary == null)
+		{
+			return;
+		}
+		for (Item item : player.getInventory().getItems())
+		{
+			if (!item.isEquipped() && (item.getId() == primary.getId()))
+			{
+				player.useEquippableItem(item, false);
+				return;
+			}
+		}
 	}
 
 	/**
@@ -165,6 +218,9 @@ public class EquipService
 			case ARCHER:
 				return type == WeaponType.BOW || type == WeaponType.CROSSBOW;
 
+			case DUAL:
+				return type == WeaponType.DUAL;
+
 			case MAGE:
 			case HEALER:
 			case BUFFER:
@@ -176,8 +232,8 @@ public class EquipService
 			case TANK:
 			case CRAFTER:
 			default:
-				// Physical melee: any weapon except ranged.
-				return type != WeaponType.BOW && type != WeaponType.CROSSBOW && type != WeaponType.FISHINGROD;
+				// Physical melee: any weapon except ranged and dual.
+				return type != WeaponType.BOW && type != WeaponType.CROSSBOW && type != WeaponType.FISHINGROD && type != WeaponType.DUAL;
 		}
 	}
 }

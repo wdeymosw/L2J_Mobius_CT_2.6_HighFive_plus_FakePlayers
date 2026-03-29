@@ -6,7 +6,6 @@ package org.l2jmobius.gameserver.bot.core.service;
 import org.l2jmobius.gameserver.ai.Intention;
 import org.l2jmobius.gameserver.bot.core.model.BotInstance;
 import org.l2jmobius.gameserver.bot.core.model.BotRole;
-import org.l2jmobius.gameserver.bot.core.service.SkillService;
 import org.l2jmobius.gameserver.model.Location;
 import org.l2jmobius.gameserver.model.actor.Creature;
 import org.l2jmobius.gameserver.model.actor.Player;
@@ -25,20 +24,6 @@ public class CombatService
 {
 	private CombatService()
 	{
-	}
-
-	/**
-	 * One attack tick: tries a damage skill first; falls back to auto-attack.
-	 * Called by AttackAction — keeps action code free of conditional logic.
-	 *
-	 * @param bot the bot that should attack
-	 */
-	public static void perform(BotInstance bot)
-	{
-		if (!SkillService.tryDamageSkill(bot))
-		{
-			attack(bot);
-		}
 	}
 
 	/**

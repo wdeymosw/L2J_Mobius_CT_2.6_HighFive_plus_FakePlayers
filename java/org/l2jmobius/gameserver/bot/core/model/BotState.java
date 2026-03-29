@@ -4,12 +4,28 @@
 package org.l2jmobius.gameserver.bot.core.model;
 
 /**
- * Operating states of a bot.
+ * Tactical operating states of a bot within the {@link BotPhase#FARMING} phase.
+ * <p>
+ * State encodes what the bot perceives about its immediate environment and what it
+ * is currently doing at the tactical level.
+ * {@link org.l2jmobius.gameserver.bot.core.brain.BotBrain} maps each state to a
+ * {@link org.l2jmobius.gameserver.bot.core.brain.BotIntention}.
+ * {@link org.l2jmobius.gameserver.bot.core.BotController} owns all state transitions.
+ * <p>
+ * Strategic phases (travelling to farm/city, resting in city) are tracked via
+ * {@link BotPhase}, not here.
  *
  * <pre>
- * IDLE ──► SEARCH_TARGET ──► MOVE_TO_TARGET ──► ATTACK
- *  ▲              │                  │               │
- *  └──── REST ◄───┴───────────────── ┴───(RETREAT)──┘
+ *                    ┌──────────────────────────────────────┐
+ *                    │  (critical: HP/inv/ammo/overweight)  │
+ *                    ▼                                      │
+ * IDLE ──► SEARCH_TARGET ──► ATTACK ──► (target dead) ──► SEARCH_TARGET
+ *               │
+ *               │  (attacked)
+ *               ▼
+ *           DEFENDING ──► (attacker dead) ──► SEARCH_TARGET
+ *               │
+ *               └── (critical) ──► RETREATING
  * </pre>
  *
  * Dead is not a state — it is detected via {@code player.isDead()} in
@@ -23,12 +39,21 @@ public enum BotState
 	/** Scanning the farm zone for the next target or loot. */
 	SEARCH_TARGET,
 
-	/** Moving: walking to city waypoints, teleporting to farm, or approaching a target. */
-	MOVE_TO_TARGET,
-
-	/** Actively fighting the current target. */
+	/** Actively fighting the chosen target (includes approaching it). */
 	ATTACK,
 
-	/** In city after a sell/restock trip — waiting for the rest timer. */
-	REST
+	/**
+	 * Reacting to an unprovoked attack.
+	 * BotController sets this when a mob targets the bot while it is not already in ATTACK.
+	 * On entry: queue is cleared, attacker is locked as new target.
+	 * After the attacker dies → SEARCH_TARGET.
+	 */
+	DEFENDING,
+
+	/**
+	 * Critical condition detected (low HP / full inventory / out of ammo / overweight / outnumbered).
+	 * BotController sets this based on the current {@link BotPerception}.
+	 * Brain returns RETREAT → BotController calls enterTravel(TRAVELING_BACK).
+	 */
+	RETREATING
 }

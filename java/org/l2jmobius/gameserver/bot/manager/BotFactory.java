@@ -7,8 +7,10 @@ import java.util.logging.Logger;
 
 import org.l2jmobius.gameserver.bot.core.model.BotInstance;
 import org.l2jmobius.gameserver.bot.core.model.BotProfile;
+import org.l2jmobius.gameserver.bot.core.model.BotRole;
 import org.l2jmobius.gameserver.bot.core.service.EquipService;
 import org.l2jmobius.gameserver.bot.core.service.GearService;
+import org.l2jmobius.gameserver.bot.core.service.PotionData;
 import org.l2jmobius.gameserver.bot.core.service.SkillService;
 import org.l2jmobius.gameserver.bot.core.service.SupplyService;
 import org.l2jmobius.gameserver.model.actor.Player;
@@ -26,6 +28,48 @@ public class BotFactory
 
 	private BotFactory()
 	{
+	}
+
+	/**
+	 * Gives the bot a free initial stock of shots, arrows and potions at spawn.
+	 * Uses REWARD (no adena cost) — this is a one-time startup gift, not a purchase.
+	 */
+	private static void giveInitialSupplies(BotInstance bot)
+	{
+		final Player player = bot.getPlayer();
+
+		final int shotId = SupplyService.getShotId(bot);
+		if (shotId > 0)
+		{
+			final long current = player.getInventory().getInventoryItemCount(shotId, -1);
+			if (current < SupplyService.RESTOCK_THRESHOLD)
+			{
+				player.getInventory().addItem(ItemProcessType.REWARD, shotId, SupplyService.RESTOCK_TARGET - current, player, null);
+				LOGGER.info("BotFactory: gave initial shots id=" + shotId + " to " + player.getName());
+			}
+		}
+
+		if (bot.getRole() == BotRole.ARCHER)
+		{
+			// getShotId returns 0 for archers — use weapon grade for arrows via SupplyService helper
+			final int arrowId = SupplyService.getArrowId(bot);
+			if (arrowId > 0)
+			{
+				final long current = player.getInventory().getInventoryItemCount(arrowId, -1);
+				if (current < SupplyService.RESTOCK_THRESHOLD)
+				{
+					player.getInventory().addItem(ItemProcessType.REWARD, arrowId, SupplyService.RESTOCK_TARGET - current, player, null);
+					LOGGER.info("BotFactory: gave initial arrows id=" + arrowId + " to " + player.getName());
+				}
+			}
+		}
+
+		final long potionCount = player.getInventory().getInventoryItemCount(PotionData.HEAL_POTION_IDS[0], -1);
+		if (potionCount < SupplyService.POTION_TARGET)
+		{
+			player.getInventory().addItem(ItemProcessType.REWARD, PotionData.HEAL_POTION_IDS[0], SupplyService.POTION_TARGET - potionCount, player, null);
+			LOGGER.info("BotFactory: gave initial potions id=" + PotionData.HEAL_POTION_IDS[0] + " to " + player.getName());
+		}
 	}
 
 	/**
@@ -64,7 +108,7 @@ public class BotFactory
 
 		EquipService.equip(bot);
 		SkillService.setup(bot);
-		SupplyService.giveInitialSupplies(bot);
+		giveInitialSupplies(bot);
 
 		// Bot spawns at its last saved DB position.
 		// ThinkService handles navigation on the first tick:

@@ -51,16 +51,12 @@ public class LevelUpService
 	 */
 	public static void checkAndUpgrade(BotInstance bot)
 	{
-		if (!bot.hasLeveledUp())
-		{
-			return;
-		}
-
 		final Player player = bot.getPlayer();
 		final int level = player.getLevel();
 		final PlayerClass current = player.getPlayerClass();
 
-		// Try class transfer first.
+		// Always check for pending class transfer — handles bots loaded mid-progression
+		// where hasLeveledUp() would never fire because the level didn't change this session.
 		final PlayerClass next = findNextClass(current, level);
 		if (next != null)
 		{
@@ -68,10 +64,11 @@ public class LevelUpService
 			player.setPlayerClass(next.getId()); // internally calls rewardSkills()
 			GearService.giveGearSet(bot, gradeForClassLevel(next.level()));
 			EquipService.equip(bot);
+			SkillService.setup(bot);
+			return;
 		}
 
-		// Refresh skills and auto-shot (also needed for non-transfer level-ups).
-		SkillService.setup(bot);
+		// No class transfer needed — skill refresh on level-up is handled by BotController.tick().
 	}
 
 	// -------------------------------------------------------------------------
