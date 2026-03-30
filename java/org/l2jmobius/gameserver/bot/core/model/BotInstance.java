@@ -3,10 +3,12 @@
  */
 package org.l2jmobius.gameserver.bot.core.model;
 
+import java.util.LinkedList;
 import java.util.List;
 
 import org.l2jmobius.gameserver.bot.core.action.BotAction;
 import org.l2jmobius.gameserver.bot.core.action.BotExecutor;
+import org.l2jmobius.gameserver.bot.core.goap.GoapAction;
 import org.l2jmobius.gameserver.bot.core.zone.FarmZone;
 import org.l2jmobius.gameserver.geoengine.pathfinding.GeoLocation;
 import org.l2jmobius.gameserver.model.Location;
@@ -91,6 +93,12 @@ public class BotInstance
 	private int _lastStuckY = Integer.MIN_VALUE;
 	private int _stuckCount = 0;
 
+	// -------------------------------------------------------------------------
+	// GOAP plan state (GoapAgent)
+	// -------------------------------------------------------------------------
+
+	private final LinkedList<GoapAction> _goapPlan = new LinkedList<>();
+
 	// =========================================================================
 	// Constructor
 	// =========================================================================
@@ -109,7 +117,14 @@ public class BotInstance
 
 	public void update(long now)
 	{
-		org.l2jmobius.gameserver.bot.core.BotController.tick(this, now);
+		if (org.l2jmobius.gameserver.bot.core.goap.GoapAgent.ENABLED)
+		{
+			org.l2jmobius.gameserver.bot.core.goap.GoapAgent.tick(this, now);
+		}
+		else
+		{
+			org.l2jmobius.gameserver.bot.core.BotController.tick(this, now);
+		}
 	}
 
 	// =========================================================================
@@ -309,4 +324,29 @@ public class BotInstance
 	public int getStuckCount() { return _stuckCount; }
 	public void incrementStuckCount() { _stuckCount++; }
 	public void resetStuckCount() { _stuckCount = 0; }
+
+	// =========================================================================
+	// GOAP plan (GoapAgent)
+	// =========================================================================
+
+	/** @return the action currently at the head of the GOAP plan, or {@code null} if the plan is empty. */
+	public GoapAction getCurrentGoapAction() { return _goapPlan.peekFirst(); }
+
+	/**
+	 * Replaces the current plan with the given list.
+	 * The first element becomes the current action.
+	 *
+	 * @param plan ordered list of actions produced by GoapPlanner
+	 */
+	public void setGoapPlan(List<GoapAction> plan)
+	{
+		_goapPlan.clear();
+		_goapPlan.addAll(plan);
+	}
+
+	/** Removes the completed head action and exposes the next one. */
+	public void advanceGoapPlan() { _goapPlan.pollFirst(); }
+
+	/** Discards the entire plan. A replan will occur on the next tick. */
+	public void clearGoapPlan() { _goapPlan.clear(); }
 }
