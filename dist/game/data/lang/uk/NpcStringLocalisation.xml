@@ -77,7 +77,7 @@
 	<localisation id="2008" translation="I&apos;m hungry. Give me a little more, please." />
 	<localisation id="2009" translation="What is this? Is this edible?" />
 	<localisation id="2010" translation="Don&apos;t worry about me." />
-	<localisation id="2011" translation="Thank you. That was delicious!" />
+	<localisation id="2011" translation="Thank you. That was delicious! " />
 	<localisation id="2012" translation="I think I am starting to like you!" />
 	<localisation id="2013" translation="Eeeeek! Eeeeek!" />
 	<localisation id="2014" translation="Don&apos;t keep trying to tame me. I don&apos;t want to be tamed." />
@@ -90,7 +90,7 @@
 	<localisation id="2021" translation="I feel strange...! I keep having these evil thoughts...!" />
 	<localisation id="2022" translation="Alas... so this is how it all ends..." />
 	<localisation id="2023" translation="I don&apos;t feel so good... Oh, my mind is very troubled...!" />
-	<localisation id="2024" translation="$s1, so what do you think it is like to be tamed?" />
+	<localisation id="2024" translation="$s1, so what do you think it is like to be tamed? " />
 	<localisation id="2025" translation="$s1, whenever I see spice, I think I will miss your hand that used to feed it to me." />
 	<localisation id="2026" translation="$s1, don&apos;t go to the village. I don&apos;t have the strength to follow you." />
 	<localisation id="2027" translation="Thank you for trusting me, $s1. I hope I will be helpful to you." />
@@ -243,7 +243,7 @@
 	<localisation id="6551" translation="Drats! How could I be so wrong??" />
 	<localisation id="6552" translation="$s1! Step back from the confounded box! I will take it myself!" />
 	<localisation id="6553" translation="$s1! I will be back soon. Stay there and don&apos;t you dare wander off!" />
-	<localisation id="6554" translation="Grr. I&apos;ve been hit..." />
+	<localisation id="6554" translation="Grr. I&apos;ve been hit... " />
 	<localisation id="6555" translation="Grr! Who are you and why have you stopped me?" />
 	<localisation id="6556" translation="I am late!" />
 	<localisation id="6557" translation="Good luck!" />
@@ -274,7 +274,7 @@
 	<localisation id="6801" translation="Saga of the Soul Hound" />
 	<localisation id="6802" translation="Saga of the Soul Hound (In Progress)" />
 	<localisation id="6803" translation="Saga of the Soul Hound (Done)" />
-	<localisation id="6851" translation="$s1! Your time is up. Prepare to die a horrible death." />
+	<localisation id="6851" translation="$s1! Your time is up. Prepare to die a horrible death. " />
 	<localisation id="6852" translation="Consider yourself lucky. The next time we meet, you will die - PERMANENTLY!" />
 	<localisation id="6853" translation="Fare thee well! We shall meet again." />
 	<localisation id="6854" translation="$s1! Who are you? And better yet, why are you bothering my minions?" />
@@ -316,7 +316,7 @@
 	<localisation id="7001" translation="Saga of the Phoenix Knight" />
 	<localisation id="7002" translation="Saga of the Phoenix Knight (In Progress)" />
 	<localisation id="7003" translation="Saga of the Phoenix Knight (Done)" />
-	<localisation id="7050" translation="You made it here, $s1. I&apos;ll show my strength. Die!" />
+	<localisation id="7050" translation="You made it here, $s1. I&apos;ll show my strength. Die! " />
 	<localisation id="7051" translation="Ha! You failed! Are you ready to quit?" />
 	<localisation id="7052" translation="I&apos;m the strongest! I lost everything to win!" />
 	<localisation id="7053" translation="$s1! Are you doing this because they&apos;re Halisha&apos;s minions?" />
@@ -598,7 +598,7 @@
 	<localisation id="8356" translation="Mortal, don&apos;t you recognize my greatness?" />
 	<localisation id="8357" translation="I&apos;ll get you this time." />
 	<localisation id="8358" translation="I&apos;ll never forget the taste of his steel, $s1! Let&apos;s fight him together!" />
-	<localisation id="8359" translation="$s1! Pull yourself together." />
+	<localisation id="8359" translation="$s1! Pull yourself together. " />
 	<localisation id="8360" translation="$s1! He&apos;ll get away!" />
 	<localisation id="8361" translation="I missed again! Next time..." />
 	<localisation id="8362" translation="Dammit! Failed again!" />
@@ -900,7 +900,7 @@
 	<localisation id="9764" translation="I have only one goal. Get out of my way." />
 	<localisation id="9765" translation="Just wait. You&apos;ll get yours!" />
 	<localisation id="9766" translation="$s1! You&apos;re a coward, aren&apos;t you!" />
-	<localisation id="9767" translation="$s1! I&apos;ll kill you next time." />
+	<localisation id="9767" translation="$s1! I&apos;ll kill you next time. " />
 	<localisation id="9801" translation="Saga of the Shillien Saint" />
 	<localisation id="9802" translation="Saga of the Shillien Saint (In Progress)" />
 	<localisation id="9803" translation="Saga of the Shillien Saint (Done)" />
@@ -1025,10 +1025,10 @@
 	<localisation id="11501" translation="The Other Side of Truth" />
 	<localisation id="11502" translation="The Other Side of Truth (In Progress)" />
 	<localisation id="11503" translation="The Other Side of Truth (Done)" />
-	<localisation id="11550" translation="This looks like the right place..." />
+	<localisation id="11550" translation="This looks like the right place... " />
 	<localisation id="11551" translation="I see someone. Is this fate?" />
-	<localisation id="11552" translation="We meet again." />
-	<localisation id="11553" translation="Don&apos;t bother trying to find out more about me. Follow your own destiny." />
+	<localisation id="11552" translation="We meet again. " />
+	<localisation id="11553" translation="Don&apos;t bother trying to find out more about me. Follow your own destiny. " />
 	<localisation id="11601" translation="Beyond the Hills of Winter" />
 	<localisation id="11602" translation="Beyond the Hills of Winter (In Progress)" />
 	<localisation id="11603" translation="Beyond the Hills of Winter (Done)" />
@@ -1504,7 +1504,7 @@
 	<localisation id="25703" translation="The Guard is Busy (Done)" />
 	<localisation id="25801" translation="Bring Wolf Pelts" />
 	<localisation id="25802" translation="Bring Wolf Pelts (In Progress)" />
-	<localisation id="25901" translation="Request from the Farm Owner" />
+	<localisation id="25901" translation="Request from the Farm Owner " />
 	<localisation id="25902" translation="Request from the Farm Owner (In Progress)" />
 	<localisation id="26001" translation="Orc Hunting" />
 	<localisation id="26002" translation="Orc Hunting (In Progress)" />
@@ -1695,7 +1695,7 @@
 	<localisation id="33558" translation="&lt;a action=&apos;bypass -h menu_select?ask=335&amp;reply=43&apos;&gt;B: Kerunos&apos;s Gold Mane&lt;/a&gt;&lt;br&gt;" />
 	<localisation id="33601" translation="Coins of Magic" />
 	<localisation id="33602" translation="Coins of Magic (In Progress)" />
-	<localisation id="33701" translation="Audience with the Land Dragon" />
+	<localisation id="33701" translation="Audience with the Land Dragon " />
 	<localisation id="33702" translation="Audience with the Land Dragon (In Progress)" />
 	<localisation id="33801" translation="Alligator Hunter" />
 	<localisation id="33802" translation="Alligator Hunter (In Progress)" />
@@ -1829,7 +1829,7 @@
 	<localisation id="40901" translation="Path of the Elven Oracle" />
 	<localisation id="40902" translation="Path of the Elven Oracle (In Progress)" />
 	<localisation id="40909" translation="The sacred flame is ours!" />
-	<localisation id="40910" translation="Arrghh...we shall never.. surrender..." />
+	<localisation id="40910" translation="Arrghh...we shall never.. surrender... " />
 	<localisation id="40911" translation="The sacred flame is ours" />
 	<localisation id="40912" translation="The sacred flame is ours" />
 	<localisation id="40913" translation="As you wish, master!" />
@@ -1912,7 +1912,7 @@
 	<localisation id="45301" translation="Not Strong Enough Alone" />
 	<localisation id="45302" translation="Not Strong Enough Alone (In Progress)" />
 	<localisation id="45303" translation="Not Strong Enough Alone (Done)" />
-	<localisation id="45401" translation="Completely Lost" />
+	<localisation id="45401" translation="Completely Lost " />
 	<localisation id="45402" translation="Completely Lost (In Progress)" />
 	<localisation id="45403" translation="Completely Lost (Done)" />
 	<localisation id="45501" translation="Wings of Sand" />
@@ -2071,7 +2071,7 @@
 	<localisation id="61051" translation="The power of constraint is getting weaker. Your ritual has failed!" />
 	<localisation id="61101" translation="Alliance with Varka Silenos" />
 	<localisation id="61102" translation="Alliance with Varka Silenos (In Progress)" />
-	<localisation id="61201" translation="Battle against Ketra Orcs" />
+	<localisation id="61201" translation="Battle against Ketra Orcs " />
 	<localisation id="61202" translation="Battle against Ketra Orcs (In Progress)" />
 	<localisation id="61301" translation="Prove Your Courage! (Varka)" />
 	<localisation id="61302" translation="Prove Your Courage! (Varka) (In Progress)" />
@@ -2185,7 +2185,7 @@
 	<localisation id="66323" translation="&lt;font color=&apos;fff802&apos;&gt; Moon Card: 3 &lt;/font&gt;" />
 	<localisation id="66324" translation="&lt;font color=&apos;fff802&apos;&gt; Moon Card: 4 &lt;/font&gt;" />
 	<localisation id="66325" translation="&lt;font color=&apos;fff802&apos;&gt; Moon Card: 5 &lt;/font&gt;" />
-	<localisation id="68801" translation="Defeat the Elrokian Raiders!" />
+	<localisation id="68801" translation="Defeat the Elrokian Raiders! " />
 	<localisation id="68802" translation="Defeat the Elrokian Raiders! (In Progress)" />
 	<localisation id="69001" translation="Jude&apos;s Request" />
 	<localisation id="69002" translation="Jude&apos;s Request (In Progress)" />
@@ -2236,24 +2236,24 @@
 	<localisation id="71052" translation="It&apos;s the enemy! No mercy!" />
 	<localisation id="71053" translation="What are you doing? We are still superior!" />
 	<localisation id="71054" translation="How infuriating! This enemy..." />
-	<localisation id="71059" translation="$s1 has become the lord of the Town of Giran. May there be glory in the territory of Giran!" />
+	<localisation id="71059" translation="$s1 has become the lord of the Town of Giran. May there be glory in the territory of Giran! " />
 	<localisation id="71101" translation="Path to Becoming a Lord - Innadril" />
 	<localisation id="71102" translation="Path to Becoming a Lord - Innadril (In Progress)" />
 	<localisation id="71151" translation="My liege! Where are you?" />
 	<localisation id="71152" translation="$s1. Now, depart!" />
-	<localisation id="71159" translation="$s1 has become the lord of the Town of Innadril. May there be glory in the territory of Innadril!" />
+	<localisation id="71159" translation="$s1 has become the lord of the Town of Innadril. May there be glory in the territory of Innadril! " />
 	<localisation id="71201" translation="Path to Becoming a Lord - Oren" />
 	<localisation id="71202" translation="Path to Becoming a Lord - Oren (In Progress)" />
 	<localisation id="71251" translation="Have you completed your preparations to become a lord?" />
 	<localisation id="71252" translation="You have found all the Nebulite Orbs!" />
-	<localisation id="71259" translation="$s1 has become the lord of the Town of Oren. May there be glory in the territory of Oren!" />
+	<localisation id="71259" translation="$s1 has become the lord of the Town of Oren. May there be glory in the territory of Oren! " />
 	<localisation id="71301" translation="Path to Becoming a Lord - Aden" />
 	<localisation id="71302" translation="Path to Becoming a Lord - Aden (In Progress)" />
-	<localisation id="71351" translation="$s1 has become the lord of the Town of Aden. May there be glory in the territory of Aden!" />
+	<localisation id="71351" translation="$s1 has become the lord of the Town of Aden. May there be glory in the territory of Aden! " />
 	<localisation id="71401" translation="Path to Becoming a Lord - Schuttgart" />
 	<localisation id="71402" translation="Path to Becoming a Lord - Schuttgart (In Progress)" />
 	<localisation id="71451" translation="Have you completed your preparations to become a lord?" />
-	<localisation id="71459" translation="$s1 has become the lord of the Town of Schuttgart. May there be glory in the territory of Schuttgart!" />
+	<localisation id="71459" translation="$s1 has become the lord of the Town of Schuttgart. May there be glory in the territory of Schuttgart! " />
 	<localisation id="71501" translation="Path to Becoming a Lord - Goddard" />
 	<localisation id="71502" translation="Path to Becoming a Lord - Goddard (In Progress)" />
 	<localisation id="71551" translation="$s1, I will remember you." />
@@ -2266,7 +2266,7 @@
 	<localisation id="71655" translation="You have charged into the temple." />
 	<localisation id="71656" translation="You are in the midst of dealing with the heretic of Heretic Temple." />
 	<localisation id="71657" translation="The Heretic Temple is descending into chaos." />
-	<localisation id="71659" translation="$s1 has become the lord of the Town of Rune. May there be glory in the territory of Rune!" />
+	<localisation id="71659" translation="$s1 has become the lord of the Town of Rune. May there be glory in the territory of Rune! " />
 	<localisation id="71701" translation="For the Sake of the Territory - Gludio" />
 	<localisation id="71702" translation="For the Sake of the Territory - Gludio (In Progress)" />
 	<localisation id="71751" translation="$s1! Raise your weapons for the sake of the territory!" />
@@ -2695,7 +2695,7 @@
 	<localisation id="1000045" translation="My comrades will get revenge!" />
 	<localisation id="1000046" translation="You heathen blasphemers of this holy place will be punished!" />
 	<localisation id="1000047" translation="Step forward, you worthless creatures who challenge my authority!" />
-	<localisation id="1000048" translation="My creator... The unchanging faithfulness to my master..." />
+	<localisation id="1000048" translation="My creator... The unchanging faithfulness to my master... " />
 	<localisation id="1000049" translation="Master of the tower... My master... master... Where is he?" />
 	<localisation id="1000050" translation="I AM THE ONE CARRYING OUT THE WILL OF CORE." />
 	<localisation id="1000051" translation="DESTROY THE INVADER." />
@@ -3137,7 +3137,7 @@
 	<localisation id="1000513" translation="This place is dangerous, $s1. Please turn back." />
 	<localisation id="1000514" translation="Who disturbs my sacred sleep?" />
 	<localisation id="1000515" translation="Begone, thief! Let our bones rest in peace." />
-	<localisation id="1000516" translation="Leave us be, Hestui scum!" />
+	<localisation id="1000516" translation=" Leave us be, Hestui scum!" />
 	<localisation id="1000517" translation="Thieving Kakai, may bloodbugs gnaw you in your sleep!" />
 	<localisation id="1000518" translation="Newbie Travel Token" />
 	<localisation id="1000519" translation="Arrogant fool! You dare to challenge me, the Ruler of Flames? Here is your reward!" />
@@ -3236,7 +3236,7 @@
 	<localisation id="1010073" translation="The Patriot&apos;s Necropolis" />
 	<localisation id="1010074" translation="Necropolis of Devotion" />
 	<localisation id="1010075" translation="Necropolis of Martyrdom" />
-	<localisation id="1010076" translation="The Disciple&apos;s Necropolis" />
+	<localisation id="1010076" translation="The Disciple&apos;s Necropolis " />
 	<localisation id="1010077" translation="The Saint&apos;s Necropolis" />
 	<localisation id="1010078" translation="The Catacomb of the Heretic" />
 	<localisation id="1010079" translation="Catacomb of the Branded" />
@@ -3284,7 +3284,7 @@
 	<localisation id="1010121" translation="Sea of Spores" />
 	<localisation id="1010122" translation="Outlaw Forest" />
 	<localisation id="1010123" translation="Forest of Evil and the Ivory Tower" />
-	<localisation id="1010124" translation="Timak Outpost" />
+	<localisation id="1010124" translation="Timak Outpost " />
 	<localisation id="1010125" translation="Great Plains of Oren" />
 	<localisation id="1010126" translation="Alchemist&apos;s Hut" />
 	<localisation id="1010127" translation="Ancient Battleground" />
@@ -3411,7 +3411,7 @@
 	<localisation id="1010420" translation="$s1...? Huh... Huh..huh..." />
 	<localisation id="1010421" translation="Ke, ke, ke, Rakul! Spin! Eh, eh, eh!" />
 	<localisation id="1010422" translation="Ah! Fafurion! Ah! Ah!" />
-	<localisation id="1010423" translation="Rakul! Rakul! Ra-kul!" />
+	<localisation id="1010423" translation="Rakul! Rakul! Ra-kul! " />
 	<localisation id="1010424" translation="Eh..Enmity...Fish..." />
 	<localisation id="1010425" translation="I won&apos;t be eaten up...Kah, ah, ah" />
 	<localisation id="1010426" translation="Cough! Rakul! Cough, Cough! Keh..." />
@@ -3496,7 +3496,7 @@
 	<localisation id="1010505" translation="Sel Mahum Training Grounds (West Gate)" />
 	<localisation id="1010506" translation="Gludin Arena" />
 	<localisation id="1010507" translation="Giran Arena" />
-	<localisation id="1010508" translation="Entrance to Antharas&apos;s Lair" />
+	<localisation id="1010508" translation="Entrance to Antharas&apos;s Lair " />
 	<localisation id="1010509" translation="Antharas&apos;s Lair - 1st Level" />
 	<localisation id="1010510" translation="Antharas&apos;s Lair - 2nd Level" />
 	<localisation id="1010511" translation="Antharas&apos;s Lair - Magic Force Field Bridge" />
@@ -3569,7 +3569,7 @@
 	<localisation id="1010578" translation="How dare you trespass into my territory! Have you no fear?" />
 	<localisation id="1010579" translation="Fools! Why haven&apos;t you fled yet? Prepare to learn a lesson!" />
 	<localisation id="1010580" translation="Bwah-ha-ha! Your doom is at hand! Behold the Ultra Secret Super Weapon!" />
-	<localisation id="1010581" translation="Foolish, insignificant creatures! How dare you challenge me!" />
+	<localisation id="1010581" translation="Foolish, insignificant creatures! How dare you challenge me! " />
 	<localisation id="1010582" translation="I see that none will challenge me now!" />
 	<localisation id="1010583" translation="Urggh! You will pay dearly for this insult." />
 	<localisation id="1010584" translation="What? You haven&apos;t even two pennies to rub together? Harumph!" />
@@ -4196,7 +4196,7 @@
 	<localisation id="1120165" translation="Deadman Ereve (lv51)" />
 	<localisation id="1120166" translation="Harit Guardian Garangky (lv56)" />
 	<localisation id="1120167" translation="Gorgolos (lv64)" />
-	<localisation id="1120168" translation="Utenus, the Last Titan (lv66)" />
+	<localisation id="1120168" translation=" Utenus, the Last Titan (lv66)" />
 	<localisation id="1120169" translation="Grave Robber Kim (lv52)" />
 	<localisation id="1120170" translation="Ghost Knight Kabed (lv55)" />
 	<localisation id="1120171" translation="Hisilrome, Priest of Shilen (lv65)" />
@@ -4706,8 +4706,8 @@
 	<localisation id="1800289" translation="I&apos;m full now, I don&apos;t want to eat anymore." />
 	<localisation id="1800290" translation="I haven&apos;t eaten anything, I&apos;m so weak~" />
 	<localisation id="1800291" translation="Yum-yum, yum-yum" />
-	<localisation id="1800292" translation="You&apos;ve sustained $s1 damage as Tumor&apos;s shell started melting after touching the sacred seal on the shield!" />
-	<localisation id="1800293" translation="You&apos;ve sustained $s1 damage as Soul Coffin&apos;s shell started melting after touching the sacred seal on the shield!" />
+	<localisation id="1800292" translation="You&apos;ve sustained $s1 damage as Tumor&apos;s shell started melting after touching the sacred seal on the shield! " />
+	<localisation id="1800293" translation="You&apos;ve sustained $s1 damage as Soul Coffin&apos;s shell started melting after touching the sacred seal on the shield! " />
 	<localisation id="1800294" translation="Raid rewards are given to the attacker &lt;$s1&gt;." />
 	<localisation id="1800295" translation="Obelisk has collapsed. Don&apos;t let the enemies jump around wildly anymore!!!!" />
 	<localisation id="1800296" translation="Enemies are trying to destroy the fortress. Everyone defend the fortress!!!!" />
@@ -5136,7 +5136,7 @@
 	<localisation id="1800719" translation="No... When I lose that one... I&apos;ll be in more pain..." />
 	<localisation id="1800720" translation="Hahahah!!! I captured Santa Claus!! There will be no gifts this year!!!" />
 	<localisation id="1800721" translation="Now! Why don’t you take up the challenge?" />
-	<localisation id="1800722" translation="Come on, I&apos;ll take all of you on!" />
+	<localisation id="1800722" translation="Come on, I&apos;ll take all of you on! " />
 	<localisation id="1800723" translation="How about it? I think I won?" />
 	<localisation id="1800724" translation="Now!! Those of you who lost, go away!" />
 	<localisation id="1800725" translation="What a bunch of losers." />
@@ -5144,20 +5144,20 @@
 	<localisation id="1800727" translation="Ah, okay..." />
 	<localisation id="1800728" translation="Agh!! I wasn’t going to do that!" />
 	<localisation id="1800729" translation="You’re cursed!! Oh.. What?" />
-	<localisation id="1800730" translation="Have you done nothing but rock-paper-scissors??" />
+	<localisation id="1800730" translation="Have you done nothing but rock-paper-scissors?? " />
 	<localisation id="1800731" translation="Stop it, no more... I did it because I was too lonely..." />
 	<localisation id="1800732" translation="I have to release Santa... How infuriating!!!" />
-	<localisation id="1800733" translation="I hate happy Merry Christmas!!!" />
+	<localisation id="1800733" translation="I hate happy Merry Christmas!!! " />
 	<localisation id="1800734" translation="Oh. I&apos;m bored." />
 	<localisation id="1800735" translation="Shall I go to take a look if Santa is still there? Hehe" />
-	<localisation id="1800736" translation="Oh ho ho.... Merry Christmas!!" />
+	<localisation id="1800736" translation="Oh ho ho.... Merry Christmas!! " />
 	<localisation id="1800737" translation="Santa could give nice presents only if he&apos;s released from the Turkey..." />
 	<localisation id="1800738" translation="Oh ho ho... Oh ho ho... Thank you. Ladies and gentlemen! I will repay you for sure." />
-	<localisation id="1800739" translation="Merry Christmas~ You’re doing a good job." />
-	<localisation id="1800740" translation="Merry Christmas~ Thank you for rescuing me from that wretched Turkey." />
-	<localisation id="1800741" translation="$s1 . I have prepared a gift for you." />
+	<localisation id="1800739" translation="Merry Christmas~ You’re doing a good job. " />
+	<localisation id="1800740" translation="Merry Christmas~ Thank you for rescuing me from that wretched Turkey. " />
+	<localisation id="1800741" translation="$s1 . I have prepared a gift for you. " />
 	<localisation id="1800742" translation="I have a gift for $s1." />
-	<localisation id="1800743" translation="Take a look at the inventory. I hope you like the gift I gave you." />
+	<localisation id="1800743" translation="Take a look at the inventory. I hope you like the gift I gave you. " />
 	<localisation id="1800744" translation="Take a look at the inventory. Perhaps there might be a big present~" />
 	<localisation id="1800745" translation="I’m tired of dealing with you. I’m leaving." />
 	<localisation id="1800746" translation="When are you going to stop? I slowly started to be tired of it." />
@@ -5279,7 +5279,7 @@
 	<localisation id="1800862" translation="All is vanity! but this cannot be the end!" />
 	<localisation id="1800863" translation="Those who are in front of my eyes! will be destroyed!" />
 	<localisation id="1800864" translation="I am tired! Do not wake me up again!" />
-	<localisation id="1800865" translation="Intruder detected" />
+	<localisation id="1800865" translation=" Intruder detected " />
 	<localisation id="1800866" translation="The candles can lead you to Zaken. Destroy him" />
 	<localisation id="1800867" translation="Who dares awaken the mighty Zaken?" />
 	<localisation id="1800868" translation="Ye not be finding me below the drink!" />
@@ -5513,7 +5513,7 @@
 	<localisation id="1801096" translation="$s1. May the protection of the gods be upon you!" />
 	<localisation id="1801097" translation="Freya has started to move." />
 	<localisation id="1801098" translation="How could I... fall... in a place like this..." />
-	<localisation id="1801099" translation="I can finally take a breather. By the way, who are you? Hmm... I think I know who sent you." />
+	<localisation id="1801099" translation="I can finally take a breather. By the way, who are you? Hmm... I think I know who sent you. " />
 	<localisation id="1801100" translation="$s1 of Balance" />
 	<localisation id="1801101" translation="Swift $s1" />
 	<localisation id="1801102" translation="$s1 of Blessing" />
@@ -5866,8 +5866,8 @@
 	<localisation id="1900147" translation="Lucky! It wasn&apos;t enough adena. It&apos;s gotta be at least %s!" />
 	<localisation id="1900148" translation="Oh! My wings disappeared! Are you gonna hit me? If you hit me, I&apos;ll throw up everything that I ate!" />
 	<localisation id="1900149" translation="Oh! My wings... Ack! Are you gonna hit me?! Scary, scary! If you hit me, something bad will happen!" />
-	<localisation id="1900150" translation="The evil Land Dragon Antharas has been defeated!" />
-	<localisation id="1900151" translation="The evil Fire Dragon Valakas has been defeated!" />
+	<localisation id="1900150" translation="The evil Land Dragon Antharas has been defeated! " />
+	<localisation id="1900151" translation="The evil Fire Dragon Valakas has been defeated! " />
 	<localisation id="1900152" translation="To serve him now means you will be able to escape a worse situation." />
 	<localisation id="1900153" translation="Oh goddess of destruction, forgive us..." />
 	<localisation id="1900154" translation="When the sky turns blood red and the earth begins to crumble… from the darkness… she will return." />
@@ -5902,8 +5902,8 @@
 	<localisation id="1911116" translation="Those who set foot in this place shall not leave alive." />
 	<localisation id="1911117" translation="Worthless creatures, I will grant you eternal sleep in fire and brimstone." />
 	<localisation id="1911118" translation="If you wish to see hell, I will grant you your wish." />
-	<localisation id="1911119" translation="Elapsed Time :" />
-	<localisation id="1911120" translation="Time Remaining :" />
+	<localisation id="1911119" translation="Elapsed Time : " />
+	<localisation id="1911120" translation="Time Remaining : " />
 	<localisation id="10004431" translation="It teleports the guard members of the Aden Imperial Castle to the inside of the castle." />
 	<localisation id="10004432" translation="It teleports the guard members of the Gludio Castle to the inside of the castle." />
 	<localisation id="10004433" translation="It teleports the guard members of the Dion Castle to the inside of the castle." />

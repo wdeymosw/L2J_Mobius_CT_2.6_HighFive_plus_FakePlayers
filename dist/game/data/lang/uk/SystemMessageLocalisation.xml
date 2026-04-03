@@ -1079,7 +1079,7 @@
 	<localisation id="1076" translation="The game cannot be terminated at this time." />
 	<localisation id="1077" translation="A GameGuard Execution error has occurred. Please send the *.erl file(s) located in the GameGuard folder to game@inca.co.kr." />
 	<localisation id="1078" translation="When a user&apos;s keyboard input exceeds a certain cumulative score a chat ban will be applied. This is done to discourage spamming. Please avoid posting the same message multiple times during a short period." />
-	<localisation id="1079" translation="The target is currently banned from chatting." />
+	<localisation id="1079" translation=" The target is currently banned from chatting." />
 	<localisation id="1080" translation="Being permanent, are you sure you wish to use the facelift potion - Type A?" />
 	<localisation id="1081" translation="Being permanent, are you sure you wish to use the hair dye potion - Type A?" />
 	<localisation id="1082" translation="Do you wish to use the hair style change potion – Type A? It is permanent." />

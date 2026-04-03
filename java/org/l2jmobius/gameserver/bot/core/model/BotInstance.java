@@ -18,7 +18,7 @@ import org.l2jmobius.gameserver.model.actor.Player;
 /**
  * Pure data container for one bot's runtime state.
  * <p>
- * Layer 2 entry point is {@link org.l2jmobius.gameserver.bot.core.BotController#tick(BotInstance, long)}.
+ * Layer 2 entry point is {@link org.l2jmobius.gameserver.bot.core.goap.GoapAgent#tick(BotInstance, long)}.
  * This class owns no logic — it only holds fields and exposes them via getters/setters.
  */
 public class BotInstance
@@ -41,7 +41,6 @@ public class BotInstance
 	// Runtime state
 	// -------------------------------------------------------------------------
 
-	private BotState _state = BotState.IDLE;
 	private BotPhase _phase = BotPhase.FARMING;
 	private Creature _target;
 
@@ -117,14 +116,7 @@ public class BotInstance
 
 	public void update(long now)
 	{
-		if (org.l2jmobius.gameserver.bot.core.goap.GoapAgent.ENABLED)
-		{
-			org.l2jmobius.gameserver.bot.core.goap.GoapAgent.tick(this, now);
-		}
-		else
-		{
-			org.l2jmobius.gameserver.bot.core.BotController.tick(this, now);
-		}
+		org.l2jmobius.gameserver.bot.core.goap.GoapAgent.tick(this, now);
 	}
 
 	// =========================================================================
@@ -151,9 +143,6 @@ public class BotInstance
 	}
 	public boolean isQueueIdle() { return _executor.isIdle(); }
 	public void tickExecutor(long now) { _executor.tick(this, now); }
-
-	public BotState getState() { return _state; }
-	public void setState(BotState state) { _state = state; }
 
 	/**
 	 * Instantly moves the bot to the given world coordinates.

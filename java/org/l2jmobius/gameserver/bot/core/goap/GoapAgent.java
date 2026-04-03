@@ -29,7 +29,7 @@ import org.l2jmobius.gameserver.bot.core.model.BotContext;
 import org.l2jmobius.gameserver.bot.core.model.BotInstance;
 
 /**
- * GOAP tick orchestrator — replaces BotController + BotBrain + FarmBehavior.
+ * GOAP tick orchestrator. Sole entry point called by {@code BotInstance.update()}.
  * <p>
  * Cycle per tick:
  * <ol>
@@ -41,15 +41,10 @@ import org.l2jmobius.gameserver.bot.core.model.BotInstance;
  *   <li>If plan empty → replan</li>
  *   <li>If shouldInterrupt → clear plan + replan</li>
  * </ol>
- * <p>
- * Toggle between HSM and GOAP via {@link #ENABLED} in {@code BotInstance.update()}.
  */
 public class GoapAgent
 {
 	private static final Logger LOGGER = Logger.getLogger(GoapAgent.class.getName());
-
-	/** Switch to {@code true} to activate GOAP and bypass the legacy HSM. */
-	public static volatile boolean ENABLED = true;
 
 	/** Set to {@code true} to log goal selection, plan builds, and action transitions. */
 	public static volatile boolean DEBUG = true;

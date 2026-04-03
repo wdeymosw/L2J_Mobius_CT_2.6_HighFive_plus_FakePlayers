@@ -114,7 +114,7 @@ public class BotManager
 		loadBots();
 
 		// Enable per-tick debug logging — disable in production.
-		org.l2jmobius.gameserver.bot.core.BotController.DEBUG_TICKS = true;
+		org.l2jmobius.gameserver.bot.core.goap.GoapAgent.DEBUG = true;
 
 		if (_availablePool.isEmpty())
 		{
@@ -317,7 +317,7 @@ public class BotManager
 				}
 				if (doStatus)
 				{
-					LOGGER.info("BotManager: [" + bot.getPlayer().getName() + "] state=" + bot.getState() + " pos=" + bot.getPlayer().getX() + "," + bot.getPlayer().getY() + " isMoving=" + bot.getPlayer().isMoving());
+					LOGGER.info("BotManager: [" + bot.getPlayer().getName() + "] phase=" + bot.getPhase() + " pos=" + bot.getPlayer().getX() + "," + bot.getPlayer().getY() + " isMoving=" + bot.getPlayer().isMoving());
 				}
 				bot.update(now);
 			}
