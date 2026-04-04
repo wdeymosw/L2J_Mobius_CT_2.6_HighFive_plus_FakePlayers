@@ -16,8 +16,8 @@ public class RestoreGoal implements GoapGoal
 
 	static
 	{
-		DESIRED.set(Fact.HP_FULL, true);
-		DESIRED.set(Fact.MP_FULL, true);
+		DESIRED.set(Fact.HP_LOW, false);
+		DESIRED.set(Fact.MP_LOW, false);
 	}
 
 	@Override
@@ -33,7 +33,9 @@ public class RestoreGoal implements GoapGoal
 		{
 			return 0; // SurviveGoal handles critical; don't sit mid-combat
 		}
-		if (worldState.get(Fact.HP_MID) || worldState.get(Fact.MP_LOW))
+		// Only sit to recover if HP is genuinely low (< 60%) or MP is depleted.
+		// HP_MID (< 99%) is too broad — bot would sit after every minor scratch.
+		if (worldState.get(Fact.HP_LOW) || worldState.get(Fact.MP_LOW))
 		{
 			return 40;
 		}

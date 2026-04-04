@@ -34,14 +34,18 @@ public class FarmGoal implements GoapGoal
 	@Override
 	public int getPriority(WorldState worldState)
 	{
-		if (worldState.get(Fact.HP_CRITICAL) || worldState.get(Fact.HP_LOW))
+		if (worldState.get(Fact.HP_CRITICAL))
 		{
-			return 0;
+			return 0; // SurviveGoal handles critical — flee/teleport
 		}
 		if (!worldState.get(Fact.HAS_AMMO) || !worldState.get(Fact.INVENTORY_OK))
 		{
 			return 0;
 		}
+		// HP_LOW alone does NOT suppress FarmGoal: if the bot has a living target it
+		// should finish the fight. RestoreGoal (priority 40) only wins when there is
+		// no target (IN_COMBAT=false). SurviveGoal (priority 100) handles truly
+		// dangerous situations regardless.
 		return 50;
 	}
 

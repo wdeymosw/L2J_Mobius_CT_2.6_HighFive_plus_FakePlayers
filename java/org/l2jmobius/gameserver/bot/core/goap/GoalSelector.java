@@ -26,6 +26,8 @@ public class GoalSelector
 	/**
 	 * Returns the highest-priority goal that is not yet satisfied,
 	 * or {@code null} if all goals are already satisfied.
+	 * <p>
+	 * Goals returning priority 0 are considered inactive and are never selected.
 	 *
 	 * @param worldState current world state
 	 * @return active goal, or null
@@ -33,7 +35,7 @@ public class GoalSelector
 	public GoapGoal select(WorldState worldState)
 	{
 		GoapGoal best = null;
-		int bestPriority = -1;
+		int bestPriority = 0; // goals with priority=0 are inactive — never selected
 
 		for (GoapGoal goal : _goals)
 		{

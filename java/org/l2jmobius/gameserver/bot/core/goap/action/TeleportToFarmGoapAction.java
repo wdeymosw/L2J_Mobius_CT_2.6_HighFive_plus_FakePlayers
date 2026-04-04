@@ -20,7 +20,7 @@ import org.l2jmobius.gameserver.model.Location;
  */
 public class TeleportToFarmGoapAction implements GoapAction
 {
-	private static final long SETTLE_MS = 3_000;
+	private static final long SETTLE_MS = 1_000;
 
 	private static final WorldState PRECONDITIONS = new WorldState();
 	private static final WorldState EFFECTS = new WorldState();

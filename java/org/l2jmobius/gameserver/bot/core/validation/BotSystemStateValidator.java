@@ -123,10 +123,11 @@ public class BotSystemStateValidator
 			throw new ValidationBotException("Inventory total weight is negative: " + inv.getTotalWeight(), bot);
 		}
 
-		// Check capacity
-		if (inv.getTotalWeight() > Inventory.MAX_ARMOR_WEIGHT)
+		// Check total weight against the player's actual carry capacity.
+		final int maxLoad = bot.getPlayer().getMaxLoad();
+		if ((maxLoad > 0) && (inv.getTotalWeight() > maxLoad))
 		{
-			LOGGER.warning("Inventory weight exceeds maximum: " + inv.getTotalWeight() + " / " + Inventory.MAX_ARMOR_WEIGHT);
+			LOGGER.warning("Inventory weight exceeds maximum: " + inv.getTotalWeight() + " / " + maxLoad);
 		}
 
 		// Check that weight penalty level is valid (0-3)

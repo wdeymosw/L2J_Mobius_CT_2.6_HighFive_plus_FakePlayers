@@ -92,7 +92,10 @@ public class BotContext
 		final double hp = (player.getMaxHp() > 0) ? (player.getCurrentHp() / player.getMaxHp() * 100.0) : 0;
 		final double mp = (player.getMaxMp() > 0) ? (player.getCurrentMp() / player.getMaxMp() * 100.0) : 100;
 		final Creature target = bot.getTarget();
-		final boolean canAttack = (target != null) && !target.isDead() && (player.calculateDistance3D(target) < player.getPhysicalAttackRange());
+		// Use a generous range check: physicalAttackRange + 80 units tolerance.
+		// PathService stops within ~60 units of the nav snapshot, and the mob may
+		// have moved slightly, so a tight range check causes a false canAttackTarget=false.
+		final boolean canAttack = (target != null) && !target.isDead() && (player.calculateDistance3D(target) < (player.getPhysicalAttackRange() + 80));
 		return new BotContext(
 			hp,
 			mp,

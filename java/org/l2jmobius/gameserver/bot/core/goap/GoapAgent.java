@@ -40,6 +40,7 @@ import org.l2jmobius.gameserver.bot.core.goap.goal.SurviveGoal;
 import org.l2jmobius.gameserver.bot.core.goap.goal.WanderGoal;
 import org.l2jmobius.gameserver.bot.core.model.BotContext;
 import org.l2jmobius.gameserver.bot.core.model.BotInstance;
+import org.l2jmobius.gameserver.bot.core.service.TargetService;
 
 /**
  * GOAP tick orchestrator. Sole entry point called by {@code BotInstance.update()}.
@@ -230,18 +231,47 @@ public class GoapAgent
 		// 5.7 Check if current action has exceeded its timeout.
 		if (checkActionTimeout(bot, now))
 		{
-			// Action timed out — clear plan and replan
-			if (DEBUG)
+			final GoapAction timedOut = bot.getCurrentGoapAction();
+			if (DEBUG && (timedOut != null))
 			{
-				StructuredBotLogger.warning(bot, StructuredBotLogger.EVENT_ACTION_TIMEOUT, "action", bot.getCurrentGoapAction().getName());
+				StructuredBotLogger.warning(bot, StructuredBotLogger.EVENT_ACTION_TIMEOUT, "action", timedOut.getName());
+			}
+			// If we timed out while moving toward a target, that target is likely
+			// unreachable (GEO blocked, mob fled, etc.). Clear it so the next
+			// replan picks a different mob instead of looping on the same one.
+			if ((timedOut instanceof MoveToTargetGoapAction) && bot.hasTarget())
+			{
+				StructuredBotLogger.warning(bot, "TARGET_UNREACHABLE", "target", bot.getTarget() != null ? bot.getTarget().getName() : "?");
+				bot.clearTarget();
+			}
+			// Let the action clean up any persistent game state (e.g. SitRest → stand up).
+			if (timedOut != null)
+			{
+				timedOut.onAbort(bot);
 			}
 			bot.clearGoapPlan();
 		}
 
 		// 6. Plan exhausted → build a new one.
+		// Rebuild ctx+ws here so replan always sees the freshest attacker/target state,
+		// not the snapshot from step 4 which may predate a mob's first attack this tick.
 		if (bot.getCurrentGoapAction() == null)
 		{
-			replan(bot, ctx, ws, now);
+			// Before replan, switch to nearest attacker if under attack.
+			final BotContext replanCtx = BotContext.of(bot, now);
+			final WorldState replanWs = WorldState.fromContext(replanCtx, bot);
+			if (replanWs.get(Fact.UNDER_ATTACK))
+			{
+				TargetService.switchToNearestAttacker(bot);
+				// Rebuild once more with updated target
+				final BotContext attackCtx = BotContext.of(bot, now);
+				final WorldState attackWs = WorldState.fromContext(attackCtx, bot);
+				replan(bot, attackCtx, attackWs, now);
+			}
+			else
+			{
+				replan(bot, replanCtx, replanWs, now);
+			}
 			return;
 		}
 
@@ -250,11 +280,27 @@ public class GoapAgent
 		{
 			if (DEBUG)
 			{
-				StructuredBotLogger.fine(bot, StructuredBotLogger.EVENT_PLAN_INTERRUPT, "action", bot.getCurrentGoapAction().getName());
+				StructuredBotLogger.fine(bot, StructuredBotLogger.EVENT_PLAN_INTERRUPT, "action", bot.getCurrentGoapAction() != null ? bot.getCurrentGoapAction().getName() : "none");
 			}
 			StructuredBotLogger.logPlanInterrupt(bot, "HP_CRITICAL or UNDER_ATTACK");
+			// Let the interrupted action clean up its game state before plan is cleared.
+			final GoapAction interrupted = bot.getCurrentGoapAction();
+			if (interrupted != null)
+			{
+				interrupted.onAbort(bot);
+			}
 			bot.clearGoapPlan();
-			replan(bot, ctx, ws, now);
+			// When interrupted by an attack, immediately switch target to the nearest
+			// aggressor so the replan produces a plan aimed at the actual threat.
+			if (ws.get(Fact.UNDER_ATTACK))
+			{
+				TargetService.switchToNearestAttacker(bot);
+			}
+			// Rebuild ctx and ws so replan sees the updated target and attacker state,
+			// not the stale snapshot from the beginning of this tick.
+			final BotContext freshCtx = BotContext.of(bot, now);
+			final WorldState freshWs = WorldState.fromContext(freshCtx, bot);
+			replan(bot, freshCtx, freshWs, now);
 		}
 	}
 
@@ -346,6 +392,15 @@ public class GoapAgent
 		final GoapGoal goal = GOAL_SELECTOR.select(ws);
 		if (goal == null)
 		{
+			// Log at warning level so it always appears in logs regardless of DEBUG mode.
+			StructuredBotLogger.warning(bot, "REPLAN_NO_GOAL",
+				"TARGET_EXISTS", ws.get(Fact.TARGET_EXISTS),
+				"IN_FARM_ZONE", ws.get(Fact.IN_FARM_ZONE),
+				"HP_LOW", ws.get(Fact.HP_LOW),
+				"INVENTORY_OK", ws.get(Fact.INVENTORY_OK),
+				"HAS_AMMO", ws.get(Fact.HAS_AMMO),
+				"UNDER_ATTACK", ws.get(Fact.UNDER_ATTACK),
+				"LOOT_NEARBY", ws.get(Fact.LOOT_NEARBY));
 			return; // all goals satisfied — nothing to do
 		}
 
@@ -382,7 +437,10 @@ public class GoapAgent
 	 * Triggers on:
 	 * <ul>
 	 *   <li>{@code HP_CRITICAL} — SurviveGoal must take over immediately.</li>
-	 *   <li>{@code UNDER_ATTACK} while doing a non-combat action — DefendGoal must engage.</li>
+	 *   <li>{@code UNDER_ATTACK} while executing a non-combat action — DefendGoal must engage.</li>
+	 *   <li>{@code UNDER_ATTACK} while in kill sequence or moving toward a target, but a DIFFERENT
+	 *       mob is attacking — the bot should stop, switch target, and fight the actual threat.</li>
+	 *   <li>{@code OVERWEIGHT} — must sell immediately; skip if already heading to safe place.</li>
 	 * </ul>
 	 *
 	 * @param ws  current world state
@@ -396,17 +454,37 @@ public class GoapAgent
 			return true;
 		}
 
+		// Overloaded — can't move at all, must sell immediately.
+		if (ws.get(Fact.OVERWEIGHT))
+		{
+			final GoapAction current = bot.getCurrentGoapAction();
+			// Don't interrupt if already heading to sell.
+			if (current != null)
+			{
+				final WorldState effects = current.getEffects();
+				if (effects.isExplicitlySet(Fact.INVENTORY_OK) || effects.isExplicitlySet(Fact.IN_SAFE_PLACE))
+				{
+					return false;
+				}
+			}
+			return true;
+		}
+
 		if (ws.get(Fact.UNDER_ATTACK))
 		{
 			final GoapAction current = bot.getCurrentGoapAction();
 			if (current != null)
 			{
 				final WorldState effects = current.getEffects();
-				// Combat actions produce TARGET_DEAD or TARGET_IN_RANGE — no interrupt needed.
-				if (!effects.isExplicitlySet(Fact.TARGET_DEAD) && !effects.isExplicitlySet(Fact.TARGET_IN_RANGE))
+				// Already in kill sequence or moving toward target — only interrupt
+				// if a DIFFERENT mob is attacking. If the attacker IS the current
+				// target, continue the plan unchanged.
+				if (effects.isExplicitlySet(Fact.TARGET_DEAD) || effects.isExplicitlySet(Fact.TARGET_IN_RANGE))
 				{
-					return true;
+					return TargetService.isAttackedByDifferentMob(bot);
 				}
+				// Any other non-combat action (rest, search, teleport, etc.) → interrupt immediately.
+				return true;
 			}
 		}
 

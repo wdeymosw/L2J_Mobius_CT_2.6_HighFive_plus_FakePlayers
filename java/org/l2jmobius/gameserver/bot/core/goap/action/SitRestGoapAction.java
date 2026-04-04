@@ -27,10 +27,8 @@ public class SitRestGoapAction implements GoapAction
 	{
 		PRECONDITIONS.set(Fact.IN_COMBAT, false);
 		PRECONDITIONS.set(Fact.IS_DEAD, false);
-		EFFECTS.set(Fact.HP_FULL, true);
-		EFFECTS.set(Fact.HP_MID, false);
+		// Effects match RestoreGoal.DESIRED — HP and MP no longer "low"
 		EFFECTS.set(Fact.HP_LOW, false);
-		EFFECTS.set(Fact.MP_FULL, true);
 		EFFECTS.set(Fact.MP_LOW, false);
 	}
 
@@ -78,7 +76,8 @@ public class SitRestGoapAction implements GoapAction
 			standUp(bot);
 			return true;
 		}
-		if (ctx.hpPercent >= 99.0 && ctx.mpPercent >= 99.0)
+		// Complete when HP and MP reach 90% — enough to resume farming safely.
+		if (ctx.hpPercent >= 90.0 && ctx.mpPercent >= 90.0)
 		{
 			standUp(bot);
 			return true;
@@ -95,11 +94,23 @@ public class SitRestGoapAction implements GoapAction
 			player.setSitting(false);
 			player.getAI().setIntention(Intention.IDLE);
 		}
+		// Always ensure running mode so PathService does not block movement on the next tick.
+		player.setRunning();
 	}
 
 	@Override
 	public String getName()
 	{
 		return "SitRestGoapAction";
+	}
+
+	/**
+	 * If aborted while sitting (timeout, interrupt, plan clear), force stand-up
+	 * so the bot can move on the next tick.
+	 */
+	@Override
+	public void onAbort(BotInstance bot)
+	{
+		standUp(bot);
 	}
 }

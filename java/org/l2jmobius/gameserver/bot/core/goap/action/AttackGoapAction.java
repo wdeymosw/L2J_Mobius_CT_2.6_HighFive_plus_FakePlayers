@@ -9,6 +9,7 @@ import org.l2jmobius.gameserver.bot.core.goap.GoapAction;
 import org.l2jmobius.gameserver.bot.core.goap.WorldState;
 import org.l2jmobius.gameserver.bot.core.model.BotContext;
 import org.l2jmobius.gameserver.bot.core.model.BotInstance;
+import org.l2jmobius.gameserver.model.actor.Creature;
 
 /**
  * pre:  TARGET_EXISTS, TARGET_IN_RANGE
@@ -50,14 +51,21 @@ public class AttackGoapAction implements GoapAction
 	@Override
 	public boolean isValid(BotContext ctx, BotInstance bot)
 	{
-		// Range is a GOAP precondition (TARGET_IN_RANGE), not a validity filter —
-		// the planner inserts MoveToTarget when needed. Only require a living target.
-		return ctx.hasTarget();
+		// TARGET_EXISTS and TARGET_IN_RANGE are GOAP preconditions — planner handles them.
+		// Autoattack is always available; no additional runtime check needed.
+		return true;
 	}
 
 	@Override
 	public void activate(BotInstance bot, long now)
 	{
+		// If target is already dead, clear it immediately so the planner replans.
+		final Creature target = bot.getTarget();
+		if ((target != null) && target.isDead())
+		{
+			bot.clearTarget();
+			return;
+		}
 		bot.clearQueue();
 		bot.queueAction(new AttackAction());
 	}
@@ -65,7 +73,14 @@ public class AttackGoapAction implements GoapAction
 	@Override
 	public boolean isComplete(BotInstance bot, BotContext ctx, long now)
 	{
-		return !ctx.hasTarget() || bot.isQueueIdle();
+		// Complete if target is dead (not yet despawned) — clear so planner replans.
+		final Creature target = bot.getTarget();
+		if ((target != null) && target.isDead())
+		{
+			bot.clearTarget();
+			return true;
+		}
+		return !ctx.hasTarget();
 	}
 
 	@Override

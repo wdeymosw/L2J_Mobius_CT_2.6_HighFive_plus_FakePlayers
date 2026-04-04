@@ -300,6 +300,28 @@ public class BotInstance
 
 	public void advanceWaypoint() { _pathIndex++; }
 
+	/** Returns the last A* waypoint (mob's stored destination), or null if no path. */
+	public GeoLocation getLastWaypoint()
+	{
+		if ((_currentPath == null) || _currentPath.isEmpty())
+		{
+			return null;
+		}
+		return _currentPath.get(_currentPath.size() - 1);
+	}
+
+	/**
+	 * Replaces the last A* waypoint with updated coordinates.
+	 * Used by MoveToCreatureAction to track a moving mob without rebuilding the whole path.
+	 */
+	public void updateLastWaypoint(int x, int y, int z)
+	{
+		if ((_currentPath != null) && !_currentPath.isEmpty())
+		{
+			_currentPath.set(_currentPath.size() - 1, new GeoLocation(x, y, z));
+		}
+	}
+
 	public void clearPath()
 	{
 		_currentPath = null;

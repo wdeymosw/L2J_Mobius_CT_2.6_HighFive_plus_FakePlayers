@@ -50,15 +50,27 @@ public class SellService
 	{
 	}
 
+	/** Weight threshold (fraction of max load) at which the bot goes to sell. */
+	private static final double WEIGHT_SELL_THRESHOLD = 0.60;
+
 	/**
 	 * Returns {@code true} if the bot should head to the shop now.
+	 * Triggers when inventory slots are ≥ 90% full OR weight exceeds 60% of max load.
 	 *
 	 * @param bot the bot to check
-	 * @return true if inventory is ≥ 90 % full
+	 * @return true if inventory needs selling
 	 */
 	public static boolean needsSell(BotInstance bot)
 	{
-		return !bot.getPlayer().isInventoryUnder90(false);
+		final Player player = bot.getPlayer();
+		// Slot-based check (original).
+		if (!player.isInventoryUnder90(false))
+		{
+			return true;
+		}
+		// Weight-based check — sell before becoming overloaded.
+		final int maxLoad = player.getMaxLoad();
+		return (maxLoad > 0) && (player.getCurrentLoad() > maxLoad * WEIGHT_SELL_THRESHOLD);
 	}
 
 	/**

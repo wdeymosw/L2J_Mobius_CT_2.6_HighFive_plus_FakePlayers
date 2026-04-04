@@ -15,6 +15,7 @@ import org.l2jmobius.gameserver.geoengine.pathfinding.GeoLocation;
 import org.l2jmobius.gameserver.geoengine.pathfinding.PathFinding;
 import org.l2jmobius.gameserver.model.Location;
 import org.l2jmobius.gameserver.model.actor.Player;
+import org.l2jmobius.gameserver.bot.core.service.TargetService;
 
 /**
  * Two-level movement engine for bots.
@@ -94,6 +95,16 @@ public class PathService
 		final int px = player.getX();
 		final int py = player.getY();
 		final int pz = player.getZ();
+
+		// --- Guard: skip movement when the character cannot physically move.
+		// Reset stuck counter so these states never accumulate toward teleportation. ---
+		if (player.isDead() || player.isSitting() || player.isStunned() || player.isParalyzed() || player.isImmobilized() || player.isRooted() || player.isOverloaded())
+		{
+			bot.resetStuckCount();
+			bot.setStuckCheckTime(now); // refresh snapshot time so the pause isn't counted
+			bot.setStuckSnapshot(px, py);
+			return;
+		}
 
 		// --- Arrival check (final destination) ---
 		final long adx = px - tx;
@@ -274,6 +285,14 @@ public class PathService
 			return false; // first sample — no comparison yet
 		}
 
+		// If bot is in combat (attacking or under attack), movement may be intentionally
+		// interrupted — reset snapshot and counter so combat time never counts as stuck.
+		if (player.isAttackingNow() || TargetService.isUnderAttack(bot))
+		{
+			bot.resetStuckCount();
+			return false;
+		}
+
 		final double moved = Math.hypot(px - lx, py - ly);
 		final double expected = player.getMoveSpeed() * elapsed * 0.3;
 
@@ -293,6 +312,10 @@ public class PathService
 				LOGGER.info("PathService: " + player.getName() + " stuck x" + STUCK_TELEPORT_THRESHOLD + " — teleporting to " + tx + "," + ty + "," + tz);
 				return true;
 			}
+			// Force-stop current movement so the next tick can issue a fresh MOVE_TO.
+			// Without this, isMoving() stays true and handleLocalMove keeps returning
+			// early, never re-triggering PathFinding or MOVE_TO.
+			player.getAI().setIntention(Intention.IDLE);
 			bot.clearPath();
 			bot.setLastPathTime(0); // allow immediate PathFinding retry
 			LOGGER.info("PathService: " + player.getName() + " stuck " + bot.getStuckCount() + "/" + STUCK_TELEPORT_THRESHOLD + " (moved " + (int) moved + " < min " + (int) expected + ") — retrying");

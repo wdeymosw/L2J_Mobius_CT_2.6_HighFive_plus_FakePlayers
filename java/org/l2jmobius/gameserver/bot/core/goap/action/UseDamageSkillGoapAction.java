@@ -10,6 +10,7 @@ import org.l2jmobius.gameserver.bot.core.goap.WorldState;
 import org.l2jmobius.gameserver.bot.core.model.BotContext;
 import org.l2jmobius.gameserver.bot.core.model.BotInstance;
 import org.l2jmobius.gameserver.bot.core.service.SkillService;
+import org.l2jmobius.gameserver.model.actor.Creature;
 import org.l2jmobius.gameserver.model.skill.Skill;
 
 /**
@@ -55,12 +56,21 @@ public class UseDamageSkillGoapAction implements GoapAction
 	@Override
 	public boolean isValid(BotContext ctx, BotInstance bot)
 	{
-		return ctx.hasTarget() && ctx.canAttackTarget && SkillService.hasDamageSkill(bot);
+		// TARGET_EXISTS and TARGET_IN_RANGE are GOAP preconditions — planner handles them.
+		// Only check what can't be a precondition: whether a damage skill is actually available.
+		return SkillService.hasDamageSkill(bot);
 	}
 
 	@Override
 	public void activate(BotInstance bot, long now)
 	{
+		// If target is already dead, clear it immediately so the planner replans.
+		final Creature target = bot.getTarget();
+		if ((target != null) && target.isDead())
+		{
+			bot.clearTarget();
+			return;
+		}
 		bot.clearQueue();
 		final Skill best = SkillService.getBestDamageSkill(bot);
 		if (best != null)
@@ -72,7 +82,14 @@ public class UseDamageSkillGoapAction implements GoapAction
 	@Override
 	public boolean isComplete(BotInstance bot, BotContext ctx, long now)
 	{
-		return !ctx.hasTarget() || bot.isQueueIdle();
+		// Complete if target is dead (not yet despawned) — clear so planner replans.
+		final Creature target = bot.getTarget();
+		if ((target != null) && target.isDead())
+		{
+			bot.clearTarget();
+			return true;
+		}
+		return !ctx.hasTarget();
 	}
 
 	@Override

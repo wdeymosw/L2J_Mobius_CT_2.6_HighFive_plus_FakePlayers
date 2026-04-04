@@ -103,4 +103,16 @@ public interface GoapAction
 
 	/** Human-readable name for logging. */
 	String getName();
+
+	/**
+	 * Called when the action is aborted mid-execution (plan cleared, timeout, interrupt).
+	 * Override to clean up any persistent game state the action put the bot into.
+	 * Default: no-op.
+	 *
+	 * @param bot the bot
+	 */
+	default void onAbort(BotInstance bot)
+	{
+		// No-op by default
+	}
 }

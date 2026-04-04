@@ -20,7 +20,7 @@ import org.l2jmobius.gameserver.model.Location;
  */
 public class TeleportToCityGoapAction implements GoapAction
 {
-	private static final long SETTLE_MS = 3_000;
+	private static final long SETTLE_MS = 1_000;
 
 	private static final WorldState PRECONDITIONS = new WorldState();
 	private static final WorldState EFFECTS = new WorldState();
@@ -29,6 +29,7 @@ public class TeleportToCityGoapAction implements GoapAction
 	{
 		EFFECTS.set(Fact.IN_SAFE_PLACE, true);
 		EFFECTS.set(Fact.IN_FARM_ZONE, false);
+		EFFECTS.set(Fact.IN_COMBAT, false); // teleporting to city ends combat for planning purposes
 	}
 
 	@Override
