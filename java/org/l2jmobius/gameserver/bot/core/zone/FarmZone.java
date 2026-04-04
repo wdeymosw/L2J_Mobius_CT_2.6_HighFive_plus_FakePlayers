@@ -72,6 +72,12 @@ public class FarmZone
 		return _radius;
 	}
 
+	/** @return the original configured radius (never changes). */
+	public int getBaseRadius()
+	{
+		return _radius;
+	}
+
 	public int getMinLevel()
 	{
 		return _minLevel;

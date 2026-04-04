@@ -64,6 +64,21 @@ public class BotInstance
 	private long _currentActionStartTime = 0;
 	/** Maximum time the current action is allowed to run (0 = no limit). */
 	private long _currentActionTimeoutMs = 0;
+	/** Last time the bot was in active combat (took damage or fought). Used to block premature sit. */
+	private long _lastCombatTime = 0;
+	/** HP snapshot taken at the end of each tick — used to detect damage taken between ticks. */
+	private double _lastHpSnapshot = -1.0;
+
+	// -------------------------------------------------------------------------
+	// Dynamic search radius state (TargetService)
+	// -------------------------------------------------------------------------
+
+	/** Dynamic search radius — starts at base, expands on repeated failures. */
+	private int _searchRadius = 700; // matches TargetService.SEARCH_RADIUS_BASE
+	/** Consecutive failed searches — drives radius expansion. */
+	private int _searchFailCount = 0;
+	/** Effective zone radius for this bot — may exceed FarmZone.getBaseRadius() during expansion. */
+	private int _effectiveZoneRadius = -1; // -1 = use zone's base radius
 
 	// -------------------------------------------------------------------------
 	// Level tracking
@@ -101,6 +116,8 @@ public class BotInstance
 	// -------------------------------------------------------------------------
 
 	private final LinkedList<GoapAction> _goapPlan = new LinkedList<>();
+	/** Priority of the goal that produced the current plan. 0 = no active plan. */
+	private int _activeGoalPriority = 0;
 
 	// =========================================================================
 	// Constructor
@@ -167,7 +184,12 @@ public class BotInstance
 
 	public Creature getTarget() { return _target; }
 	public void setTarget(Creature target) { _target = target; _player.setTarget(target); }
-	public void clearTarget() { _target = null; _player.setTarget(null); }
+	public void clearTarget()
+	{
+		_target = null;
+		_player.abortAttack();
+		_player.setTarget(null);
+	}
 	public boolean hasTarget() { return (_target != null) && !_target.isDead(); }
 
 	public BotPhase getPhase() { return _phase; }
@@ -179,7 +201,11 @@ public class BotInstance
 
 	public boolean isInZone()
 	{
-		return _profile.getZone().contains(_player.getX(), _player.getY());
+		final FarmZone zone = _profile.getZone();
+		final int radius = (_effectiveZoneRadius > 0) ? _effectiveZoneRadius : zone.getRadius();
+		final long dx = _player.getX() - zone.getX();
+		final long dy = _player.getY() - zone.getY();
+		return (dx * dx + dy * dy) <= ((long) radius * radius);
 	}
 
 	// =========================================================================
@@ -213,6 +239,78 @@ public class BotInstance
 
 	public long getNextPotionTime() { return _nextPotionTime; }
 	public void setNextPotionTime(long time) { _nextPotionTime = time; }
+
+	public long getLastCombatTime() { return _lastCombatTime; }
+	public void updateLastCombatTime() { _lastCombatTime = System.currentTimeMillis(); }
+
+	/**
+	 * Returns {@code true} if the bot's HP has dropped since the last snapshot.
+	 * Used as a reliable fallback combat indicator when attacker lists haven't
+	 * been populated yet (e.g. mob aggroed but hasn't attacked on the server yet).
+	 */
+	public boolean hasTakenDamageSinceLastTick()
+	{
+		return (_lastHpSnapshot > 0) && (_player.getCurrentHp() < _lastHpSnapshot - 1.0);
+	}
+
+	/** Called at the end of each GoapAgent tick to capture the current HP for next-tick comparison. */
+	public void updateHpSnapshot()
+	{
+		_lastHpSnapshot = _player.getCurrentHp();
+	}
+
+	// =========================================================================
+	// Dynamic search radius (TargetService)
+	// =========================================================================
+
+	/** Base search radius — never shrinks below this value. */
+	private static final int SEARCH_RADIUS_BASE = 700;
+	/** Maximum search radius before zone expansion kicks in. */
+	private static final int SEARCH_RADIUS_PHASE1_MAX = 1000;
+	/** Maximum allowed zone radius multiplier. */
+	private static final float ZONE_RADIUS_MAX_MULT = 5.0f; // 1000 * 5 = 5000
+	/** Growth factor per failed search during phase 1 (search radius). */
+	private static final int SEARCH_RADIUS_STEP = 50;
+	/** Growth factor per failed search during phase 2 (zone radius). x1.5 per step. */
+	private static final float ZONE_RADIUS_STEP = 1.5f;
+
+	public int getSearchRadius() { return _searchRadius; }
+
+	/**
+	 * Called when no mob was found. Expands search radius step-by-step:
+	 * <ol>
+	 *   <li>Phase 1 — search radius grows 50 units/fail up to {@value #SEARCH_RADIUS_PHASE1_MAX}</li>
+	 *   <li>Phase 2 — zone radius grows ×1.5/fail up to base×{@value #ZONE_RADIUS_MAX_MULT}</li>
+	 * </ol>
+	 */
+	public void onSearchFailed()
+	{
+		_searchFailCount++;
+		if (_searchRadius < SEARCH_RADIUS_PHASE1_MAX)
+		{
+			// Phase 1: grow search radius smoothly
+			_searchRadius = Math.min(_searchRadius + SEARCH_RADIUS_STEP, SEARCH_RADIUS_PHASE1_MAX);
+		}
+		else
+		{
+			// Phase 2: expand the per-bot effective zone radius (does not affect other bots)
+			final int baseZoneRadius = _profile.getZone().getBaseRadius();
+			final int currentEffective = (_effectiveZoneRadius > 0) ? _effectiveZoneRadius : baseZoneRadius;
+			final int maxZoneRadius = (int) (baseZoneRadius * ZONE_RADIUS_MAX_MULT);
+			if (currentEffective < maxZoneRadius)
+			{
+				_effectiveZoneRadius = Math.min((int) (currentEffective * ZONE_RADIUS_STEP), maxZoneRadius);
+			}
+		}
+	}
+
+	/** Called when a target is successfully found — resets all expansion state. */
+	public void onSearchSuccess()
+	{
+		_searchFailCount = 0;
+		_searchRadius = SEARCH_RADIUS_BASE;
+		_effectiveZoneRadius = -1; // back to base zone radius
+	}
 
 	public boolean isSessionExpired()
 	{
@@ -313,12 +411,20 @@ public class BotInstance
 	/**
 	 * Replaces the last A* waypoint with updated coordinates.
 	 * Used by MoveToCreatureAction to track a moving mob without rebuilding the whole path.
+	 * Silently skips if the coordinates are outside geo-data bounds.
 	 */
 	public void updateLastWaypoint(int x, int y, int z)
 	{
 		if ((_currentPath != null) && !_currentPath.isEmpty())
 		{
-			_currentPath.set(_currentPath.size() - 1, new GeoLocation(x, y, z));
+			try
+			{
+				_currentPath.set(_currentPath.size() - 1, new GeoLocation(x, y, z));
+			}
+			catch (Exception ignored)
+			{
+				// Coordinates may be outside geodata bounds — skip the update silently.
+			}
 		}
 	}
 
@@ -350,6 +456,9 @@ public class BotInstance
 	// GOAP plan (GoapAgent)
 	// =========================================================================
 
+	public int getActiveGoalPriority() { return _activeGoalPriority; }
+	public void setActiveGoalPriority(int priority) { _activeGoalPriority = priority; }
+
 	/** @return the action currently at the head of the GOAP plan, or {@code null} if the plan is empty. */
 	public GoapAction getCurrentGoapAction() { return _goapPlan.peekFirst(); }
 
@@ -369,5 +478,9 @@ public class BotInstance
 	public void advanceGoapPlan() { _goapPlan.pollFirst(); }
 
 	/** Discards the entire plan. A replan will occur on the next tick. */
-	public void clearGoapPlan() { _goapPlan.clear(); }
+	public void clearGoapPlan()
+	{
+		_goapPlan.clear();
+		_activeGoalPriority = 0;
+	}
 }

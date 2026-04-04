@@ -31,6 +31,7 @@ import org.l2jmobius.gameserver.bot.core.validation.BotSystemStateValidator;
 import org.l2jmobius.gameserver.bot.core.logging.StructuredBotLogger;
 import org.l2jmobius.gameserver.bot.core.goap.goal.BuffGoal;
 import org.l2jmobius.gameserver.bot.core.goap.goal.DefendGoal;
+import org.l2jmobius.gameserver.bot.core.goap.goal.DrinkPotionGoal;
 import org.l2jmobius.gameserver.bot.core.goap.goal.FarmGoal;
 import org.l2jmobius.gameserver.bot.core.goap.goal.HuntGoal;
 import org.l2jmobius.gameserver.bot.core.goap.goal.PickupGoal;
@@ -86,15 +87,16 @@ public class GoapAgent
 
 	/** Goal selector evaluated each replan. Goals are checked in priority order. */
 	private static final GoalSelector GOAL_SELECTOR = new GoalSelector(List.of(
-		new SurviveGoal(),  // 100 — HP critical
-		new DefendGoal(),   // 90  — under attack
-		new FarmGoal(),     // 50  — kill existing target
-		new BuffGoal(),     // 47  — apply pending self-buffs
-		new PickupGoal(),   // 46  — collect nearby loot
-		new HuntGoal(),     // 45  — find a target (in zone, no target)
-		new RestoreGoal(),  // 40  — HP/MP low
-		new RestockGoal(),  // 30  — out of supplies
-		new WanderGoal())); // 10  — fallback: get to farm zone
+		new SurviveGoal(),      // 100 — HP critical
+		new DefendGoal(),       //  90 — under attack
+		new DrinkPotionGoal(),  //  52 — HP low + potion ready (in and out of combat)
+		new FarmGoal(),         //  50 — kill existing target
+		new BuffGoal(),         //  47 — apply pending self-buffs
+		new PickupGoal(),       //  46 — collect nearby loot
+		new HuntGoal(),         //  45 — find a target (in zone, no target)
+		new RestoreGoal(),      //  40 — HP/MP low (sit rest / heal skill)
+		new RestockGoal(),      //  30 — out of supplies
+		new WanderGoal()));     //  10 — fallback: get to farm zone
 
 	private GoapAgent()
 	{
@@ -141,6 +143,20 @@ public class GoapAgent
 			// Unexpected error: log and disable to prevent cascading failures
 			StructuredBotLogger.severe(bot, StructuredBotLogger.EVENT_EXCEPTION_CAUGHT, "exception", e.getClass().getSimpleName(), "message", e.getMessage());
 			e.printStackTrace();
+			// Also write to a dedicated crash file so it is not lost in console scroll
+			try
+			{
+				final java.io.File f = new java.io.File("log/bot-crash.log");
+				f.getParentFile().mkdirs();
+				try (java.io.PrintWriter pw = new java.io.PrintWriter(new java.io.FileWriter(f, true)))
+				{
+					pw.println("=== " + new java.util.Date() + " bot=" + bot.getPlayer().getName() + " ===");
+					e.printStackTrace(pw);
+				}
+			}
+			catch (Exception ignored)
+			{
+			}
 			bot.clearQueue();
 			bot.clearGoapPlan();
 		}
@@ -187,6 +203,13 @@ public class GoapAgent
 		// 4. Build context + world state snapshots.
 		final BotContext ctx = BotContext.of(bot, now);
 		final WorldState ws = WorldState.fromContext(ctx, bot);
+
+		// 4.1 Track last combat time — used by SitRestGoapAction to prevent premature sitting.
+		// HP-delta check catches mobs that aggroed but haven't registered in attacker lists yet.
+		if (ctx.hasTarget() || (ctx.attackerCount > 0) || bot.hasTakenDamageSinceLastTick())
+		{
+			bot.updateLastCombatTime();
+		}
 
 		// 4.5 Validate system state consistency
 		BotSystemStateValidator.validateFull(bot, ws);
@@ -278,6 +301,25 @@ public class GoapAgent
 		// 7. Interrupt on HP_CRITICAL or unhandled UNDER_ATTACK.
 		if (shouldInterrupt(ws, bot))
 		{
+			// Before actually clearing the plan, peek at what goal would win now.
+			// If the new goal has lower or equal priority than the current plan's goal,
+			// the interrupt would be a downgrade (e.g. WanderGoal=10 interrupting FarmGoal=50
+			// when HP recovered via potions mid-tick). Skip in that case.
+			if (ws.get(Fact.UNDER_ATTACK) || bot.hasTakenDamageSinceLastTick())
+			{
+				TargetService.switchToNearestAttacker(bot);
+			}
+			final BotContext freshCtx = BotContext.of(bot, now);
+			final WorldState freshWs = WorldState.fromContext(freshCtx, bot);
+			final GoapGoal newGoal = GOAL_SELECTOR.select(freshWs);
+			final int newPriority = (newGoal != null) ? newGoal.getPriority(freshWs) : 0;
+			if (newPriority <= bot.getActiveGoalPriority())
+			{
+				// No upgrade available — don't interrupt, let the current plan continue.
+				bot.updateHpSnapshot();
+				return;
+			}
+
 			if (DEBUG)
 			{
 				StructuredBotLogger.fine(bot, StructuredBotLogger.EVENT_PLAN_INTERRUPT, "action", bot.getCurrentGoapAction() != null ? bot.getCurrentGoapAction().getName() : "none");
@@ -290,18 +332,11 @@ public class GoapAgent
 				interrupted.onAbort(bot);
 			}
 			bot.clearGoapPlan();
-			// When interrupted by an attack, immediately switch target to the nearest
-			// aggressor so the replan produces a plan aimed at the actual threat.
-			if (ws.get(Fact.UNDER_ATTACK))
-			{
-				TargetService.switchToNearestAttacker(bot);
-			}
-			// Rebuild ctx and ws so replan sees the updated target and attacker state,
-			// not the stale snapshot from the beginning of this tick.
-			final BotContext freshCtx = BotContext.of(bot, now);
-			final WorldState freshWs = WorldState.fromContext(freshCtx, bot);
 			replan(bot, freshCtx, freshWs, now);
 		}
+
+		// End of tick — snapshot HP for next-tick damage detection.
+		bot.updateHpSnapshot();
 	}
 
 	// =========================================================================
@@ -367,8 +402,14 @@ public class GoapAgent
 			bot.setReviveTime(0);
 			bot.getPlayer().doRevive();
 			bot.getPlayer().setRunning();
-			// After revive the world state naturally drives the bot back to farm
-			// (TeleportToFarmGoapAction will be selected on next replan).
+			// Reset zone/search expansion so the city home location is never mistaken
+			// for "inside the farm zone" due to a previously expanded effective radius.
+			bot.onSearchSuccess();
+			// Teleport to city as a proper GOAP plan so the agent tracks completion
+			// and replans (WanderGoal → TeleportToFarm) once the city queue finishes.
+			final TeleportToCityGoapAction teleportToCity = new TeleportToCityGoapAction();
+			bot.setGoapPlan(List.of(teleportToCity));
+			teleportToCity.activate(bot, now);
 			StructuredBotLogger.logBotRevived(bot);
 		}
 	}
@@ -414,12 +455,10 @@ public class GoapAgent
 			return;
 		}
 
-		if (DEBUG)
-		{
-			StructuredBotLogger.logPlanBuild(bot, goal.getName(), plan.size(), planDuration);
-		}
+		StructuredBotLogger.logPlanBuild(bot, goal.getName(), plan.size(), planDuration);
 
 		bot.setGoapPlan(plan);
+		bot.setActiveGoalPriority(goal.getPriority(ws));
 		final GoapAction first = bot.getCurrentGoapAction();
 		if (first != null)
 		{
@@ -484,6 +523,33 @@ public class GoapAgent
 					return TargetService.isAttackedByDifferentMob(bot);
 				}
 				// Any other non-combat action (rest, search, teleport, etc.) → interrupt immediately.
+				return true;
+			}
+		}
+
+		// HP dropped this tick — we're taking damage even if attacker lists haven't updated yet.
+		// Covers the race: mob aggroed + started moving toward bot but target not set yet.
+		if (bot.hasTakenDamageSinceLastTick())
+		{
+			final GoapAction current = bot.getCurrentGoapAction();
+			if (current != null)
+			{
+				final WorldState effects = current.getEffects();
+				// Don't interrupt an active attack/move-to sequence — bot is already fighting.
+				if (!effects.isExplicitlySet(Fact.TARGET_DEAD) && !effects.isExplicitlySet(Fact.TARGET_IN_RANGE) && !effects.isExplicitlySet(Fact.THREAT_NEUTRALIZED))
+				{
+					return true; // Taking damage outside of a combat action — interrupt immediately.
+				}
+			}
+		}
+
+		// HP is low and a potion is available — interrupt the current plan to drink immediately.
+		// DrinkPotionGoal (priority 52) will win over FarmGoal (50) on the next replan.
+		if (ws.get(Fact.HP_LOW) && ws.get(Fact.POTION_READY) && ws.get(Fact.HAS_POTIONS) && !ws.get(Fact.HP_CRITICAL))
+		{
+			final GoapAction current = bot.getCurrentGoapAction();
+			if ((current != null) && !(current instanceof DrinkPotionGoapAction))
+			{
 				return true;
 			}
 		}

@@ -59,7 +59,16 @@ public class PathService
 	private static final long STUCK_CHECK_MS = 3000;
 
 	/** After this many consecutive stuck triggers, teleport to destination. */
-	private static final int STUCK_TELEPORT_THRESHOLD = 8;
+	private static final int STUCK_TELEPORT_THRESHOLD = 10;
+
+	/** At this stuck count, start trying escape maneuvers (left/right/back). */
+	private static final int STUCK_ESCAPE_THRESHOLD = 3;
+
+	/** At this stuck count, force a full repath (clear global + local path). */
+	private static final int STUCK_REPATH_THRESHOLD = 7;
+
+	/** Escape distance (units) for left/right/backward sidestep. */
+	private static final int ESCAPE_DIST = 200;
 
 	/** Max PathFinding calls across all bots within PATH_RATE_WINDOW_MS. */
 	private static final int MAX_PATH_CALLS_PER_WINDOW = 10;
@@ -261,9 +270,16 @@ public class PathService
 	// Anti-stuck
 	// -------------------------------------------------------------------------
 
-	// Clears the local path if the bot has not moved enough since the last check.
-	// After STUCK_TELEPORT_THRESHOLD consecutive triggers, teleports to destination.
-	// Returns true if the bot was teleported (caller should skip the rest of the tick).
+	// Escape angle constants for sidestep maneuvers.
+	// Angle = 105° from forward direction (= 75° from backward) → slightly backward + mostly sideways.
+	// cos(105°) = −cos(75°) ≈ −0.2588,  sin(105°) = sin(75°) ≈ 0.9659
+	private static final double ESC_COS = -0.2588;
+	private static final double ESC_SIN = 0.9659;
+
+	// Sequence: counts 1-2 → normal retry, 3 → left-75°, 4 → right-75°,
+	//           5 → backward-180°, 6+ → force repath, 10 → teleport.
+	//
+	// Returns true if the bot was teleported (caller should skip the rest of tick).
 	private static boolean handleStuck(BotInstance bot, Player player, int tx, int ty, int tz, long now)
 	{
 		if ((now - bot.getStuckCheckTime()) < STUCK_CHECK_MS)
@@ -276,6 +292,7 @@ public class PathService
 		final int ly = bot.getLastStuckY();
 		final int px = player.getX();
 		final int py = player.getY();
+		final int pz = player.getZ();
 
 		bot.setStuckCheckTime(now);
 		bot.setStuckSnapshot(px, py);
@@ -285,8 +302,7 @@ public class PathService
 			return false; // first sample — no comparison yet
 		}
 
-		// If bot is in combat (attacking or under attack), movement may be intentionally
-		// interrupted — reset snapshot and counter so combat time never counts as stuck.
+		// In combat, movement interruptions are intentional — never count as stuck.
 		if (player.isAttackingNow() || TargetService.isUnderAttack(bot))
 		{
 			bot.resetStuckCount();
@@ -296,34 +312,97 @@ public class PathService
 		final double moved = Math.hypot(px - lx, py - ly);
 		final double expected = player.getMoveSpeed() * elapsed * 0.3;
 
-		if (moved < expected)
-		{
-			bot.incrementStuckCount();
-			if (bot.getStuckCount() >= STUCK_TELEPORT_THRESHOLD)
-			{
-				// Too many retries — teleport directly to destination.
-				bot.clearGlobalPath();
-				bot.setLastPathTime(0);
-				bot.setLastDirectCheckTime(0);
-				bot.setStuckCheckTime(0);
-				bot.setStuckSnapshot(Integer.MIN_VALUE, Integer.MIN_VALUE);
-				bot.resetStuckCount();
-				bot.teleport(tx, ty, tz);
-				LOGGER.info("PathService: " + player.getName() + " stuck x" + STUCK_TELEPORT_THRESHOLD + " — teleporting to " + tx + "," + ty + "," + tz);
-				return true;
-			}
-			// Force-stop current movement so the next tick can issue a fresh MOVE_TO.
-			// Without this, isMoving() stays true and handleLocalMove keeps returning
-			// early, never re-triggering PathFinding or MOVE_TO.
-			player.getAI().setIntention(Intention.IDLE);
-			bot.clearPath();
-			bot.setLastPathTime(0); // allow immediate PathFinding retry
-			LOGGER.info("PathService: " + player.getName() + " stuck " + bot.getStuckCount() + "/" + STUCK_TELEPORT_THRESHOLD + " (moved " + (int) moved + " < min " + (int) expected + ") — retrying");
-		}
-		else
+		if (moved >= expected)
 		{
 			bot.resetStuckCount();
+			return false;
 		}
+
+		bot.incrementStuckCount();
+		final int count = bot.getStuckCount();
+		LOGGER.info("PathService: " + player.getName() + " stuck " + count + "/" + STUCK_TELEPORT_THRESHOLD + " (moved " + (int) moved + " < min " + (int) expected + ")");
+
+		// ── Last resort: teleport ────────────────────────────────────────────
+		if (count >= STUCK_TELEPORT_THRESHOLD)
+		{
+			bot.clearGlobalPath();
+			bot.setLastPathTime(0);
+			bot.setLastDirectCheckTime(0);
+			bot.setStuckCheckTime(0);
+			bot.setStuckSnapshot(Integer.MIN_VALUE, Integer.MIN_VALUE);
+			bot.resetStuckCount();
+			bot.teleport(tx, ty, tz);
+			LOGGER.info("PathService: " + player.getName() + " stuck x" + STUCK_TELEPORT_THRESHOLD + " — teleporting to " + tx + "," + ty + "," + tz);
+			return true;
+		}
+
+		// ── Force repath: clear everything, let PathFinding rebuild from scratch ──
+		if (count >= STUCK_REPATH_THRESHOLD)
+		{
+			bot.clearGlobalPath();
+			bot.clearPath();
+			bot.setLastPathTime(0);
+			bot.setLastDirectCheckTime(0);
+			player.getAI().setIntention(Intention.IDLE);
+			LOGGER.info("PathService: " + player.getName() + " stuck " + count + " — force repath");
+			return false;
+		}
+
+		// ── Escape maneuvers: sidestep at 75° from forward direction ─────────
+		if (count >= STUCK_ESCAPE_THRESHOLD)
+		{
+			final double ddx = tx - px;
+			final double ddy = ty - py;
+			final double dist = Math.hypot(ddx, ddy);
+
+			if (dist > 0)
+			{
+				// Unit vector toward destination.
+				final double ndx = ddx / dist;
+				final double ndy = ddy / dist;
+
+				int ex;
+				int ey;
+				String dir;
+
+				switch (count - STUCK_ESCAPE_THRESHOLD)
+				{
+					case 0: // LEFT: rotate forward +75°
+					{
+						ex = (int) (px + (ndx * ESC_COS - ndy * ESC_SIN) * ESCAPE_DIST);
+						ey = (int) (py + (ndx * ESC_SIN + ndy * ESC_COS) * ESCAPE_DIST);
+						dir = "LEFT-75";
+						break;
+					}
+					case 1: // RIGHT: rotate forward -75°
+					{
+						ex = (int) (px + (ndx * ESC_COS + ndy * ESC_SIN) * ESCAPE_DIST);
+						ey = (int) (py + (-ndx * ESC_SIN + ndy * ESC_COS) * ESCAPE_DIST);
+						dir = "RIGHT-75";
+						break;
+					}
+					default: // BACKWARD: 180°
+					{
+						ex = (int) (px - ndx * ESCAPE_DIST);
+						ey = (int) (py - ndy * ESCAPE_DIST);
+						dir = "BACK";
+						break;
+					}
+				}
+
+				bot.clearGlobalPath();
+				bot.clearPath();
+				bot.setLastPathTime(0);
+				player.getAI().setIntention(Intention.MOVE_TO, new Location(ex, ey, pz));
+				LOGGER.info("PathService: " + player.getName() + " stuck " + count + " — escape " + dir + " to " + ex + "," + ey);
+				return false;
+			}
+		}
+
+		// ── Default retry (counts 1-2): stop and let PathFinding retry ───────
+		player.getAI().setIntention(Intention.IDLE);
+		bot.clearPath();
+		bot.setLastPathTime(0);
 		return false;
 	}
 
@@ -348,7 +427,17 @@ public class PathService
 		}
 
 		bot.setLastPathTime(now);
-		final List<GeoLocation> path = PathFinding.getInstance().findPath(px, py, pz, tx, ty, tz, player.getInstanceId(), true);
+		List<GeoLocation> path;
+		try
+		{
+			path = PathFinding.getInstance().findPath(px, py, pz, tx, ty, tz, player.getInstanceId(), true);
+		}
+		catch (Exception e)
+		{
+			// Coordinates may be outside geodata bounds (ArrayIndexOutOfBoundsException, etc.)
+			LOGGER.fine("PathService: " + player.getName() + " PathFinding threw " + e.getClass().getSimpleName() + " → fallback MOVE_TO");
+			return false;
+		}
 		if ((path != null) && !path.isEmpty())
 		{
 			bot.setPath(path);

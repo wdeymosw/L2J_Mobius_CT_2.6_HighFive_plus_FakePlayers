@@ -36,8 +36,24 @@ public class MoveToCreatureAction implements BotAction
 	/** Mob displacement that triggers a global path reset (coarse repath for wandering mobs). */
 	private static final int REPATH_THRESHOLD = 300;
 
+	/** After this many consecutive geo-errors, give up (target in unreachable geo area). */
+	private static final int MAX_GEO_ERRORS = 3;
+
+	/**
+	 * Consecutive ticks where distance to target increased by at least this many units squared.
+	 * Used to detect a fleeing mob. A mob that consistently runs away from the bot should be
+	 * abandoned so the bot finds a stationary or closer target instead.
+	 */
+	private static final int MAX_FLEE_CHECKS = 3;
+
+	/** Minimum squared-distance increase per tick to count as "mob is moving away". */
+	private static final int FLEE_DELTA_SQ = 150 * 150;
+
 	private final Creature _target;
 	private final int _arrivalRadius;
+	private int _geoErrorCount = 0;
+	private int _fleeCount = 0;
+	private int _lastDistSq = Integer.MAX_VALUE;
 
 	/**
 	 * Navigation target passed to PathService — snapshot of mob position, updated only
@@ -79,6 +95,32 @@ public class MoveToCreatureAction implements BotAction
 		final int ty = _target.getY();
 		final int tz = _target.getZ();
 
+		// --- Fleeing mob detection: if the mob is consistently moving away for MAX_FLEE_CHECKS
+		// consecutive ticks, abandon it and let the planner find a closer / stationary target. ---
+		{
+			final Player player = bot.getPlayer();
+			final int fdx = tx - player.getX();
+			final int fdy = ty - player.getY();
+			final int distSq = (fdx * fdx) + (fdy * fdy);
+			if (distSq > (_lastDistSq + FLEE_DELTA_SQ))
+			{
+				_fleeCount++;
+				if (_fleeCount >= MAX_FLEE_CHECKS)
+				{
+					bot.clearTarget();
+					bot.clearGlobalPath();
+					bot.clearPath();
+					player.getAI().setIntention(Intention.IDLE);
+					return;
+				}
+			}
+			else
+			{
+				_fleeCount = 0;
+			}
+			_lastDistSq = distSq;
+		}
+
 		// --- When close to the last waypoint, refresh it to mob's live position.
 		// This steers the bot toward the mob as it closes in without stopping. ---
 		if (bot.hasPath())
@@ -111,13 +153,32 @@ public class MoveToCreatureAction implements BotAction
 			_navZ = tz;
 		}
 
-		PathService.thinkMove(bot, _navX, _navY, _navZ);
+		try
+		{
+			PathService.thinkMove(bot, _navX, _navY, _navZ);
+			_geoErrorCount = 0; // reset on success
+		}
+		catch (ArrayIndexOutOfBoundsException e)
+		{
+			// Target is in a geodata area that is outside map bounds.
+			// After MAX_GEO_ERRORS consecutive failures, abandon this target.
+			_geoErrorCount++;
+			if (_geoErrorCount >= MAX_GEO_ERRORS)
+			{
+				bot.clearTarget();
+			}
+		}
 	}
 
 	@Override
 	public boolean isDone(BotInstance bot, long now)
 	{
 		if ((_target == null) || _target.isDead())
+		{
+			return true;
+		}
+		// Target was cleared because it's in an unreachable geo area.
+		if (bot.getTarget() == null)
 		{
 			return true;
 		}

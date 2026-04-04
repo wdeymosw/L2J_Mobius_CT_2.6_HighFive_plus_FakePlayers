@@ -3,12 +3,12 @@
  */
 package org.l2jmobius.gameserver.bot.core.goap.action;
 
-import org.l2jmobius.gameserver.ai.Intention;
 import org.l2jmobius.gameserver.bot.core.goap.Fact;
 import org.l2jmobius.gameserver.bot.core.goap.GoapAction;
 import org.l2jmobius.gameserver.bot.core.goap.WorldState;
 import org.l2jmobius.gameserver.bot.core.model.BotContext;
 import org.l2jmobius.gameserver.bot.core.model.BotInstance;
+import org.l2jmobius.gameserver.bot.core.service.TargetService;
 import org.l2jmobius.gameserver.model.actor.Player;
 
 /**
@@ -20,8 +20,16 @@ import org.l2jmobius.gameserver.model.actor.Player;
  */
 public class SitRestGoapAction implements GoapAction
 {
+	private static final double STAND_HP_THRESHOLD = 80.0;
+	private static final double STAND_MP_THRESHOLD = 55.0;
+	/** How long to wait after calling standUp() for the 2500ms animation to finish. */
+	private static final long STAND_UP_ANIMATION_MS = 2_600;
+
 	private static final WorldState PRECONDITIONS = new WorldState();
 	private static final WorldState EFFECTS = new WorldState();
+
+	/** Timestamp when standUp() was called — we wait for animation before returning isComplete=true. */
+	private long _standUpStartTime = 0;
 
 	static
 	{
@@ -53,7 +61,23 @@ public class SitRestGoapAction implements GoapAction
 	@Override
 	public boolean isValid(BotContext ctx, BotInstance bot)
 	{
-		return !ctx.hasTarget() && (ctx.attackerCount == 0) && !bot.getPlayer().isDead();
+		// Never sit while in combat — live query beats stale ctx snapshot.
+		if (ctx.hasTarget() || (ctx.attackerCount > 0) || (TargetService.countAttackers(bot) > 0))
+		{
+			return false;
+		}
+		// HP-drop guard: if we took damage this tick, a mob may be attacking but not yet in lists.
+		if (bot.hasTakenDamageSinceLastTick())
+		{
+			return false;
+		}
+		// 3-second grace window after last combat — covers slow-registering aggressors.
+		final long now = System.currentTimeMillis();
+		if ((now - bot.getLastCombatTime()) < 3_000)
+		{
+			return false;
+		}
+		return !bot.getPlayer().isDead();
 	}
 
 	@Override
@@ -70,32 +94,76 @@ public class SitRestGoapAction implements GoapAction
 	@Override
 	public boolean isComplete(BotInstance bot, BotContext ctx, long now)
 	{
-		if (ctx.hasTarget() || (ctx.attackerCount > 0))
+		// If standUp() was triggered, wait for the 2500ms sit→stand animation before completing.
+		if (_standUpStartTime > 0)
 		{
-			// Interrupted by combat — force stand up and signal done
-			standUp(bot);
-			return true;
+			if ((now - _standUpStartTime) >= STAND_UP_ANIMATION_MS)
+			{
+				_standUpStartTime = 0;
+				return true;
+			}
+			return false;
 		}
-		// Complete when HP and MP reach 90% — enough to resume farming safely.
-		if (ctx.hpPercent >= 90.0 && ctx.mpPercent >= 90.0)
+
+		// Live combat check — do NOT rely on stale ctx snapshot.
+		// countAttackers() is a fresh World query; hasTakenDamageSinceLastTick() catches
+		// mobs that aggroed but haven't registered in attacker lists yet.
+		final boolean underAttack = (ctx.attackerCount > 0) || (TargetService.countAttackers(bot) > 0) || bot.hasTakenDamageSinceLastTick();
+		if (ctx.hasTarget() || underAttack)
 		{
-			standUp(bot);
-			return true;
+			// Mark combat time so the 3-second grace window in isValid() blocks
+			// SitRest from being replanned immediately after standing up.
+			bot.updateLastCombatTime();
+			standUp(bot, now);
+			return false; // wait for animation
+		}
+		// HP and MP recovered enough — stand up and resume hunting.
+		// Uses hysteresis thresholds above the goal-trigger values to avoid re-sit immediately.
+		if ((ctx.hpPercent >= STAND_HP_THRESHOLD) && (ctx.mpPercent >= STAND_MP_THRESHOLD))
+		{
+			standUp(bot, now);
+			return false; // wait for animation
+		}
+		// sitDown() is asynchronous — retry each tick until the server confirms the sitting state.
+		if (!bot.getPlayer().isSitting())
+		{
+			bot.getPlayer().sitDown();
 		}
 		return false;
 	}
 
-	private static void standUp(BotInstance bot)
+	/**
+	 * No timeout — the bot must sit until HP/MP actually reaches 90%
+	 * or combat interrupts. A 30 s timeout would abort recovery prematurely,
+	 * causing a stand-up / sit-down loop on slow natural regen.
+	 */
+	@Override
+	public long getActionTimeoutMs()
 	{
+		return 0L;
+	}
+
+	private void standUp(BotInstance bot, long now)
+	{
+		if (_standUpStartTime > 0)
+		{
+			return; // already standing up
+		}
 		final Player player = bot.getPlayer();
 		if (player.isSitting())
 		{
-			player.setSittingProgress(false);
-			player.setSitting(false);
-			player.getAI().setIntention(Intention.IDLE);
+			// Use the native standUp() which:
+			// 1. Broadcasts ChangeWaitType(WT_STANDING) to the client
+			// 2. Schedules StandUpTask (2500ms) → setParalyzed(false) + setSitting(false)
+			player.standUp();
 		}
-		// Always ensure running mode so PathService does not block movement on the next tick.
+		else
+		{
+			// Not sitting — ensure paralysis is cleared in case SitDownTask hasn't run yet.
+			player.setParalyzed(false);
+		}
 		player.setRunning();
+		_standUpStartTime = now;
 	}
 
 	@Override
@@ -111,6 +179,7 @@ public class SitRestGoapAction implements GoapAction
 	@Override
 	public void onAbort(BotInstance bot)
 	{
-		standUp(bot);
+		final long now = System.currentTimeMillis();
+		standUp(bot, now);
 	}
 }

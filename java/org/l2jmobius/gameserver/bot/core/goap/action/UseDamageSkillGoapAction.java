@@ -33,6 +33,8 @@ public class UseDamageSkillGoapAction implements GoapAction
 		PRECONDITIONS.set(Fact.TARGET_IN_RANGE, true);
 		PRECONDITIONS.set(Fact.HAS_DAMAGE_SKILL, true);
 		EFFECTS.set(Fact.TARGET_DEAD, true);
+		EFFECTS.set(Fact.TARGET_EXISTS, false);
+		EFFECTS.set(Fact.THREAT_NEUTRALIZED, true); // DefendGoal can use skill attacks
 	}
 
 	@Override

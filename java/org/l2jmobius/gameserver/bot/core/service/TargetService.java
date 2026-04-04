@@ -24,8 +24,9 @@ import org.l2jmobius.gameserver.model.actor.Player;
 public class TargetService
 {
 	private static final Logger LOGGER = Logger.getLogger(TargetService.class.getName());
-	/** Search radius in game units (~500–1000 is typical aggro range). */
-	private static final int SEARCH_RADIUS = 700;
+	/** Search radius in game units — starts at 700, expands up to 1000 when no mobs are found. */
+	private static final int SEARCH_RADIUS_BASE = 700;
+	private static final int SEARCH_RADIUS_MAX = 1000;
 
 	/** Maximum Z-axis difference to consider a mob reachable (avoids targeting mobs on other floors). */
 	private static final int MAX_Z_DIFF = 800;
@@ -61,11 +62,16 @@ public class TargetService
 
 		final Player player = bot.getPlayer();
 		final GeoEngine geo = GeoEngine.getInstance();
-		final List<Attackable> candidates = World.getInstance().getVisibleObjectsInRange(player, Attackable.class, SEARCH_RADIUS, mob -> !mob.isDead());
+
+		// Dynamic search radius: expands up to SEARCH_RADIUS_MAX if no mobs found last N attempts.
+		// After that zone radius expands (handled in SearchTargetGoapAction via expandZoneRadius).
+		final int searchRadius = bot.getSearchRadius();
+		final List<Attackable> candidates = World.getInstance().getVisibleObjectsInRange(player, Attackable.class, searchRadius, mob -> !mob.isDead());
 
 		if (candidates.isEmpty())
 		{
-			LOGGER.fine("[" + bot.getPlayer().getName() + "] findTarget: no candidates in radius " + SEARCH_RADIUS);
+			LOGGER.fine("[" + bot.getPlayer().getName() + "] findTarget: no candidates in radius " + searchRadius);
+			bot.onSearchFailed(); // expand radius on repeated failures
 			return; // caller handles wander
 		}
 
@@ -143,10 +149,12 @@ public class TargetService
 		if (nearest == null)
 		{
 			LOGGER.fine("[" + bot.getPlayer().getName() + "] findTarget: " + candidates.size() + " candidates, none reachable (skippedGeo=" + skippedGeo + " skippedEngaged=" + skippedEngaged + ")");
+			bot.onSearchFailed(); // expand radius on repeated failures
 		}
 		else
 		{
 			LOGGER.fine("[" + bot.getPlayer().getName() + "] findTarget: selected " + nearest.getName() + " dist=" + (int) nearestDist);
+			bot.onSearchSuccess(); // reset radius on success
 		}
 
 		bot.setTarget(nearest);
@@ -168,7 +176,7 @@ public class TargetService
 		{
 			return true;
 		}
-		return !World.getInstance().getVisibleObjectsInRange(player, Attackable.class, SEARCH_RADIUS, mob -> !mob.isDead() && (mob.getTarget() == player)).isEmpty();
+		return !World.getInstance().getVisibleObjectsInRange(player, Attackable.class, SEARCH_RADIUS_MAX, mob -> !mob.isDead() && (mob.getTarget() == player)).isEmpty();
 	}
 
 	/**
@@ -190,7 +198,7 @@ public class TargetService
 				return true;
 			}
 		}
-		return !World.getInstance().getVisibleObjectsInRange(player, Attackable.class, SEARCH_RADIUS, mob -> !mob.isDead() && (mob.getTarget() == player) && (mob != currentTarget)).isEmpty();
+		return !World.getInstance().getVisibleObjectsInRange(player, Attackable.class, SEARCH_RADIUS_MAX, mob -> !mob.isDead() && (mob.getTarget() == player) && (mob != currentTarget)).isEmpty();
 	}
 
 	/**
@@ -208,7 +216,7 @@ public class TargetService
 		final Player player = bot.getPlayer();
 		final Creature currentTarget = bot.getTarget();
 		final Set<Creature> attackers = player.getAttackByList();
-		final List<Attackable> candidates = World.getInstance().getVisibleObjectsInRange(player, Attackable.class, SEARCH_RADIUS, mob -> !mob.isDead() && (attackers.contains(mob) || (mob.getTarget() == player)));
+		final List<Attackable> candidates = World.getInstance().getVisibleObjectsInRange(player, Attackable.class, SEARCH_RADIUS_MAX, mob -> !mob.isDead() && (attackers.contains(mob) || (mob.getTarget() == player)));
 
 		// First pass: find nearest attacker that is NOT the current target.
 		Creature nearest = null;
@@ -251,7 +259,7 @@ public class TargetService
 	{
 		final Player player = bot.getPlayer();
 		final Set<Creature> attackers = player.getAttackByList();
-		return World.getInstance().getVisibleObjectsInRange(player, Attackable.class, SEARCH_RADIUS, mob -> !mob.isDead() && (attackers.contains(mob) || (mob.getTarget() == player))).size();
+		return World.getInstance().getVisibleObjectsInRange(player, Attackable.class, SEARCH_RADIUS_MAX, mob -> !mob.isDead() && (attackers.contains(mob) || (mob.getTarget() == player))).size();
 	}
 
 	// -------------------------------------------------------------------------

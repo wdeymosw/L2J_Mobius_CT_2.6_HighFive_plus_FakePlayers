@@ -60,14 +60,13 @@ public class BotExecutor
 			return;
 		}
 
-		if (current.isDone(bot, now))
-		{
-			_queue.pollFirst();
-			return;
-		}
-
 		try
 		{
+			if (current.isDone(bot, now))
+			{
+				_queue.pollFirst();
+				return;
+			}
 			current.execute(bot, now);
 		}
 		catch (FatalBotException e)

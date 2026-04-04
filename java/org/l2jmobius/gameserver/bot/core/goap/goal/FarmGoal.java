@@ -42,6 +42,10 @@ public class FarmGoal implements GoapGoal
 		{
 			return 0;
 		}
+		if (!worldState.get(Fact.TARGET_EXISTS))
+		{
+			return 0; // No living target — let HuntGoal find one (priority 45)
+		}
 		// HP_LOW alone does NOT suppress FarmGoal: if the bot has a living target it
 		// should finish the fight. RestoreGoal (priority 40) only wins when there is
 		// no target (IN_COMBAT=false). SurviveGoal (priority 100) handles truly
