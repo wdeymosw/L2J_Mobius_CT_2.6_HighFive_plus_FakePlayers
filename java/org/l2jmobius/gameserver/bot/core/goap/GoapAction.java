@@ -76,6 +76,31 @@ public interface GoapAction
 	 */
 	boolean isComplete(BotInstance bot, BotContext ctx, long now);
 
+	/**
+	 * Maximum time (in milliseconds) this action may run before timeout.
+	 * Used by GoapAgent to force completion if action exceeds duration.
+	 * Default: 30000 ms (30 seconds).
+	 * Override to customize per action.
+	 *
+	 * @return timeout in milliseconds; 0 = no timeout
+	 */
+	default long getActionTimeoutMs()
+	{
+		return 30000L;
+	}
+
+	/**
+	 * Sets the timeout for this action instance (optional).
+	 * Default implementation does nothing.
+	 * Override to support dynamic timeout adjustment.
+	 *
+	 * @param timeoutMs timeout in milliseconds; 0 = no timeout
+	 */
+	default void setActionTimeoutMs(long timeoutMs)
+	{
+		// No-op by default
+	}
+
 	/** Human-readable name for logging. */
 	String getName();
 }

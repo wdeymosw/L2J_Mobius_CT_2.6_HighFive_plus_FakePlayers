@@ -3,6 +3,9 @@
  */
 package org.l2jmobius.gameserver.bot.core.action;
 
+import org.l2jmobius.gameserver.bot.core.exception.FatalBotException;
+import org.l2jmobius.gameserver.bot.core.exception.RecoverableBotException;
+import org.l2jmobius.gameserver.bot.core.exception.ValidationBotException;
 import org.l2jmobius.gameserver.bot.core.model.BotInstance;
 import org.l2jmobius.gameserver.bot.core.service.PathService;
 import org.l2jmobius.gameserver.model.Location;
@@ -39,7 +42,7 @@ public class MoveToAction implements BotAction
 	}
 
 	@Override
-	public void execute(BotInstance bot, long now)
+	public void execute(BotInstance bot, long now) throws FatalBotException, ValidationBotException, RecoverableBotException
 	{
 		PathService.thinkMove(bot, _dest.getX(), _dest.getY(), _dest.getZ());
 	}

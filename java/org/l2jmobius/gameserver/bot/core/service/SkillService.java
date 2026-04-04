@@ -122,6 +122,59 @@ public class SkillService
 	}
 
 	/**
+	 * Returns {@code true} if the bot has at least one damage skill ready to cast at its current target.
+	 * Does not cast anything — use as a world-state fact check.
+	 *
+	 * @param bot the bot to check
+	 * @return {@code true} if a usable damage skill exists
+	 */
+	public static boolean hasDamageSkill(BotInstance bot)
+	{
+		return getBestDamageSkill(bot) != null;
+	}
+
+	/**
+	 * Returns the highest-level damage skill available for the bot's current target,
+	 * or {@code null} if none is ready.
+	 *
+	 * @param bot the attacking bot
+	 * @return best ready damage skill, or {@code null}
+	 */
+	public static Skill getBestDamageSkill(BotInstance bot)
+	{
+		final Player player = bot.getPlayer();
+		if ((bot.getTarget() == null) || bot.getTarget().isDead())
+		{
+			return null;
+		}
+		Skill best = null;
+		for (Skill skill : player.getAllSkills())
+		{
+			if (!skill.isActive() || !skill.isDamage())
+			{
+				continue;
+			}
+			if (player.isSkillDisabled(skill))
+			{
+				continue;
+			}
+			if (player.getCurrentMp() < skill.getMpConsume())
+			{
+				continue;
+			}
+			if (!isCombatTargetType(skill.getTargetType()))
+			{
+				continue;
+			}
+			if ((best == null) || (skill.getLevel() > best.getLevel()))
+			{
+				best = skill;
+			}
+		}
+		return best;
+	}
+
+	/**
 	 * Tries to cast the best available damage skill at the bot's current target.
 	 *
 	 * @param bot the attacking bot

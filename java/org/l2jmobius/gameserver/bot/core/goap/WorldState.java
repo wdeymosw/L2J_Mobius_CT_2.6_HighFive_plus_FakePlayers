@@ -8,7 +8,10 @@ import java.util.Map;
 
 import org.l2jmobius.gameserver.bot.core.model.BotContext;
 import org.l2jmobius.gameserver.bot.core.model.BotInstance;
+import org.l2jmobius.gameserver.bot.core.service.BuffService;
+import org.l2jmobius.gameserver.bot.core.service.LootService;
 import org.l2jmobius.gameserver.bot.core.service.PotionData;
+import org.l2jmobius.gameserver.bot.core.service.SkillService;
 import org.l2jmobius.gameserver.model.actor.Player;
 import org.l2jmobius.gameserver.model.effects.EffectType;
 import org.l2jmobius.gameserver.model.skill.Skill;
@@ -69,6 +72,12 @@ public class WorldState
 	public boolean isExplicitlySet(Fact fact)
 	{
 		return _facts.containsKey(fact);
+	}
+
+	/** Returns the internal facts map for iteration. */
+	public EnumMap<Fact, Boolean> getMask()
+	{
+		return _facts;
 	}
 
 	// -------------------------------------------------------------------------
@@ -184,6 +193,18 @@ public class WorldState
 		// --- Player state ---
 		ws.set(Fact.IS_SITTING, bot.getPlayer().isSitting());
 		ws.set(Fact.IS_DEAD, bot.getPlayer().isDead());
+		ws.set(Fact.IS_CASTING, bot.getPlayer().isCastingNow());
+		ws.set(Fact.IS_MOVING, bot.getPlayer().isMoving());
+		ws.set(Fact.OVERWEIGHT, ctx.weightPenalty >= 2);
+
+		// --- Buff state ---
+		ws.set(Fact.HAS_BUFF, !BuffService.needsBuff(bot));
+
+		// --- Combat skills ---
+		ws.set(Fact.HAS_DAMAGE_SKILL, SkillService.hasDamageSkill(bot));
+
+		// --- Loot ---
+		ws.set(Fact.LOOT_NEARBY, LootService.hasNearbyLoot(bot));
 
 		return ws;
 	}

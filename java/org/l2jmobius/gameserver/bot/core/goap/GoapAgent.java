@@ -11,16 +11,29 @@ import java.util.logging.Logger;
 import org.l2jmobius.gameserver.bot.core.goap.action.AttackGoapAction;
 import org.l2jmobius.gameserver.bot.core.goap.action.DrinkPotionGoapAction;
 import org.l2jmobius.gameserver.bot.core.goap.action.MoveToTargetGoapAction;
+import org.l2jmobius.gameserver.bot.core.goap.action.PickupLootGoapAction;
 import org.l2jmobius.gameserver.bot.core.goap.action.RestockGoapAction;
 import org.l2jmobius.gameserver.bot.core.goap.action.SearchTargetGoapAction;
 import org.l2jmobius.gameserver.bot.core.goap.action.SellItemsGoapAction;
 import org.l2jmobius.gameserver.bot.core.goap.action.SitRestGoapAction;
 import org.l2jmobius.gameserver.bot.core.goap.action.TeleportToCityGoapAction;
 import org.l2jmobius.gameserver.bot.core.goap.action.TeleportToFarmGoapAction;
+import org.l2jmobius.gameserver.bot.core.goap.action.UseBuffSkillGoapAction;
+import org.l2jmobius.gameserver.bot.core.goap.action.UseDamageSkillGoapAction;
 import org.l2jmobius.gameserver.bot.core.goap.action.UseHealSkillGoapAction;
+import org.l2jmobius.gameserver.bot.core.exception.BotException;
+import org.l2jmobius.gameserver.bot.core.exception.RecoverableBotException;
+import org.l2jmobius.gameserver.bot.core.exception.ValidationBotException;
+import org.l2jmobius.gameserver.bot.core.exception.FatalBotException;
+import org.l2jmobius.gameserver.bot.core.exception.BotRecoveryStrategy;
+import org.l2jmobius.gameserver.bot.core.validation.BotStateValidator;
+import org.l2jmobius.gameserver.bot.core.validation.BotSystemStateValidator;
+import org.l2jmobius.gameserver.bot.core.logging.StructuredBotLogger;
+import org.l2jmobius.gameserver.bot.core.goap.goal.BuffGoal;
 import org.l2jmobius.gameserver.bot.core.goap.goal.DefendGoal;
 import org.l2jmobius.gameserver.bot.core.goap.goal.FarmGoal;
 import org.l2jmobius.gameserver.bot.core.goap.goal.HuntGoal;
+import org.l2jmobius.gameserver.bot.core.goap.goal.PickupGoal;
 import org.l2jmobius.gameserver.bot.core.goap.goal.RestockGoal;
 import org.l2jmobius.gameserver.bot.core.goap.goal.RestoreGoal;
 import org.l2jmobius.gameserver.bot.core.goap.goal.SurviveGoal;
@@ -56,9 +69,12 @@ public class GoapAgent
 
 	/** All available GOAP actions. Shared, stateless singletons. */
 	private static final List<GoapAction> ACTIONS = List.of(
-		new AttackGoapAction(),
+		new UseDamageSkillGoapAction(), // 0.8 — skill attack (preferred over autoattack)
+		new AttackGoapAction(),         // 1.0 — autoattack fallback
 		new MoveToTargetGoapAction(),
 		new SearchTargetGoapAction(),
+		new UseBuffSkillGoapAction(),
+		new PickupLootGoapAction(),
 		new DrinkPotionGoapAction(),
 		new UseHealSkillGoapAction(),
 		new SitRestGoapAction(),
@@ -72,6 +88,8 @@ public class GoapAgent
 		new SurviveGoal(),  // 100 — HP critical
 		new DefendGoal(),   // 90  — under attack
 		new FarmGoal(),     // 50  — kill existing target
+		new BuffGoal(),     // 47  — apply pending self-buffs
+		new PickupGoal(),   // 46  — collect nearby loot
 		new HuntGoal(),     // 45  — find a target (in zone, no target)
 		new RestoreGoal(),  // 40  — HP/MP low
 		new RestockGoal(),  // 30  — out of supplies
@@ -92,6 +110,52 @@ public class GoapAgent
 	 * @param now current time in ms
 	 */
 	public static void tick(BotInstance bot, long now)
+	{
+		try
+		{
+			tickInternal(bot, now);
+		}
+		catch (FatalBotException e)
+		{
+			// Unrecoverable: disable bot
+			StructuredBotLogger.logBotDisabled(bot, e.getMessage());
+			// Bot is already logged; BotManager will remove it on next check
+		}
+		catch (ValidationBotException e)
+		{
+			// State corrupted: attempt to fix and replan
+			StructuredBotLogger.logExceptionCaught(bot, "ValidationBotException", "ADJUST_AND_REPLAN");
+			bot.clearGoapPlan();
+			bot.clearQueue();
+			BotStateValidator.repair(bot);
+		}
+		catch (RecoverableBotException e)
+		{
+			// Temporary error: replan and continue
+			StructuredBotLogger.logExceptionCaught(bot, "RecoverableBotException", "REPLAN");
+			bot.clearGoapPlan();
+		}
+		catch (Exception e)
+		{
+			// Unexpected error: log and disable to prevent cascading failures
+			StructuredBotLogger.severe(bot, StructuredBotLogger.EVENT_EXCEPTION_CAUGHT, "exception", e.getClass().getSimpleName(), "message", e.getMessage());
+			e.printStackTrace();
+			bot.clearQueue();
+			bot.clearGoapPlan();
+		}
+	}
+
+	/**
+	 * Internal tick logic (the actual GOAP cycle).
+	 * Exceptions from this method propagate to tick() which applies recovery strategies.
+	 *
+	 * @param bot the bot to tick
+	 * @param now current time in ms
+	 * @throws FatalBotException if bot encounters fatal error
+	 * @throws ValidationBotException if bot state becomes invalid
+	 * @throws RecoverableBotException if bot encounters temporary error
+	 */
+	private static void tickInternal(BotInstance bot, long now) throws FatalBotException, ValidationBotException, RecoverableBotException
 	{
 		// 1. Throttle: 250–400 ms between ticks.
 		if (now < bot.getNextThinkTime())
@@ -123,13 +187,19 @@ public class GoapAgent
 		final BotContext ctx = BotContext.of(bot, now);
 		final WorldState ws = WorldState.fromContext(ctx, bot);
 
+		// 4.5 Validate system state consistency
+		BotSystemStateValidator.validateFull(bot, ws);
+
 		// 5. Advance plan if current action is complete.
 		GoapAction current = bot.getCurrentGoapAction();
 		if ((current != null) && current.isComplete(bot, ctx, now))
 		{
+			// Validate that effects are now present in world state
+			BotStateValidator.validateEffects(current, ws, bot);
+
 			if (DEBUG)
 			{
-				LOGGER.info("[GOAP] " + bot.getPlayer().getName() + " ✓ " + current.getName());
+				StructuredBotLogger.fine(bot, StructuredBotLogger.EVENT_ACTION_COMPLETE, "action", current.getName());
 			}
 			bot.advanceGoapPlan();
 			current = bot.getCurrentGoapAction();
@@ -137,9 +207,17 @@ public class GoapAgent
 			{
 				if (DEBUG)
 				{
-					LOGGER.info("[GOAP] " + bot.getPlayer().getName() + " → " + current.getName());
+					StructuredBotLogger.fine(bot, StructuredBotLogger.EVENT_ACTION_START, "action", current.getName());
 				}
+
+				// Validate preconditions before activating
+				BotStateValidator.validatePreconditions(current, ws, bot);
+
 				current.activate(bot, now);
+				// Start timeout tracking for this action
+				bot.setCurrentActionStartTime(now);
+				bot.setCurrentActionTimeoutMs(current.getActionTimeoutMs());
+				StructuredBotLogger.logActionStart(bot, current.getName(), current.getActionTimeoutMs());
 			}
 		}
 		// 5.5 Action is not done but the executor has nothing left to run
@@ -147,6 +225,17 @@ public class GoapAgent
 		else if ((current != null) && bot.isQueueIdle())
 		{
 			current.activate(bot, now);
+		}
+
+		// 5.7 Check if current action has exceeded its timeout.
+		if (checkActionTimeout(bot, now))
+		{
+			// Action timed out — clear plan and replan
+			if (DEBUG)
+			{
+				StructuredBotLogger.warning(bot, StructuredBotLogger.EVENT_ACTION_TIMEOUT, "action", bot.getCurrentGoapAction().getName());
+			}
+			bot.clearGoapPlan();
 		}
 
 		// 6. Plan exhausted → build a new one.
@@ -161,11 +250,52 @@ public class GoapAgent
 		{
 			if (DEBUG)
 			{
-				LOGGER.info("[GOAP] " + bot.getPlayer().getName() + " INTERRUPT " + bot.getCurrentGoapAction().getName() + " ws=" + ws);
+				StructuredBotLogger.fine(bot, StructuredBotLogger.EVENT_PLAN_INTERRUPT, "action", bot.getCurrentGoapAction().getName());
 			}
+			StructuredBotLogger.logPlanInterrupt(bot, "HP_CRITICAL or UNDER_ATTACK");
 			bot.clearGoapPlan();
 			replan(bot, ctx, ws, now);
 		}
+	}
+
+	// =========================================================================
+	// Action timeout check
+	// =========================================================================
+
+	/**
+	 * Checks if the current action has exceeded its timeout.
+	 * Called each tick to detect stuck or slow-running actions.
+	 *
+	 * @param bot the bot being evaluated
+	 * @param now current time in ms
+	 * @return true if the action has timed out and the plan should be cleared
+	 */
+	private static boolean checkActionTimeout(BotInstance bot, long now)
+	{
+		final long actionStartTime = bot.getCurrentActionStartTime();
+		final long actionTimeoutMs = bot.getCurrentActionTimeoutMs();
+
+		// No active action or no timeout set
+		if ((actionStartTime == 0) || (actionTimeoutMs == 0))
+		{
+			return false;
+		}
+
+		final long elapsed = now - actionStartTime;
+		if (elapsed > actionTimeoutMs)
+		{
+			final GoapAction current = bot.getCurrentGoapAction();
+			if (current != null)
+			{
+				StructuredBotLogger.logActionTimeout(bot, current.getName(), elapsed, actionTimeoutMs);
+			}
+			// Reset the timing fields for next action
+			bot.setCurrentActionStartTime(0);
+			bot.setCurrentActionTimeoutMs(0);
+			return true;
+		}
+
+		return false;
 	}
 
 	// =========================================================================
@@ -182,7 +312,7 @@ public class GoapAgent
 			bot.clearGoapPlan();
 			final long delay = REVIVE_DELAY_MIN + ThreadLocalRandom.current().nextLong(REVIVE_DELAY_MAX - REVIVE_DELAY_MIN);
 			bot.setReviveTime(now + delay);
-			LOGGER.info("GoapAgent: " + bot.getPlayer().getName() + " died, reviving in " + (delay / 1000) + "s");
+			StructuredBotLogger.info(bot, "BOT_DEAD", "revive_delay_ms", delay);
 			return;
 		}
 
@@ -193,7 +323,7 @@ public class GoapAgent
 			bot.getPlayer().setRunning();
 			// After revive the world state naturally drives the bot back to farm
 			// (TeleportToFarmGoapAction will be selected on next replan).
-			LOGGER.info("GoapAgent: " + bot.getPlayer().getName() + " revived");
+			StructuredBotLogger.logBotRevived(bot);
 		}
 	}
 
@@ -219,21 +349,19 @@ public class GoapAgent
 			return; // all goals satisfied — nothing to do
 		}
 
+		final long planStartTime = System.currentTimeMillis();
 		final List<GoapAction> plan = GoapPlanner.plan(ws, goal, valid);
+		final long planDuration = System.currentTimeMillis() - planStartTime;
+
 		if (plan.isEmpty())
 		{
-			LOGGER.warning("[GOAP] " + bot.getPlayer().getName() + " no plan for goal=" + goal.getName() + " ws=" + ws);
+			StructuredBotLogger.warning(bot, StructuredBotLogger.EVENT_PLAN_BUILD, "goal", goal.getName(), "result", "no_plan");
 			return;
 		}
 
 		if (DEBUG)
 		{
-			final StringBuilder sb = new StringBuilder("[GOAP] ").append(bot.getPlayer().getName()).append(" PLAN [").append(goal.getName()).append("] ");
-			for (GoapAction a : plan)
-			{
-				sb.append(a.getName()).append(' ');
-			}
-			LOGGER.info(sb.toString());
+			StructuredBotLogger.logPlanBuild(bot, goal.getName(), plan.size(), planDuration);
 		}
 
 		bot.setGoapPlan(plan);

@@ -5,6 +5,9 @@ package org.l2jmobius.gameserver.bot.core.action;
 
 import java.util.logging.Logger;
 
+import org.l2jmobius.gameserver.bot.core.exception.FatalBotException;
+import org.l2jmobius.gameserver.bot.core.exception.RecoverableBotException;
+import org.l2jmobius.gameserver.bot.core.exception.ValidationBotException;
 import org.l2jmobius.gameserver.bot.core.model.BotInstance;
 import org.l2jmobius.gameserver.bot.core.service.PotionData;
 import org.l2jmobius.gameserver.handler.IItemHandler;
@@ -27,7 +30,7 @@ public class DrinkPotionAction implements BotAction
 	private boolean _done = false;
 
 	@Override
-	public void execute(BotInstance bot, long now)
+	public void execute(BotInstance bot, long now) throws FatalBotException, ValidationBotException, RecoverableBotException
 	{
 		final Player player = bot.getPlayer();
 		for (int itemId : PotionData.HEAL_POTION_IDS)

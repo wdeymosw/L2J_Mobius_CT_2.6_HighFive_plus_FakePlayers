@@ -60,6 +60,10 @@ public class BotInstance
 	private long _reviveTime = 0;
 	/** Earliest time the bot may attempt to drink another potion (reuse guard). */
 	private long _nextPotionTime = 0;
+	/** When the current GOAP action started (for timeout detection). */
+	private long _currentActionStartTime = 0;
+	/** Maximum time the current action is allowed to run (0 = no limit). */
+	private long _currentActionTimeoutMs = 0;
 
 	// -------------------------------------------------------------------------
 	// Level tracking
@@ -190,6 +194,12 @@ public class BotInstance
 
 	public long getNextSearchTime() { return _nextSearchTime; }
 	public void setNextSearchTime(long time) { _nextSearchTime = time; }
+
+	public long getCurrentActionStartTime() { return _currentActionStartTime; }
+	public void setCurrentActionStartTime(long time) { _currentActionStartTime = time; }
+
+	public long getCurrentActionTimeoutMs() { return _currentActionTimeoutMs; }
+	public void setCurrentActionTimeoutMs(long timeoutMs) { _currentActionTimeoutMs = timeoutMs; }
 
 	// =========================================================================
 	// Session

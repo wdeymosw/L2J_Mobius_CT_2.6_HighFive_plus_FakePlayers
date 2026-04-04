@@ -38,6 +38,42 @@ public class LootService
 	}
 
 	/**
+	 * Returns {@code true} if there is at least one reachable ground item within scan radius.
+	 * Does not pick anything up — use as a world-state fact check.
+	 *
+	 * @param bot the bot to check
+	 * @return {@code true} if loot is present and reachable
+	 */
+	public static boolean hasNearbyLoot(BotInstance bot)
+	{
+		final Player player = bot.getPlayer();
+		if (!player.isInventoryUnder90(false))
+		{
+			return false;
+		}
+		for (Item item : World.getInstance().getVisibleObjectsInRange(player, Item.class, SCAN_RADIUS))
+		{
+			if (!item.isSpawned())
+			{
+				continue;
+			}
+			if (item.isProtected() && (item.getOwnerId() != player.getObjectId()))
+			{
+				continue;
+			}
+			if (!GeoEngine.getInstance().canMoveToTarget(
+				player.getX(), player.getY(), player.getZ(),
+				item.getX(), item.getY(), item.getZ(),
+				player.getInstanceId()))
+			{
+				continue;
+			}
+			return true;
+		}
+		return false;
+	}
+
+	/**
 	 * Attempts to pick up the nearest ground item within scan radius.
 	 *
 	 * @param bot the bot that should pick up loot

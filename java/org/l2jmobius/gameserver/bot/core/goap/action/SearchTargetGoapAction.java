@@ -3,6 +3,8 @@
  */
 package org.l2jmobius.gameserver.bot.core.goap.action;
 
+import java.util.concurrent.ThreadLocalRandom;
+
 import org.l2jmobius.gameserver.bot.core.action.MoveToAction;
 import org.l2jmobius.gameserver.bot.core.action.WaitAction;
 import org.l2jmobius.gameserver.bot.core.goap.Fact;
@@ -10,19 +12,21 @@ import org.l2jmobius.gameserver.bot.core.goap.GoapAction;
 import org.l2jmobius.gameserver.bot.core.goap.WorldState;
 import org.l2jmobius.gameserver.bot.core.model.BotContext;
 import org.l2jmobius.gameserver.bot.core.model.BotInstance;
-import org.l2jmobius.gameserver.bot.core.service.BuffService;
-import org.l2jmobius.gameserver.bot.core.service.LootService;
 import org.l2jmobius.gameserver.bot.core.service.TargetService;
 import org.l2jmobius.gameserver.model.Location;
-
-import java.util.concurrent.ThreadLocalRandom;
 
 /**
  * pre:  IN_FARM_ZONE
  * eff:  TARGET_EXISTS
  * cost: 3.0
  * <p>
- * Tries buffs → loot → target search → wander if nothing found.
+ * Searches for the nearest attackable mob. If none is found, wanders
+ * to a random point in the farm zone to trigger respawns.
+ * <p>
+ * Buffing is now handled by {@link UseBuffSkillGoapAction} via {@link org.l2jmobius.gameserver.bot.core.goap.goal.BuffGoal}.
+ * Loot pickup is now handled by {@link PickupLootGoapAction} via {@link org.l2jmobius.gameserver.bot.core.goap.goal.PickupGoal}.
+ * These goals activate at higher priorities (47 and 46) so the bot always
+ * buffs and loots before this action runs.
  */
 public class SearchTargetGoapAction implements GoapAction
 {
@@ -64,27 +68,14 @@ public class SearchTargetGoapAction implements GoapAction
 	{
 		bot.clearQueue();
 
-		// 1. Buff first if available
-		if (BuffService.tryBuffSelf(bot))
-		{
-			bot.queueAction(new WaitAction(500));
-			return;
-		}
-
-		// 2. Pick up nearby loot
-		if (LootService.pickupNearest(bot))
-		{
-			return;
-		}
-
-		// 3. Search for a target
+		// Search for a target
 		TargetService.findTarget(bot);
 		if (bot.hasTarget())
 		{
 			return; // GoapAgent will replan next tick: MoveToTarget + Attack
 		}
 
-		// 4. Nothing found — wander
+		// Nothing found — wander to a random zone point
 		final Location wander = bot.getProfile().getZone().randomPointInside();
 		bot.queueAction(new WaitAction(1000 + ThreadLocalRandom.current().nextInt(1000)));
 		bot.queueAction(new MoveToAction(wander));
@@ -93,7 +84,6 @@ public class SearchTargetGoapAction implements GoapAction
 	@Override
 	public boolean isComplete(BotInstance bot, BotContext ctx, long now)
 	{
-		// Done if we found a target OR the wander queue finished
 		return ctx.hasTarget() || bot.isQueueIdle();
 	}
 

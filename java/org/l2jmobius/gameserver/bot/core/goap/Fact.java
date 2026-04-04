@@ -69,4 +69,22 @@ public enum Fact
 	IS_SITTING,
 	/** player.isDead(). */
 	IS_DEAD,
+	/** player.isCastingNow(). */
+	IS_CASTING,
+	/** player.isMoving(). */
+	IS_MOVING,
+	/** weightPenalty >= 2 (red/black — move impaired). */
+	OVERWEIGHT,
+
+	// --- Buff state ---
+	/** No self-buff is pending: !BuffService.needsBuff(bot). */
+	HAS_BUFF,
+
+	// --- Combat skills ---
+	/** At least one usable damage skill exists for the current target. */
+	HAS_DAMAGE_SKILL,
+
+	// --- Loot ---
+	/** A reachable ground item is within scan radius. */
+	LOOT_NEARBY,
 }
