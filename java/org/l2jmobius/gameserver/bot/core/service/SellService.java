@@ -4,6 +4,7 @@
 package org.l2jmobius.gameserver.bot.core.service;
 
 import java.util.ArrayList;
+import org.l2jmobius.gameserver.bot.core.goap.GoapTuning;
 import java.util.Comparator;
 import java.util.List;
 import java.util.logging.Logger;
@@ -38,20 +39,20 @@ public class SellService
 	private static final Logger LOGGER = Logger.getLogger(SellService.class.getName());
 
 	/** NPC sell price = reference price × this multiplier (retail ≈ 50 %). */
-	private static final double SELL_RATE = 0.5;
+	private static final double SELL_RATE = GoapTuning.SELL_RATE;
 
 	/**
 	 * Minimum reference price for an item to be worth listing in a private store.
 	 * Items below this threshold are sold to NPC even if technically "valuable".
 	 */
-	private static final long MIN_SHOP_PRICE = 5_000;
+	private static final long MIN_SHOP_PRICE = GoapTuning.MIN_SHOP_PRICE;
 
 	private SellService()
 	{
 	}
 
 	/** Weight threshold (fraction of max load) at which the bot goes to sell. */
-	private static final double WEIGHT_SELL_THRESHOLD = 0.60;
+	private static final double WEIGHT_SELL_THRESHOLD = GoapTuning.WEIGHT_SELL_THRESHOLD;
 
 	/**
 	 * Returns {@code true} if the bot should head to the shop now.

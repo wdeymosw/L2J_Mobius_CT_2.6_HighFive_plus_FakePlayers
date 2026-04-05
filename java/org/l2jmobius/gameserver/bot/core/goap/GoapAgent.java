@@ -67,10 +67,10 @@ public class GoapAgent
 	/** Set to {@code true} to log goal selection, plan builds, and action transitions. */
 	public static volatile boolean DEBUG = true;
 
-	private static final long THINK_MS_MIN = 250;
-	private static final long THINK_MS_MAX = 400;
-	private static final long REVIVE_DELAY_MIN = 1_000;
-	private static final long REVIVE_DELAY_MAX = 5_000;
+	private static final long THINK_MS_MIN = GoapTuning.THINK_MS_MIN;
+	private static final long THINK_MS_MAX = GoapTuning.THINK_MS_MAX;
+	private static final long REVIVE_DELAY_MIN = GoapTuning.REVIVE_DELAY_MIN;
+	private static final long REVIVE_DELAY_MAX = GoapTuning.REVIVE_DELAY_MAX;
 
 	/** All available GOAP actions. Shared, stateless singletons. */
 	private static final List<GoapAction> ACTIONS = List.of(

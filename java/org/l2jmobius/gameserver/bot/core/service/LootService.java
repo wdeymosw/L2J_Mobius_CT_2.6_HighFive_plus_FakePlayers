@@ -4,6 +4,7 @@
 package org.l2jmobius.gameserver.bot.core.service;
 
 import org.l2jmobius.gameserver.ai.Intention;
+import org.l2jmobius.gameserver.bot.core.goap.GoapTuning;
 import org.l2jmobius.gameserver.bot.core.model.BotInstance;
 import org.l2jmobius.gameserver.geoengine.GeoEngine;
 import org.l2jmobius.gameserver.model.World;
@@ -28,10 +29,10 @@ import org.l2jmobius.gameserver.model.item.instance.Item;
 public class LootService
 {
 	/** Radius to scan for ground items (game units). */
-	private static final int SCAN_RADIUS = 400;
+	private static final int SCAN_RADIUS = GoapTuning.LOOT_SCAN_RADIUS;
 
 	/** Distance at which doPickupItem is called instead of moving closer. */
-	private static final int PICKUP_RADIUS = 70;
+	private static final int PICKUP_RADIUS = GoapTuning.PICKUP_RADIUS;
 
 	private LootService()
 	{

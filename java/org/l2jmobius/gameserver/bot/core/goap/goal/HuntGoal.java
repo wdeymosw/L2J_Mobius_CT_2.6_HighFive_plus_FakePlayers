@@ -5,6 +5,7 @@ package org.l2jmobius.gameserver.bot.core.goap.goal;
 
 import org.l2jmobius.gameserver.bot.core.goap.Fact;
 import org.l2jmobius.gameserver.bot.core.goap.GoapGoal;
+import org.l2jmobius.gameserver.bot.core.goap.GoapTuning;
 import org.l2jmobius.gameserver.bot.core.goap.WorldState;
 
 /**
@@ -44,7 +45,7 @@ public class HuntGoal implements GoapGoal
 		{
 			return 0; // need to restock first
 		}
-		return 45;
+		return GoapTuning.PRIORITY_HUNT;
 	}
 
 	@Override

@@ -6,6 +6,7 @@ package org.l2jmobius.gameserver.bot.core.action;
 import java.util.logging.Logger;
 
 import org.l2jmobius.gameserver.ai.Intention;
+import org.l2jmobius.gameserver.bot.core.goap.GoapTuning;
 import org.l2jmobius.gameserver.bot.core.exception.FatalBotException;
 import org.l2jmobius.gameserver.bot.core.exception.RecoverableBotException;
 import org.l2jmobius.gameserver.bot.core.exception.ValidationBotException;
@@ -35,23 +36,23 @@ public class MoveToCreatureAction implements BotAction
 	private static final Logger LOGGER = Logger.getLogger(MoveToCreatureAction.class.getName());
 
 	/** Distance to last waypoint below which we refresh it to the creature's live position. */
-	private static final int LAST_WP_UPDATE_RANGE = 200;
+	private static final int LAST_WP_UPDATE_RANGE = GoapTuning.MOB_LAST_WP_UPDATE_RANGE;
 
 	/** Mob displacement that triggers a global path reset (coarse repath for wandering mobs). */
-	private static final int REPATH_THRESHOLD = 300;
+	private static final int REPATH_THRESHOLD = GoapTuning.MOB_REPATH_THRESHOLD;
 
 	/** After this many consecutive geo-errors, give up (target in unreachable geo area). */
-	private static final int MAX_GEO_ERRORS = 3;
+	private static final int MAX_GEO_ERRORS = GoapTuning.MAX_GEO_ERRORS;
 
 	/**
 	 * Consecutive ticks where distance to target increased by at least this many units squared.
 	 * Used to detect a fleeing mob. A mob that consistently runs away from the bot should be
 	 * abandoned so the bot finds a stationary or closer target instead.
 	 */
-	private static final int MAX_FLEE_CHECKS = 3;
+	private static final int MAX_FLEE_CHECKS = GoapTuning.MAX_FLEE_CHECKS;
 
 	/** Minimum squared-distance increase per tick to count as "mob is moving away". */
-	private static final int FLEE_DELTA_SQ = 150 * 150;
+	private static final int FLEE_DELTA_SQ = GoapTuning.MOB_FLEE_DELTA * GoapTuning.MOB_FLEE_DELTA;
 
 	private final Creature _target;
 	private final int _arrivalRadius;

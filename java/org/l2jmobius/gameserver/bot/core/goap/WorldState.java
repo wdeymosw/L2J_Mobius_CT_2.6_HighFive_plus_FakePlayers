@@ -30,14 +30,14 @@ import org.l2jmobius.gameserver.model.skill.targets.TargetType;
 public class WorldState
 {
 	// --- HP thresholds — mutually exclusive zones ---
-	// CRITICAL [0..20)  LOW [20..60)  MID [60..99)  FULL [99+)
-	private static final double HP_CRITICAL_THRESHOLD = 20.0;
-	private static final double HP_LOW_THRESHOLD = 60.0;
-	private static final double HP_FULL_THRESHOLD = 99.0;
+	// CRITICAL [0..HP_CRITICAL)  LOW [HP_CRITICAL..HP_LOW)  MID [HP_LOW..HP_FULL)  FULL [HP_FULL+)
+	private static final double HP_CRITICAL_THRESHOLD = GoapTuning.HP_CRITICAL_THRESHOLD;
+	private static final double HP_LOW_THRESHOLD = GoapTuning.HP_LOW_THRESHOLD;
+	private static final double HP_FULL_THRESHOLD = GoapTuning.HP_FULL_THRESHOLD;
 	// --- MP thresholds — mutually exclusive zones ---
-	// LOW [0..40)  OK [40..99)  FULL [99+)
-	private static final double MP_LOW_THRESHOLD = 40.0;
-	private static final double MP_FULL_THRESHOLD = 99.0;
+	// LOW [0..MP_LOW)  OK [MP_LOW..MP_FULL)  FULL [MP_FULL+)
+	private static final double MP_LOW_THRESHOLD = GoapTuning.MP_LOW_THRESHOLD;
+	private static final double MP_FULL_THRESHOLD = GoapTuning.MP_FULL_THRESHOLD;
 
 	private final EnumMap<Fact, Boolean> _facts;
 

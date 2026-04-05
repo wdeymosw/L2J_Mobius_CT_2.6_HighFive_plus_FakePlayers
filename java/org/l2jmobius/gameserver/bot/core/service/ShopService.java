@@ -4,6 +4,7 @@
 package org.l2jmobius.gameserver.bot.core.service;
 
 import java.util.ArrayList;
+import org.l2jmobius.gameserver.bot.core.goap.GoapTuning;
 import java.util.Comparator;
 import java.util.List;
 import java.util.logging.Logger;
@@ -32,7 +33,7 @@ public class ShopService
 	private static final Logger LOGGER = Logger.getLogger(ShopService.class.getName());
 
 	/** Shop price = reference price × this multiplier. */
-	private static final double SHOP_PRICE_RATE = 2.0;
+	private static final double SHOP_PRICE_RATE = GoapTuning.SHOP_PRICE_RATE;
 
 	private ShopService()
 	{

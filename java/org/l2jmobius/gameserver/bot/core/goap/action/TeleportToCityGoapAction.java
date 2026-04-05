@@ -7,6 +7,7 @@ import org.l2jmobius.gameserver.bot.core.action.TeleportAction;
 import org.l2jmobius.gameserver.bot.core.action.WaitAction;
 import org.l2jmobius.gameserver.bot.core.goap.Fact;
 import org.l2jmobius.gameserver.bot.core.goap.GoapAction;
+import org.l2jmobius.gameserver.bot.core.goap.GoapTuning;
 import org.l2jmobius.gameserver.bot.core.goap.WorldState;
 import org.l2jmobius.gameserver.bot.core.model.BotContext;
 import org.l2jmobius.gameserver.bot.core.model.BotInstance;
@@ -20,7 +21,7 @@ import org.l2jmobius.gameserver.model.Location;
  */
 public class TeleportToCityGoapAction implements GoapAction
 {
-	private static final long SETTLE_MS = 1_000;
+	private static final long SETTLE_MS = GoapTuning.TELEPORT_SETTLE_MS;
 
 	private static final WorldState PRECONDITIONS = new WorldState();
 	private static final WorldState EFFECTS = new WorldState();
@@ -47,7 +48,7 @@ public class TeleportToCityGoapAction implements GoapAction
 	@Override
 	public float getCost(WorldState worldState)
 	{
-		return 5.0f;
+		return GoapTuning.COST_TELEPORT_CITY;
 	}
 
 	@Override

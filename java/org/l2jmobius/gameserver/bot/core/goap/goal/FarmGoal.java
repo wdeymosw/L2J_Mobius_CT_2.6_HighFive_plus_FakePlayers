@@ -5,6 +5,7 @@ package org.l2jmobius.gameserver.bot.core.goap.goal;
 
 import org.l2jmobius.gameserver.bot.core.goap.Fact;
 import org.l2jmobius.gameserver.bot.core.goap.GoapGoal;
+import org.l2jmobius.gameserver.bot.core.goap.GoapTuning;
 import org.l2jmobius.gameserver.bot.core.goap.WorldState;
 
 /**
@@ -50,7 +51,7 @@ public class FarmGoal implements GoapGoal
 		// should finish the fight. RestoreGoal (priority 40) only wins when there is
 		// no target (IN_COMBAT=false). SurviveGoal (priority 100) handles truly
 		// dangerous situations regardless.
-		return 50;
+		return GoapTuning.PRIORITY_FARM;
 	}
 
 	@Override

@@ -5,6 +5,7 @@ package org.l2jmobius.gameserver.bot.core.goap.goal;
 
 import org.l2jmobius.gameserver.bot.core.goap.Fact;
 import org.l2jmobius.gameserver.bot.core.goap.GoapGoal;
+import org.l2jmobius.gameserver.bot.core.goap.GoapTuning;
 import org.l2jmobius.gameserver.bot.core.goap.WorldState;
 
 /**
@@ -41,7 +42,7 @@ public class DrinkPotionGoal implements GoapGoal
 		}
 		if (worldState.get(Fact.HP_LOW) && worldState.get(Fact.POTION_READY) && worldState.get(Fact.HAS_POTIONS))
 		{
-			return 52;
+			return GoapTuning.PRIORITY_DRINK_POTION;
 		}
 		return 0;
 	}

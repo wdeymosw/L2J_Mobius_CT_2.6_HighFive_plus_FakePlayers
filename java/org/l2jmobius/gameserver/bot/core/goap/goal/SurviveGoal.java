@@ -5,6 +5,7 @@ package org.l2jmobius.gameserver.bot.core.goap.goal;
 
 import org.l2jmobius.gameserver.bot.core.goap.Fact;
 import org.l2jmobius.gameserver.bot.core.goap.GoapGoal;
+import org.l2jmobius.gameserver.bot.core.goap.GoapTuning;
 import org.l2jmobius.gameserver.bot.core.goap.WorldState;
 
 /**
@@ -37,7 +38,7 @@ public class SurviveGoal implements GoapGoal
 	@Override
 	public int getPriority(WorldState worldState)
 	{
-		return worldState.get(Fact.HP_CRITICAL) ? 100 : 0;
+		return worldState.get(Fact.HP_CRITICAL) ? GoapTuning.PRIORITY_SURVIVE : 0;
 	}
 
 	@Override

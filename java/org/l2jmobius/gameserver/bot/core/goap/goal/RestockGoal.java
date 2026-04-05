@@ -5,6 +5,7 @@ package org.l2jmobius.gameserver.bot.core.goap.goal;
 
 import org.l2jmobius.gameserver.bot.core.goap.Fact;
 import org.l2jmobius.gameserver.bot.core.goap.GoapGoal;
+import org.l2jmobius.gameserver.bot.core.goap.GoapTuning;
 import org.l2jmobius.gameserver.bot.core.goap.WorldState;
 
 /**
@@ -32,7 +33,7 @@ public class RestockGoal implements GoapGoal
 	{
 		if (!worldState.get(Fact.HAS_AMMO) || !worldState.get(Fact.INVENTORY_OK))
 		{
-			return 30;
+			return GoapTuning.PRIORITY_RESTOCK;
 		}
 		return 0;
 	}

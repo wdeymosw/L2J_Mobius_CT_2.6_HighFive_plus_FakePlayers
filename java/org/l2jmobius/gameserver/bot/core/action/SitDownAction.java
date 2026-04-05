@@ -4,6 +4,7 @@
 package org.l2jmobius.gameserver.bot.core.action;
 
 import org.l2jmobius.gameserver.bot.core.exception.FatalBotException;
+import org.l2jmobius.gameserver.bot.core.goap.GoapTuning;
 import org.l2jmobius.gameserver.bot.core.exception.RecoverableBotException;
 import org.l2jmobius.gameserver.bot.core.exception.ValidationBotException;
 import org.l2jmobius.gameserver.bot.core.model.BotInstance;
@@ -18,7 +19,7 @@ import org.l2jmobius.gameserver.bot.core.model.BotInstance;
 public class SitDownAction implements BotAction
 {
 	/** Safety timeout: if sitting state never confirms, give up and continue. */
-	private static final long TIMEOUT_MS = 3000;
+	private static final long TIMEOUT_MS = GoapTuning.ACTION_SIT_TIMEOUT_MS;
 
 	private long _startTime = 0;
 

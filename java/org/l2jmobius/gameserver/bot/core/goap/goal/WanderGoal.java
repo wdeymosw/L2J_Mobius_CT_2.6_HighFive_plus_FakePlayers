@@ -5,6 +5,7 @@ package org.l2jmobius.gameserver.bot.core.goap.goal;
 
 import org.l2jmobius.gameserver.bot.core.goap.Fact;
 import org.l2jmobius.gameserver.bot.core.goap.GoapGoal;
+import org.l2jmobius.gameserver.bot.core.goap.GoapTuning;
 import org.l2jmobius.gameserver.bot.core.goap.WorldState;
 
 /**
@@ -29,7 +30,7 @@ public class WanderGoal implements GoapGoal
 	@Override
 	public int getPriority(WorldState worldState)
 	{
-		return 10;
+		return GoapTuning.PRIORITY_WANDER;
 	}
 
 	@Override

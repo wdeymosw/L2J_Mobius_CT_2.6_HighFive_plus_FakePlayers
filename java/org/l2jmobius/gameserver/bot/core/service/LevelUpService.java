@@ -4,6 +4,7 @@
 package org.l2jmobius.gameserver.bot.core.service;
 
 import java.util.Set;
+import org.l2jmobius.gameserver.bot.core.goap.GoapTuning;
 import java.util.logging.Logger;
 
 import org.l2jmobius.gameserver.bot.core.model.BotInstance;
@@ -31,9 +32,9 @@ public class LevelUpService
 {
 	private static final Logger LOGGER = Logger.getLogger(LevelUpService.class.getName());
 
-	private static final int FIRST_CLASS_LEVEL  = 20;
-	private static final int SECOND_CLASS_LEVEL = 40;
-	private static final int THIRD_CLASS_LEVEL  = 76;
+	private static final int FIRST_CLASS_LEVEL  = GoapTuning.FIRST_CLASS_LEVEL;
+	private static final int SECOND_CLASS_LEVEL = GoapTuning.SECOND_CLASS_LEVEL;
+	private static final int THIRD_CLASS_LEVEL  = GoapTuning.THIRD_CLASS_LEVEL;
 
 	private LevelUpService()
 	{

@@ -5,6 +5,7 @@ package org.l2jmobius.gameserver.bot.core.goap.goal;
 
 import org.l2jmobius.gameserver.bot.core.goap.Fact;
 import org.l2jmobius.gameserver.bot.core.goap.GoapGoal;
+import org.l2jmobius.gameserver.bot.core.goap.GoapTuning;
 import org.l2jmobius.gameserver.bot.core.goap.WorldState;
 
 /**
@@ -53,7 +54,7 @@ public class PickupGoal implements GoapGoal
 		{
 			return 0; // no loot present — goal already satisfied
 		}
-		return 48; // above BuffGoal (47): kill → loot → buff → hunt
+		return GoapTuning.PRIORITY_PICKUP; // above BuffGoal: kill → loot → buff → hunt
 	}
 
 	@Override

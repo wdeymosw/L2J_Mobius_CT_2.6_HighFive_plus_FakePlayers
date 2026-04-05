@@ -3,6 +3,7 @@
  */
 package org.l2jmobius.gameserver.bot.core.model;
 
+import org.l2jmobius.gameserver.bot.core.goap.GoapTuning;
 import org.l2jmobius.gameserver.bot.core.service.SupplyService;
 import org.l2jmobius.gameserver.bot.core.service.TargetService;
 import org.l2jmobius.gameserver.model.Location;
@@ -95,7 +96,7 @@ public class BotContext
 		// Use a generous range check: physicalAttackRange + 80 units tolerance.
 		// PathService stops within ~60 units of the nav snapshot, and the mob may
 		// have moved slightly, so a tight range check causes a false canAttackTarget=false.
-		final boolean canAttack = (target != null) && !target.isDead() && (player.calculateDistance3D(target) < (player.getPhysicalAttackRange() + 80));
+		final boolean canAttack = (target != null) && !target.isDead() && (player.calculateDistance3D(target) < (player.getPhysicalAttackRange() + GoapTuning.ATTACK_RANGE_TOLERANCE));
 		return new BotContext(
 			hp,
 			mp,

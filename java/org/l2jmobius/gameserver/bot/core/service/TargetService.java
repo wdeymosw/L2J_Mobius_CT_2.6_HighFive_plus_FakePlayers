@@ -4,6 +4,7 @@
 package org.l2jmobius.gameserver.bot.core.service;
 
 import java.util.HashMap;
+import org.l2jmobius.gameserver.bot.core.goap.GoapTuning;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
@@ -27,17 +28,17 @@ public class TargetService
 {
 	private static final Logger LOGGER = Logger.getLogger(TargetService.class.getName());
 	/** Search radius in game units — starts at 700, expands up to 1000 when no mobs are found. */
-	private static final int SEARCH_RADIUS_BASE = 700;
-	private static final int SEARCH_RADIUS_MAX = 1000;
+	private static final int SEARCH_RADIUS_BASE = GoapTuning.TARGET_SEARCH_RADIUS_BASE;
+	private static final int SEARCH_RADIUS_MAX = GoapTuning.TARGET_SEARCH_RADIUS_MAX;
 
 	/** Maximum Z-axis difference to consider a mob reachable (avoids targeting mobs on other floors). */
-	private static final int MAX_Z_DIFF = 800;
+	private static final int MAX_Z_DIFF = GoapTuning.TARGET_MAX_Z_DIFF;
 
 	/** Minimum delay between searches (ms). */
-	private static final long SEARCH_COOLDOWN_MIN = 2000;
+	private static final long SEARCH_COOLDOWN_MIN = GoapTuning.TARGET_SEARCH_COOLDOWN_MIN;
 
 	/** Maximum delay between searches (ms). */
-	private static final long SEARCH_COOLDOWN_MAX = 4000;
+	private static final long SEARCH_COOLDOWN_MAX = GoapTuning.TARGET_SEARCH_COOLDOWN_MAX;
 
 	private TargetService()
 	{

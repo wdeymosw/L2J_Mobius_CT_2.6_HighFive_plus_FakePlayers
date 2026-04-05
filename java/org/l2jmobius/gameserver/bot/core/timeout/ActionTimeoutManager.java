@@ -4,6 +4,7 @@
 package org.l2jmobius.gameserver.bot.core.timeout;
 
 import java.util.Map;
+import org.l2jmobius.gameserver.bot.core.goap.GoapTuning;
 import java.util.WeakHashMap;
 import java.util.logging.Logger;
 
@@ -24,7 +25,7 @@ public class ActionTimeoutManager
 	private static final Logger LOGGER = Logger.getLogger(ActionTimeoutManager.class.getName());
 
 	private static final Map<BotInstance, ActionTimeoutEntry> ACTIVE_TIMEOUTS = new WeakHashMap<>();
-	private static final long DEFAULT_TIMEOUT_MS = 30000L; // 30 seconds
+	private static final long DEFAULT_TIMEOUT_MS = GoapTuning.ACTION_DEFAULT_TIMEOUT_MS;
 
 	private ActionTimeoutManager()
 	{

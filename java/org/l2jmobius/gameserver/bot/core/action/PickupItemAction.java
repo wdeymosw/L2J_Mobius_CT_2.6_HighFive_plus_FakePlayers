@@ -4,6 +4,7 @@
 package org.l2jmobius.gameserver.bot.core.action;
 
 import org.l2jmobius.gameserver.ai.Intention;
+import org.l2jmobius.gameserver.bot.core.goap.GoapTuning;
 import org.l2jmobius.gameserver.bot.core.exception.FatalBotException;
 import org.l2jmobius.gameserver.bot.core.exception.RecoverableBotException;
 import org.l2jmobius.gameserver.bot.core.exception.ValidationBotException;
@@ -20,10 +21,10 @@ import org.l2jmobius.gameserver.model.item.instance.Item;
 public class PickupItemAction implements BotAction
 {
 	/** Distance at which doPickupItem is called instead of moving closer. */
-	private static final int PICKUP_RADIUS = 70;
+	private static final int PICKUP_RADIUS = GoapTuning.PICKUP_RADIUS;
 
 	/** Safety timeout to avoid getting stuck chasing a disappearing item. */
-	private static final long TIMEOUT_MS = 8000;
+	private static final long TIMEOUT_MS = GoapTuning.ACTION_PICKUP_TIMEOUT_MS;
 
 	private final Item _item;
 	private long _startTime = 0;

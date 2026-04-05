@@ -6,6 +6,7 @@ package org.l2jmobius.gameserver.bot.core.goap.action;
 import org.l2jmobius.gameserver.bot.core.action.WaitAction;
 import org.l2jmobius.gameserver.bot.core.goap.Fact;
 import org.l2jmobius.gameserver.bot.core.goap.GoapAction;
+import org.l2jmobius.gameserver.bot.core.goap.GoapTuning;
 import org.l2jmobius.gameserver.bot.core.goap.WorldState;
 import org.l2jmobius.gameserver.bot.core.model.BotContext;
 import org.l2jmobius.gameserver.bot.core.model.BotInstance;
@@ -49,7 +50,7 @@ public class UseBuffSkillGoapAction implements GoapAction
 	@Override
 	public float getCost(WorldState worldState)
 	{
-		return 1.0f;
+		return GoapTuning.COST_USE_BUFF;
 	}
 
 	@Override

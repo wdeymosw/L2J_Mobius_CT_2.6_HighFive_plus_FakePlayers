@@ -4,6 +4,7 @@
 package org.l2jmobius.gameserver.bot.core.action;
 
 import org.l2jmobius.gameserver.bot.core.exception.FatalBotException;
+import org.l2jmobius.gameserver.bot.core.goap.GoapTuning;
 import org.l2jmobius.gameserver.bot.core.exception.RecoverableBotException;
 import org.l2jmobius.gameserver.bot.core.exception.ValidationBotException;
 import org.l2jmobius.gameserver.bot.core.model.BotInstance;
@@ -18,7 +19,7 @@ import org.l2jmobius.gameserver.model.Location;
  */
 public class MoveToAction implements BotAction
 {
-	private static final int ARRIVAL_RADIUS = 150;
+	private static final int ARRIVAL_RADIUS = GoapTuning.ARRIVAL_RADIUS;
 
 	private final Location _dest;
 	private final int _arrivalRadius;

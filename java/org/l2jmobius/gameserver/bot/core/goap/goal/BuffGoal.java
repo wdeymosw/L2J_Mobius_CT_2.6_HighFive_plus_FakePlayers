@@ -5,6 +5,7 @@ package org.l2jmobius.gameserver.bot.core.goap.goal;
 
 import org.l2jmobius.gameserver.bot.core.goap.Fact;
 import org.l2jmobius.gameserver.bot.core.goap.GoapGoal;
+import org.l2jmobius.gameserver.bot.core.goap.GoapTuning;
 import org.l2jmobius.gameserver.bot.core.goap.WorldState;
 
 /**
@@ -51,7 +52,7 @@ public class BuffGoal implements GoapGoal
 		{
 			return 0; // already fully buffed
 		}
-		return 47;
+		return GoapTuning.PRIORITY_BUFF;
 	}
 
 	@Override

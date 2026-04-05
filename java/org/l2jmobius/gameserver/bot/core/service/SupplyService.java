@@ -4,6 +4,7 @@
 package org.l2jmobius.gameserver.bot.core.service;
 
 import java.util.logging.Logger;
+import org.l2jmobius.gameserver.bot.core.goap.GoapTuning;
 
 import org.l2jmobius.gameserver.bot.core.model.BotInstance;
 import org.l2jmobius.gameserver.bot.core.model.BotRole;
@@ -37,13 +38,13 @@ public class SupplyService
 
 
 	/** Restock when remaining quantity drops below this threshold. */
-	public static final long RESTOCK_THRESHOLD = 500;
+	public static final long RESTOCK_THRESHOLD = GoapTuning.RESTOCK_THRESHOLD;
 
 	/** Target quantity to maintain after restocking. */
-	public static final long RESTOCK_TARGET = 3000;
+	public static final long RESTOCK_TARGET = GoapTuning.RESTOCK_TARGET;
 
 	/** Target quantity of healing potions to maintain. */
-	public static final long POTION_TARGET = 100;
+	public static final long POTION_TARGET = GoapTuning.POTION_TARGET;
 
 	// City idle duration is read from BotConfig at runtime (BotCityIdleMinSeconds / BotCityIdleMaxSeconds).
 

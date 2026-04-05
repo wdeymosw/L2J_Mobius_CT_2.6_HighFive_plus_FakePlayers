@@ -4,6 +4,7 @@
 package org.l2jmobius.gameserver.bot.core.action;
 
 import org.l2jmobius.gameserver.bot.core.exception.FatalBotException;
+import org.l2jmobius.gameserver.bot.core.goap.GoapTuning;
 import org.l2jmobius.gameserver.bot.core.exception.RecoverableBotException;
 import org.l2jmobius.gameserver.bot.core.exception.ValidationBotException;
 import org.l2jmobius.gameserver.bot.core.model.BotInstance;
@@ -26,7 +27,7 @@ import org.l2jmobius.gameserver.model.actor.Player;
 public class AttackAction implements BotAction
 {
 	/** Maximum time (ms) to pursue before giving up. */
-	private static final long ATTACK_TIMEOUT_MS = 8000;
+	private static final long ATTACK_TIMEOUT_MS = GoapTuning.ACTION_ATTACK_TIMEOUT_MS;
 
 	private long _startTime = 0;
 

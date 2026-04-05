@@ -4,6 +4,7 @@
 package org.l2jmobius.gameserver.bot.core.action;
 
 import org.l2jmobius.gameserver.ai.Intention;
+import org.l2jmobius.gameserver.bot.core.goap.GoapTuning;
 import org.l2jmobius.gameserver.bot.core.exception.FatalBotException;
 import org.l2jmobius.gameserver.bot.core.exception.RecoverableBotException;
 import org.l2jmobius.gameserver.bot.core.exception.ValidationBotException;
@@ -18,7 +19,7 @@ import org.l2jmobius.gameserver.model.actor.Player;
  */
 public class StandUpAction implements BotAction
 {
-	private static final long TIMEOUT_MS = 3000;
+	private static final long TIMEOUT_MS = GoapTuning.ACTION_STAND_TIMEOUT_MS;
 
 	private long _startTime = 0;
 

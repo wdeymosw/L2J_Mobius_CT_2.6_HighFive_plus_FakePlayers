@@ -5,6 +5,7 @@ package org.l2jmobius.gameserver.bot.core.goap.action;
 
 import org.l2jmobius.gameserver.bot.core.goap.Fact;
 import org.l2jmobius.gameserver.bot.core.goap.GoapAction;
+import org.l2jmobius.gameserver.bot.core.goap.GoapTuning;
 import org.l2jmobius.gameserver.bot.core.goap.WorldState;
 import org.l2jmobius.gameserver.bot.core.model.BotContext;
 import org.l2jmobius.gameserver.bot.core.model.BotInstance;
@@ -20,10 +21,10 @@ import org.l2jmobius.gameserver.model.actor.Player;
  */
 public class SitRestGoapAction implements GoapAction
 {
-	private static final double STAND_HP_THRESHOLD = 80.0;
-	private static final double STAND_MP_THRESHOLD = 55.0;
+	private static final double STAND_HP_THRESHOLD = GoapTuning.STAND_HP_THRESHOLD;
+	private static final double STAND_MP_THRESHOLD = GoapTuning.STAND_MP_THRESHOLD;
 	/** How long to wait after calling standUp() for the 2500ms animation to finish. */
-	private static final long STAND_UP_ANIMATION_MS = 2_600;
+	private static final long STAND_UP_ANIMATION_MS = GoapTuning.STAND_UP_ANIMATION_MS;
 
 	private static final WorldState PRECONDITIONS = new WorldState();
 	private static final WorldState EFFECTS = new WorldState();
@@ -55,7 +56,7 @@ public class SitRestGoapAction implements GoapAction
 	@Override
 	public float getCost(WorldState worldState)
 	{
-		return 10.0f;
+		return GoapTuning.COST_SIT_REST;
 	}
 
 	@Override
@@ -73,7 +74,7 @@ public class SitRestGoapAction implements GoapAction
 		}
 		// 3-second grace window after last combat — covers slow-registering aggressors.
 		final long now = System.currentTimeMillis();
-		if ((now - bot.getLastCombatTime()) < 3_000)
+		if ((now - bot.getLastCombatTime()) < GoapTuning.POST_COMBAT_REST_GRACE_MS)
 		{
 			return false;
 		}

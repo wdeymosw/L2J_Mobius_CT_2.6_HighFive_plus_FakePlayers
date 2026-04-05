@@ -5,6 +5,7 @@ package org.l2jmobius.gameserver.bot.core.goap.goal;
 
 import org.l2jmobius.gameserver.bot.core.goap.Fact;
 import org.l2jmobius.gameserver.bot.core.goap.GoapGoal;
+import org.l2jmobius.gameserver.bot.core.goap.GoapTuning;
 import org.l2jmobius.gameserver.bot.core.goap.WorldState;
 
 /**
@@ -41,7 +42,7 @@ public class RestoreGoal implements GoapGoal
 		// HP_MID (< 99%) is too broad — bot would sit after every minor scratch.
 		if (worldState.get(Fact.HP_LOW) || worldState.get(Fact.MP_LOW))
 		{
-			return 40;
+			return GoapTuning.PRIORITY_RESTORE;
 		}
 		return 0;
 	}

@@ -6,6 +6,7 @@ package org.l2jmobius.gameserver.bot.core.action;
 import java.util.logging.Logger;
 
 import org.l2jmobius.gameserver.bot.core.exception.FatalBotException;
+import org.l2jmobius.gameserver.bot.core.goap.GoapTuning;
 import org.l2jmobius.gameserver.bot.core.exception.RecoverableBotException;
 import org.l2jmobius.gameserver.bot.core.exception.ValidationBotException;
 import org.l2jmobius.gameserver.bot.core.model.BotInstance;
@@ -23,7 +24,7 @@ public class CastSkillAction implements BotAction
 	private static final Logger LOGGER = Logger.getLogger(CastSkillAction.class.getName());
 
 	/** Maximum time to wait for a cast to start and finish. */
-	private static final long CAST_TIMEOUT_MS = 10_000;
+	private static final long CAST_TIMEOUT_MS = GoapTuning.ACTION_CAST_TIMEOUT_MS;
 
 	private final Skill _skill;
 	private boolean _executed = false;
@@ -47,7 +48,7 @@ public class CastSkillAction implements BotAction
 		if (!bot.getPlayer().isCastingNow())
 		{
 			// Cast failed to start — disable skill briefly to avoid looping.
-			bot.getPlayer().disableSkill(_skill, 3000);
+			bot.getPlayer().disableSkill(_skill, GoapTuning.ACTION_CAST_FAIL_DISABLE_MS);
 			LOGGER.fine("CastSkillAction: cast failed [" + _skill.getName() + "], skipping 3s");
 		}
 	}
