@@ -33,6 +33,10 @@ public class RestoreGoal implements GoapGoal
 		{
 			return 0; // SurviveGoal handles critical; don't sit mid-combat
 		}
+		if (worldState.get(Fact.LOOT_NEARBY))
+		{
+			return 0; // collect the drop first, then rest
+		}
 		// Only sit to recover if HP is genuinely low (< 60%) or MP is depleted.
 		// HP_MID (< 99%) is too broad — bot would sit after every minor scratch.
 		if (worldState.get(Fact.HP_LOW) || worldState.get(Fact.MP_LOW))

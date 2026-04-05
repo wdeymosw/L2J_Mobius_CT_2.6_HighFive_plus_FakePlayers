@@ -25,7 +25,7 @@ public class ActionOrderingImpl
 	 *
 	 * @param queue action queue to reorder
 	 */
-	public static void orderQueue(Deque<Object> queue)
+	public static void orderQueue(Deque<BotAction> queue)
 	{
 		if (queue == null || queue.isEmpty())
 		{
@@ -41,7 +41,7 @@ public class ActionOrderingImpl
 	 *
 	 * @return new empty ordered deque
 	 */
-	public static Deque<Object> createOrderedQueue()
+	public static Deque<BotAction> createOrderedQueue()
 	{
 		return new ArrayDeque<>();
 	}
