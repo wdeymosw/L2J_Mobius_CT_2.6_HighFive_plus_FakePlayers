@@ -173,6 +173,9 @@ public final class GoapTuning
 	/** Safety timeout waiting for stand-up animation to confirm. */
 	public static final long ACTION_STAND_TIMEOUT_MS = 3_000;
 
+	/** Max time to wait for the bot to close range to its target before aborting movement. */
+	public static final long ACTION_MOVE_TO_TARGET_TIMEOUT_MS = 8_000;
+
 	/** Wait after issuing standUp() for the ~2500 ms sit→stand animation to finish. */
 	public static final long STAND_UP_ANIMATION_MS = 2_600;
 

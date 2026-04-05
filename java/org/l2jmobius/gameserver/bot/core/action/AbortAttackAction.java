@@ -12,20 +12,12 @@ import org.l2jmobius.gameserver.bot.core.model.BotInstance;
  * Immediately cancels the bot's current auto-attack swing.
  * One-shot: completes after the first execute call.
  */
-public class AbortAttackAction implements BotAction
+public class AbortAttackAction extends AbstractOneTimeAction
 {
-	private boolean _done = false;
-
 	@Override
-	public void execute(BotInstance bot, long now) throws FatalBotException, ValidationBotException, RecoverableBotException
+	protected void doExecute(BotInstance bot, long now) throws FatalBotException, ValidationBotException, RecoverableBotException
 	{
 		bot.getPlayer().abortAttack();
-		_done = true;
-	}
-
-	@Override
-	public boolean isDone(BotInstance bot, long now)
-	{
-		return _done;
 	}
 }
+

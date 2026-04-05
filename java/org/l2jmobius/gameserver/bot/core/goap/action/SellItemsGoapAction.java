@@ -4,8 +4,8 @@
 package org.l2jmobius.gameserver.bot.core.goap.action;
 
 import org.l2jmobius.gameserver.bot.core.action.WaitAction;
+import org.l2jmobius.gameserver.bot.core.goap.AbstractGoapAction;
 import org.l2jmobius.gameserver.bot.core.goap.Fact;
-import org.l2jmobius.gameserver.bot.core.goap.GoapAction;
 import org.l2jmobius.gameserver.bot.core.goap.GoapTuning;
 import org.l2jmobius.gameserver.bot.core.goap.WorldState;
 import org.l2jmobius.gameserver.bot.core.model.BotContext;
@@ -22,7 +22,7 @@ import org.l2jmobius.gameserver.bot.core.service.ShopService;
  * <p>
  * Runs the full city pipeline: sell → equip → level-up → open private shop.
  */
-public class SellItemsGoapAction implements GoapAction
+public class SellItemsGoapAction extends AbstractGoapAction
 {
 	private static final WorldState PRECONDITIONS = new WorldState();
 	private static final WorldState EFFECTS = new WorldState();
@@ -33,16 +33,9 @@ public class SellItemsGoapAction implements GoapAction
 		EFFECTS.set(Fact.INVENTORY_OK, true);
 	}
 
-	@Override
-	public WorldState getPreconditions()
+	public SellItemsGoapAction()
 	{
-		return PRECONDITIONS;
-	}
-
-	@Override
-	public WorldState getEffects()
-	{
-		return EFFECTS;
+		super(PRECONDITIONS, EFFECTS);
 	}
 
 	@Override
@@ -64,8 +57,7 @@ public class SellItemsGoapAction implements GoapAction
 		EquipService.equip(bot);
 		LevelUpService.checkAndUpgrade(bot);
 		ShopService.openShop(bot);
-		bot.clearQueue();
-		bot.queueAction(new WaitAction(500));
+		bot.replaceQueue(new WaitAction(500));
 	}
 
 	@Override

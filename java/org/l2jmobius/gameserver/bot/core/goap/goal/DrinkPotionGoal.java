@@ -3,8 +3,8 @@
  */
 package org.l2jmobius.gameserver.bot.core.goap.goal;
 
+import org.l2jmobius.gameserver.bot.core.goap.AbstractGoapGoal;
 import org.l2jmobius.gameserver.bot.core.goap.Fact;
-import org.l2jmobius.gameserver.bot.core.goap.GoapGoal;
 import org.l2jmobius.gameserver.bot.core.goap.GoapTuning;
 import org.l2jmobius.gameserver.bot.core.goap.WorldState;
 
@@ -18,7 +18,7 @@ import org.l2jmobius.gameserver.bot.core.goap.WorldState;
  * Desired state: {@code HP_LOW=false}
  * Resolved by: {@link org.l2jmobius.gameserver.bot.core.goap.action.DrinkPotionGoapAction}
  */
-public class DrinkPotionGoal implements GoapGoal
+public class DrinkPotionGoal extends AbstractGoapGoal
 {
 	private static final WorldState DESIRED = new WorldState();
 
@@ -27,10 +27,9 @@ public class DrinkPotionGoal implements GoapGoal
 		DESIRED.set(Fact.HP_LOW, false);
 	}
 
-	@Override
-	public WorldState getDesiredState()
+	public DrinkPotionGoal()
 	{
-		return DESIRED;
+		super(DESIRED);
 	}
 
 	@Override

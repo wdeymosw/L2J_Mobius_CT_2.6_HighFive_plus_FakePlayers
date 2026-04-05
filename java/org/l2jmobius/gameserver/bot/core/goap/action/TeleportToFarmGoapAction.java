@@ -6,8 +6,8 @@ package org.l2jmobius.gameserver.bot.core.goap.action;
 import org.l2jmobius.gameserver.bot.core.action.MoveToAction;
 import org.l2jmobius.gameserver.bot.core.action.TeleportAction;
 import org.l2jmobius.gameserver.bot.core.action.WaitAction;
+import org.l2jmobius.gameserver.bot.core.goap.AbstractGoapAction;
 import org.l2jmobius.gameserver.bot.core.goap.Fact;
-import org.l2jmobius.gameserver.bot.core.goap.GoapAction;
 import org.l2jmobius.gameserver.bot.core.goap.GoapTuning;
 import org.l2jmobius.gameserver.bot.core.goap.WorldState;
 import org.l2jmobius.gameserver.bot.core.model.BotContext;
@@ -25,7 +25,7 @@ import org.l2jmobius.gameserver.model.Location;
  * Walks to the gatekeeper NPC in the city (if configured), waits there briefly
  * to simulate NPC interaction, then teleports to the farm zone center.
  */
-public class TeleportToFarmGoapAction implements GoapAction
+public class TeleportToFarmGoapAction extends AbstractGoapAction
 {
 	/**
 	 * If the bot is within this distance of the farm zone center, walk directly
@@ -48,16 +48,9 @@ public class TeleportToFarmGoapAction implements GoapAction
 		EFFECTS.set(Fact.IN_SAFE_PLACE, false);
 	}
 
-	@Override
-	public WorldState getPreconditions()
+	public TeleportToFarmGoapAction()
 	{
-		return PRECONDITIONS;
-	}
-
-	@Override
-	public WorldState getEffects()
-	{
-		return EFFECTS;
+		super(PRECONDITIONS, EFFECTS);
 	}
 
 	@Override

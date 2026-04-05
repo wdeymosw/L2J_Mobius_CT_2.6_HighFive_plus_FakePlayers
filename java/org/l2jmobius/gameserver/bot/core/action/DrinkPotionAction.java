@@ -22,15 +22,12 @@ import org.l2jmobius.gameserver.model.item.instance.Item;
  * One-shot action: tries once per execution, then is done — the item's own
  * reuse timer prevents over-consumption across repeated calls.
  */
-public class DrinkPotionAction implements BotAction
+public class DrinkPotionAction extends AbstractOneTimeAction
 {
 	private static final Logger LOGGER = Logger.getLogger(DrinkPotionAction.class.getName());
 
-
-	private boolean _done = false;
-
 	@Override
-	public void execute(BotInstance bot, long now) throws FatalBotException, ValidationBotException, RecoverableBotException
+	protected void doExecute(BotInstance bot, long now) throws FatalBotException, ValidationBotException, RecoverableBotException
 	{
 		final Player player = bot.getPlayer();
 		for (int itemId : PotionData.HEAL_POTION_IDS)
@@ -62,12 +59,6 @@ public class DrinkPotionAction implements BotAction
 		// Set reuse guard regardless of outcome — prevents Brain from
 		// requesting another potion every tick while the item is on cooldown.
 		bot.setNextPotionTime(now + PotionData.POTION_REUSE_MS);
-		_done = true;
-	}
-
-	@Override
-	public boolean isDone(BotInstance bot, long now)
-	{
-		return _done;
 	}
 }
+

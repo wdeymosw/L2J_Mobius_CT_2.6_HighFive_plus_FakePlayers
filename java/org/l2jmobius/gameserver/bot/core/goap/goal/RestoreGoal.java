@@ -3,15 +3,15 @@
  */
 package org.l2jmobius.gameserver.bot.core.goap.goal;
 
+import org.l2jmobius.gameserver.bot.core.goap.AbstractGoapGoal;
 import org.l2jmobius.gameserver.bot.core.goap.Fact;
-import org.l2jmobius.gameserver.bot.core.goap.GoapGoal;
 import org.l2jmobius.gameserver.bot.core.goap.GoapTuning;
 import org.l2jmobius.gameserver.bot.core.goap.WorldState;
 
 /**
  * Priority 40 — restore HP and MP when not in combat and not fully recovered.
  */
-public class RestoreGoal implements GoapGoal
+public class RestoreGoal extends AbstractGoapGoal
 {
 	private static final WorldState DESIRED = new WorldState();
 
@@ -21,10 +21,9 @@ public class RestoreGoal implements GoapGoal
 		DESIRED.set(Fact.MP_LOW, false);
 	}
 
-	@Override
-	public WorldState getDesiredState()
+	public RestoreGoal()
 	{
-		return DESIRED;
+		super(DESIRED);
 	}
 
 	@Override

@@ -3,8 +3,8 @@
  */
 package org.l2jmobius.gameserver.bot.core.goap.goal;
 
+import org.l2jmobius.gameserver.bot.core.goap.AbstractGoapGoal;
 import org.l2jmobius.gameserver.bot.core.goap.Fact;
-import org.l2jmobius.gameserver.bot.core.goap.GoapGoal;
 import org.l2jmobius.gameserver.bot.core.goap.GoapTuning;
 import org.l2jmobius.gameserver.bot.core.goap.WorldState;
 
@@ -12,7 +12,7 @@ import org.l2jmobius.gameserver.bot.core.goap.WorldState;
  * Priority 30 — go to city to sell loot and restock supplies.
  * Triggers when inventory is full or ammo runs out.
  */
-public class RestockGoal implements GoapGoal
+public class RestockGoal extends AbstractGoapGoal
 {
 	private static final WorldState DESIRED = new WorldState();
 
@@ -22,10 +22,9 @@ public class RestockGoal implements GoapGoal
 		DESIRED.set(Fact.INVENTORY_OK, true);
 	}
 
-	@Override
-	public WorldState getDesiredState()
+	public RestockGoal()
 	{
-		return DESIRED;
+		super(DESIRED);
 	}
 
 	@Override

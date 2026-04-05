@@ -3,8 +3,8 @@
  */
 package org.l2jmobius.gameserver.bot.core.goap.goal;
 
+import org.l2jmobius.gameserver.bot.core.goap.AbstractGoapGoal;
 import org.l2jmobius.gameserver.bot.core.goap.Fact;
-import org.l2jmobius.gameserver.bot.core.goap.GoapGoal;
 import org.l2jmobius.gameserver.bot.core.goap.GoapTuning;
 import org.l2jmobius.gameserver.bot.core.goap.WorldState;
 
@@ -20,7 +20,7 @@ import org.l2jmobius.gameserver.bot.core.goap.WorldState;
  * The bot must not have an active target ({@code TARGET_EXISTS=false}) so loot
  * pickup never interrupts an ongoing fight.
  */
-public class PickupGoal implements GoapGoal
+public class PickupGoal extends AbstractGoapGoal
 {
 	private static final WorldState DESIRED = new WorldState();
 
@@ -29,10 +29,9 @@ public class PickupGoal implements GoapGoal
 		DESIRED.set(Fact.LOOT_NEARBY, false);
 	}
 
-	@Override
-	public WorldState getDesiredState()
+	public PickupGoal()
 	{
-		return DESIRED;
+		super(DESIRED);
 	}
 
 	@Override

@@ -12,20 +12,12 @@ import org.l2jmobius.gameserver.bot.core.model.BotInstance;
  * Immediately cancels the bot's current skill cast.
  * One-shot: completes after the first execute call.
  */
-public class AbortCastAction implements BotAction
+public class AbortCastAction extends AbstractOneTimeAction
 {
-	private boolean _done = false;
-
 	@Override
-	public void execute(BotInstance bot, long now) throws FatalBotException, ValidationBotException, RecoverableBotException
+	protected void doExecute(BotInstance bot, long now) throws FatalBotException, ValidationBotException, RecoverableBotException
 	{
 		bot.getPlayer().abortCast();
-		_done = true;
-	}
-
-	@Override
-	public boolean isDone(BotInstance bot, long now)
-	{
-		return _done;
 	}
 }
+

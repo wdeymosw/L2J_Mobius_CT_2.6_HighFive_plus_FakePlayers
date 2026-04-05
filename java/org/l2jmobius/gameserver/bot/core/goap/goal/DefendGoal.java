@@ -3,15 +3,15 @@
  */
 package org.l2jmobius.gameserver.bot.core.goap.goal;
 
+import org.l2jmobius.gameserver.bot.core.goap.AbstractGoapGoal;
 import org.l2jmobius.gameserver.bot.core.goap.Fact;
-import org.l2jmobius.gameserver.bot.core.goap.GoapGoal;
 import org.l2jmobius.gameserver.bot.core.goap.GoapTuning;
 import org.l2jmobius.gameserver.bot.core.goap.WorldState;
 
 /**
  * Priority 90 — neutralize threats when the bot is under attack.
  */
-public class DefendGoal implements GoapGoal
+public class DefendGoal extends AbstractGoapGoal
 {
 	private static final WorldState DESIRED = new WorldState();
 
@@ -20,10 +20,9 @@ public class DefendGoal implements GoapGoal
 		DESIRED.set(Fact.THREAT_NEUTRALIZED, true);
 	}
 
-	@Override
-	public WorldState getDesiredState()
+	public DefendGoal()
 	{
-		return DESIRED;
+		super(DESIRED);
 	}
 
 	@Override

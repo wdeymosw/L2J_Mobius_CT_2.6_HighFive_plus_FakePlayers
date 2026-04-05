@@ -3,8 +3,8 @@
  */
 package org.l2jmobius.gameserver.bot.core.goap.goal;
 
+import org.l2jmobius.gameserver.bot.core.goap.AbstractGoapGoal;
 import org.l2jmobius.gameserver.bot.core.goap.Fact;
-import org.l2jmobius.gameserver.bot.core.goap.GoapGoal;
 import org.l2jmobius.gameserver.bot.core.goap.GoapTuning;
 import org.l2jmobius.gameserver.bot.core.goap.WorldState;
 
@@ -15,7 +15,7 @@ import org.l2jmobius.gameserver.bot.core.goap.WorldState;
  * When a target exists the desired state {@code TARGET_EXISTS=true} is already satisfied,
  * so this goal is skipped and {@link FarmGoal} takes over.
  */
-public class HuntGoal implements GoapGoal
+public class HuntGoal extends AbstractGoapGoal
 {
 	private static final WorldState DESIRED = new WorldState();
 
@@ -24,10 +24,9 @@ public class HuntGoal implements GoapGoal
 		DESIRED.set(Fact.TARGET_EXISTS, true);
 	}
 
-	@Override
-	public WorldState getDesiredState()
+	public HuntGoal()
 	{
-		return DESIRED;
+		super(DESIRED);
 	}
 
 	@Override

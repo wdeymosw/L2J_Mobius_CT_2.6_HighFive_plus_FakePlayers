@@ -4,8 +4,8 @@
 package org.l2jmobius.gameserver.bot.core.goap.action;
 
 import org.l2jmobius.gameserver.bot.core.action.DrinkPotionAction;
+import org.l2jmobius.gameserver.bot.core.goap.AbstractGoapAction;
 import org.l2jmobius.gameserver.bot.core.goap.Fact;
-import org.l2jmobius.gameserver.bot.core.goap.GoapAction;
 import org.l2jmobius.gameserver.bot.core.goap.GoapTuning;
 import org.l2jmobius.gameserver.bot.core.goap.WorldState;
 import org.l2jmobius.gameserver.bot.core.model.BotContext;
@@ -17,7 +17,7 @@ import org.l2jmobius.gameserver.bot.core.service.PotionData;
  * eff:  HP_LOW=false  (optimistic — real HP recovery is async)
  * cost: 1.0
  */
-public class DrinkPotionGoapAction implements GoapAction
+public class DrinkPotionGoapAction extends AbstractGoapAction
 {
 	private static final WorldState PRECONDITIONS = new WorldState();
 	private static final WorldState EFFECTS = new WorldState();
@@ -30,16 +30,9 @@ public class DrinkPotionGoapAction implements GoapAction
 		EFFECTS.set(Fact.HP_LOW, false);
 	}
 
-	@Override
-	public WorldState getPreconditions()
+	public DrinkPotionGoapAction()
 	{
-		return PRECONDITIONS;
-	}
-
-	@Override
-	public WorldState getEffects()
-	{
-		return EFFECTS;
+		super(PRECONDITIONS, EFFECTS);
 	}
 
 	@Override
@@ -51,25 +44,13 @@ public class DrinkPotionGoapAction implements GoapAction
 	@Override
 	public boolean isValid(BotContext ctx, BotInstance bot)
 	{
-		if (!ctx.potionReuseReady || !(ctx.hpPercent < 60.0))
-		{
-			return false;
-		}
-		for (int id : PotionData.HEAL_POTION_IDS)
-		{
-			if (bot.getPlayer().getInventory().getInventoryItemCount(id, -1) > 0)
-			{
-				return true;
-			}
-		}
-		return false;
+		return ctx.potionReuseReady && (ctx.hpPercent < 60.0) && PotionData.hasPotions(bot.getPlayer());
 	}
 
 	@Override
 	public void activate(BotInstance bot, long now)
 	{
-		bot.clearQueue();
-		bot.queueAction(new DrinkPotionAction());
+		bot.replaceQueue(new DrinkPotionAction());
 	}
 
 	@Override

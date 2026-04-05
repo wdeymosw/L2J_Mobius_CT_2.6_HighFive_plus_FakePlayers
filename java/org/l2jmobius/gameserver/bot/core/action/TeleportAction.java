@@ -12,12 +12,11 @@ import org.l2jmobius.gameserver.bot.core.model.BotInstance;
  * Instantly teleports the bot to the given coordinates.
  * Used for long-distance travel (farm ↔ city) where path-finding is impractical.
  */
-public class TeleportAction implements BotAction
+public class TeleportAction extends AbstractOneTimeAction
 {
 	private final int _x;
 	private final int _y;
 	private final int _z;
-	private boolean _done = false;
 
 	public TeleportAction(int x, int y, int z)
 	{
@@ -27,15 +26,9 @@ public class TeleportAction implements BotAction
 	}
 
 	@Override
-	public void execute(BotInstance bot, long now) throws FatalBotException, ValidationBotException, RecoverableBotException
+	protected void doExecute(BotInstance bot, long now) throws FatalBotException, ValidationBotException, RecoverableBotException
 	{
 		bot.teleport(_x, _y, _z);
-		_done = true;
-	}
-
-	@Override
-	public boolean isDone(BotInstance bot, long now)
-	{
-		return _done;
 	}
 }
+

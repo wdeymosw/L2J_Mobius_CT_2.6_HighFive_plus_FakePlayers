@@ -88,6 +88,40 @@ public class SkillService
 	}
 
 	/**
+	 * Returns {@code true} if the bot has at least one SELF-targeting HEAL skill
+	 * that is not on cooldown and has sufficient MP.
+	 * Used as a world-state fact check (does not cast anything).
+	 *
+	 * @param bot the bot to check
+	 * @return {@code true} if a usable heal skill exists
+	 */
+	public static boolean hasHealSkill(BotInstance bot)
+	{
+		final Player player = bot.getPlayer();
+		for (Skill skill : player.getAllSkills())
+		{
+			if (skill.getTargetType() != TargetType.SELF)
+			{
+				continue;
+			}
+			if (!skill.hasEffectType(EffectType.HEAL))
+			{
+				continue;
+			}
+			if (player.isSkillDisabled(skill))
+			{
+				continue;
+			}
+			if (player.getCurrentMp() < skill.getMpConsume())
+			{
+				continue;
+			}
+			return true;
+		}
+		return false;
+	}
+
+	/**
 	 * Tries to cast a SELF-targeting heal skill.
 	 * Called before retreating on low HP — one attempt per tick.
 	 *

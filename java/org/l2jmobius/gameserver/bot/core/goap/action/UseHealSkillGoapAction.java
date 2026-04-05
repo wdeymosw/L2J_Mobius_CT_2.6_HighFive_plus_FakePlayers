@@ -3,17 +3,13 @@
  */
 package org.l2jmobius.gameserver.bot.core.goap.action;
 
+import org.l2jmobius.gameserver.bot.core.goap.AbstractGoapAction;
 import org.l2jmobius.gameserver.bot.core.goap.Fact;
-import org.l2jmobius.gameserver.bot.core.goap.GoapAction;
 import org.l2jmobius.gameserver.bot.core.goap.GoapTuning;
 import org.l2jmobius.gameserver.bot.core.goap.WorldState;
 import org.l2jmobius.gameserver.bot.core.model.BotContext;
 import org.l2jmobius.gameserver.bot.core.model.BotInstance;
 import org.l2jmobius.gameserver.bot.core.service.SkillService;
-import org.l2jmobius.gameserver.model.actor.Player;
-import org.l2jmobius.gameserver.model.effects.EffectType;
-import org.l2jmobius.gameserver.model.skill.Skill;
-import org.l2jmobius.gameserver.model.skill.targets.TargetType;
 
 /**
  * pre:  HAS_HEAL_SKILL, MP_OK
@@ -22,7 +18,7 @@ import org.l2jmobius.gameserver.model.skill.targets.TargetType;
  * <p>
  * One-shot: casts the best available self-heal skill.
  */
-public class UseHealSkillGoapAction implements GoapAction
+public class UseHealSkillGoapAction extends AbstractGoapAction
 {
 	private static final WorldState PRECONDITIONS = new WorldState();
 	private static final WorldState EFFECTS = new WorldState();
@@ -34,16 +30,9 @@ public class UseHealSkillGoapAction implements GoapAction
 		EFFECTS.set(Fact.HP_LOW, false);
 	}
 
-	@Override
-	public WorldState getPreconditions()
+	public UseHealSkillGoapAction()
 	{
-		return PRECONDITIONS;
-	}
-
-	@Override
-	public WorldState getEffects()
-	{
-		return EFFECTS;
+		super(PRECONDITIONS, EFFECTS);
 	}
 
 	@Override
@@ -55,19 +44,7 @@ public class UseHealSkillGoapAction implements GoapAction
 	@Override
 	public boolean isValid(BotContext ctx, BotInstance bot)
 	{
-		if (ctx.mpPercent < 40.0)
-		{
-			return false;
-		}
-		final Player player = bot.getPlayer();
-		for (Skill skill : player.getAllSkills())
-		{
-			if ((skill.getTargetType() == TargetType.SELF) && skill.hasEffectType(EffectType.HEAL) && !player.isSkillDisabled(skill) && (player.getCurrentMp() >= skill.getMpConsume()))
-			{
-				return true;
-			}
-		}
-		return false;
+		return SkillService.hasHealSkill(bot);
 	}
 
 	@Override

@@ -4,23 +4,22 @@
 package org.l2jmobius.gameserver.bot.core.goap.action;
 
 import org.l2jmobius.gameserver.bot.core.action.MoveToCreatureAction;
+import org.l2jmobius.gameserver.bot.core.goap.AbstractGoapAction;
 import org.l2jmobius.gameserver.bot.core.goap.Fact;
-import org.l2jmobius.gameserver.bot.core.goap.GoapAction;
 import org.l2jmobius.gameserver.bot.core.goap.GoapTuning;
 import org.l2jmobius.gameserver.bot.core.goap.WorldState;
 import org.l2jmobius.gameserver.bot.core.model.BotContext;
 import org.l2jmobius.gameserver.bot.core.model.BotInstance;
-import org.l2jmobius.gameserver.model.actor.Creature;
+import org.l2jmobius.gameserver.bot.core.service.TargetService;
 import org.l2jmobius.gameserver.model.actor.Player;
+
 /**
  * pre:  TARGET_EXISTS
  * eff:  TARGET_IN_RANGE
  * cost: 2.0
  */
-public class MoveToTargetGoapAction implements GoapAction
+public class MoveToTargetGoapAction extends AbstractGoapAction
 {
-	/** Shorter timeout: if we can't reach the mob in 8s, it's likely unreachable. */
-	private static final long TIMEOUT_MS = 8_000L;
 	private static final WorldState PRECONDITIONS = new WorldState();
 	private static final WorldState EFFECTS = new WorldState();
 
@@ -30,16 +29,9 @@ public class MoveToTargetGoapAction implements GoapAction
 		EFFECTS.set(Fact.TARGET_IN_RANGE, true);
 	}
 
-	@Override
-	public WorldState getPreconditions()
+	public MoveToTargetGoapAction()
 	{
-		return PRECONDITIONS;
-	}
-
-	@Override
-	public WorldState getEffects()
-	{
-		return EFFECTS;
+		super(PRECONDITIONS, EFFECTS);
 	}
 
 	@Override
@@ -60,27 +52,22 @@ public class MoveToTargetGoapAction implements GoapAction
 	@Override
 	public void activate(BotInstance bot, long now)
 	{
-		final Creature target = bot.getTarget();
 		// Target gone or already dead — clear it so the planner re-inserts SearchTargetGoapAction.
-		if ((target == null) || target.isDead())
+		if (TargetService.clearIfDead(bot) || !TargetService.isTargetAlive(bot))
 		{
-			bot.clearTarget();
 			return;
 		}
 		final Player player = bot.getPlayer();
 		final int range = player.getPhysicalAttackRange();
-		bot.clearQueue();
-		bot.queueAction(new MoveToCreatureAction(target, range));
+		bot.replaceQueue(new MoveToCreatureAction(bot.getTarget(), range));
 	}
 
 	@Override
 	public boolean isComplete(BotInstance bot, BotContext ctx, long now)
 	{
 		// Complete if target is dead (not yet despawned) — treat same as no target.
-		final Creature target = bot.getTarget();
-		if ((target != null) && target.isDead())
+		if (TargetService.clearIfDead(bot))
 		{
-			bot.clearTarget();
 			return true;
 		}
 		return ctx.canAttackTarget || !ctx.hasTarget();
@@ -95,6 +82,6 @@ public class MoveToTargetGoapAction implements GoapAction
 	@Override
 	public long getActionTimeoutMs()
 	{
-		return TIMEOUT_MS;
+		return GoapTuning.ACTION_MOVE_TO_TARGET_TIMEOUT_MS;
 	}
 }

@@ -272,6 +272,38 @@ public class TargetService
 		return World.getInstance().getVisibleObjectsInRange(player, Attackable.class, SEARCH_RADIUS_MAX, mob -> !mob.isDead() && (attackers.contains(mob) || (mob.getTarget() == player))).size();
 	}
 
+	/**
+	 * Clears the bot's target if it is dead, then returns whether the target was cleared.
+	 * <p>
+	 * Convenience helper used in GOAP action {@code activate()} and {@code isComplete()}
+	 * to skip work when the target died between ticks.
+	 *
+	 * @param bot the bot to check
+	 * @return {@code true} if the target was dead and was cleared; {@code false} otherwise
+	 */
+	public static boolean clearIfDead(BotInstance bot)
+	{
+		final Creature target = bot.getTarget();
+		if ((target != null) && target.isDead())
+		{
+			bot.clearTarget();
+			return true;
+		}
+		return false;
+	}
+
+	/**
+	 * Returns {@code true} if the bot has a non-null, living target.
+	 *
+	 * @param bot the bot to check
+	 * @return {@code true} if target exists and is alive
+	 */
+	public static boolean isTargetAlive(BotInstance bot)
+	{
+		final Creature target = bot.getTarget();
+		return (target != null) && !target.isDead();
+	}
+
 	// -------------------------------------------------------------------------
 	// Helpers
 	// -------------------------------------------------------------------------

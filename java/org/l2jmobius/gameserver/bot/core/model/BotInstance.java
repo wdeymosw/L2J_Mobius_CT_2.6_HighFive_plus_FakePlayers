@@ -164,6 +164,19 @@ public class BotInstance
 		_lastStuckX = Integer.MIN_VALUE;
 		_lastStuckY = Integer.MIN_VALUE;
 	}
+
+	/**
+	 * Convenience: clear the queue and immediately enqueue a single action.
+	 * Equivalent to {@code clearQueue(); queueAction(action);}.
+	 *
+	 * @param action the sole action to execute next
+	 */
+	public void replaceQueue(BotAction action)
+	{
+		clearQueue();
+		queueAction(action);
+	}
+
 	public boolean isQueueIdle() { return _executor.isIdle(); }
 	public void tickExecutor(long now) { _executor.tick(this, now); }
 

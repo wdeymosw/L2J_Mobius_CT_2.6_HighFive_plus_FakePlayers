@@ -5,8 +5,8 @@ package org.l2jmobius.gameserver.bot.core.goap.action;
 
 import org.l2jmobius.gameserver.bot.core.action.TeleportAction;
 import org.l2jmobius.gameserver.bot.core.action.WaitAction;
+import org.l2jmobius.gameserver.bot.core.goap.AbstractGoapAction;
 import org.l2jmobius.gameserver.bot.core.goap.Fact;
-import org.l2jmobius.gameserver.bot.core.goap.GoapAction;
 import org.l2jmobius.gameserver.bot.core.goap.GoapTuning;
 import org.l2jmobius.gameserver.bot.core.goap.WorldState;
 import org.l2jmobius.gameserver.bot.core.model.BotContext;
@@ -19,7 +19,7 @@ import org.l2jmobius.gameserver.model.Location;
  * eff:  IN_SAFE_PLACE=true, IN_FARM_ZONE=false
  * cost: 5.0
  */
-public class TeleportToCityGoapAction implements GoapAction
+public class TeleportToCityGoapAction extends AbstractGoapAction
 {
 	private static final long SETTLE_MS = GoapTuning.TELEPORT_SETTLE_MS;
 
@@ -33,16 +33,9 @@ public class TeleportToCityGoapAction implements GoapAction
 		EFFECTS.set(Fact.IN_COMBAT, false); // teleporting to city ends combat for planning purposes
 	}
 
-	@Override
-	public WorldState getPreconditions()
+	public TeleportToCityGoapAction()
 	{
-		return PRECONDITIONS;
-	}
-
-	@Override
-	public WorldState getEffects()
-	{
-		return EFFECTS;
+		super(PRECONDITIONS, EFFECTS);
 	}
 
 	@Override

@@ -4,6 +4,8 @@
 package org.l2jmobius.gameserver.bot.core.service;
 
 import org.l2jmobius.gameserver.bot.core.goap.GoapTuning;
+import org.l2jmobius.gameserver.model.actor.Player;
+import org.l2jmobius.gameserver.model.item.instance.Item;
 
 /**
  * Shared healing potion constants used by DrinkPotionAction and {@link SupplyService}.
@@ -24,6 +26,26 @@ public final class PotionData
 
 	/** How long (ms) the bot waits before attempting another potion. */
 	public static final long POTION_REUSE_MS = GoapTuning.POTION_REUSE_MS;
+
+	/**
+	 * Returns {@code true} if the player has at least one healing potion in inventory.
+	 * Checks {@link #HEAL_POTION_IDS} in priority order.
+	 *
+	 * @param player the player whose inventory to check
+	 * @return {@code true} if any healing potion is present
+	 */
+	public static boolean hasPotions(Player player)
+	{
+		for (int itemId : HEAL_POTION_IDS)
+		{
+			final Item potion = player.getInventory().getItemByItemId(itemId);
+			if (potion != null)
+			{
+				return true;
+			}
+		}
+		return false;
+	}
 
 	private PotionData()
 	{

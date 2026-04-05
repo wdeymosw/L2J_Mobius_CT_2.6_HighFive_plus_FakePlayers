@@ -3,8 +3,8 @@
  */
 package org.l2jmobius.gameserver.bot.core.goap.goal;
 
+import org.l2jmobius.gameserver.bot.core.goap.AbstractGoapGoal;
 import org.l2jmobius.gameserver.bot.core.goap.Fact;
-import org.l2jmobius.gameserver.bot.core.goap.GoapGoal;
 import org.l2jmobius.gameserver.bot.core.goap.GoapTuning;
 import org.l2jmobius.gameserver.bot.core.goap.WorldState;
 
@@ -18,7 +18,7 @@ import org.l2jmobius.gameserver.bot.core.goap.WorldState;
  * Priority sits between {@link FarmGoal} (50) and {@link HuntGoal} (45):
  * kill any current target first, then ensure buffs are up, then hunt.
  */
-public class BuffGoal implements GoapGoal
+public class BuffGoal extends AbstractGoapGoal
 {
 	private static final WorldState DESIRED = new WorldState();
 
@@ -27,10 +27,9 @@ public class BuffGoal implements GoapGoal
 		DESIRED.set(Fact.HAS_BUFF, true);
 	}
 
-	@Override
-	public WorldState getDesiredState()
+	public BuffGoal()
 	{
-		return DESIRED;
+		super(DESIRED);
 	}
 
 	@Override

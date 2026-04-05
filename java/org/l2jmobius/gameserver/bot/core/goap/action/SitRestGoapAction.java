@@ -3,8 +3,8 @@
  */
 package org.l2jmobius.gameserver.bot.core.goap.action;
 
+import org.l2jmobius.gameserver.bot.core.goap.AbstractGoapAction;
 import org.l2jmobius.gameserver.bot.core.goap.Fact;
-import org.l2jmobius.gameserver.bot.core.goap.GoapAction;
 import org.l2jmobius.gameserver.bot.core.goap.GoapTuning;
 import org.l2jmobius.gameserver.bot.core.goap.WorldState;
 import org.l2jmobius.gameserver.bot.core.model.BotContext;
@@ -19,7 +19,7 @@ import org.l2jmobius.gameserver.model.actor.Player;
  * <p>
  * Sits the bot down until HP and MP are fully restored, then stands up.
  */
-public class SitRestGoapAction implements GoapAction
+public class SitRestGoapAction extends AbstractGoapAction
 {
 	private static final double STAND_HP_THRESHOLD = GoapTuning.STAND_HP_THRESHOLD;
 	private static final double STAND_MP_THRESHOLD = GoapTuning.STAND_MP_THRESHOLD;
@@ -32,6 +32,11 @@ public class SitRestGoapAction implements GoapAction
 	/** Timestamp when standUp() was called — we wait for animation before returning isComplete=true. */
 	private long _standUpStartTime = 0;
 
+	public SitRestGoapAction()
+	{
+		super(PRECONDITIONS, EFFECTS);
+	}
+
 	static
 	{
 		PRECONDITIONS.set(Fact.IN_COMBAT, false);
@@ -39,18 +44,6 @@ public class SitRestGoapAction implements GoapAction
 		// Effects match RestoreGoal.DESIRED — HP and MP no longer "low"
 		EFFECTS.set(Fact.HP_LOW, false);
 		EFFECTS.set(Fact.MP_LOW, false);
-	}
-
-	@Override
-	public WorldState getPreconditions()
-	{
-		return PRECONDITIONS;
-	}
-
-	@Override
-	public WorldState getEffects()
-	{
-		return EFFECTS;
 	}
 
 	@Override

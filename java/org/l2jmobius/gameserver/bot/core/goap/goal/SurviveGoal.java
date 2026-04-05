@@ -3,8 +3,8 @@
  */
 package org.l2jmobius.gameserver.bot.core.goap.goal;
 
+import org.l2jmobius.gameserver.bot.core.goap.AbstractGoapGoal;
 import org.l2jmobius.gameserver.bot.core.goap.Fact;
-import org.l2jmobius.gameserver.bot.core.goap.GoapGoal;
 import org.l2jmobius.gameserver.bot.core.goap.GoapTuning;
 import org.l2jmobius.gameserver.bot.core.goap.WorldState;
 
@@ -17,7 +17,7 @@ import org.l2jmobius.gameserver.bot.core.goap.WorldState;
  * This avoids a two-tick gap where the bot stands idle after teleporting but
  * before RestoreGoal kicks in.
  */
-public class SurviveGoal implements GoapGoal
+public class SurviveGoal extends AbstractGoapGoal
 {
 	private static final WorldState DESIRED = new WorldState();
 
@@ -29,10 +29,9 @@ public class SurviveGoal implements GoapGoal
 		DESIRED.set(Fact.MP_LOW, false);
 	}
 
-	@Override
-	public WorldState getDesiredState()
+	public SurviveGoal()
 	{
-		return DESIRED;
+		super(DESIRED);
 	}
 
 	@Override

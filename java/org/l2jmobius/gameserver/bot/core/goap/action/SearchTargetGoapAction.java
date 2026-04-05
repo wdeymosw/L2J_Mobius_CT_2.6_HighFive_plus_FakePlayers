@@ -4,8 +4,8 @@
 package org.l2jmobius.gameserver.bot.core.goap.action;
 
 import org.l2jmobius.gameserver.bot.core.action.MoveToAction;
+import org.l2jmobius.gameserver.bot.core.goap.AbstractGoapAction;
 import org.l2jmobius.gameserver.bot.core.goap.Fact;
-import org.l2jmobius.gameserver.bot.core.goap.GoapAction;
 import org.l2jmobius.gameserver.bot.core.goap.GoapTuning;
 import org.l2jmobius.gameserver.bot.core.goap.WorldState;
 import org.l2jmobius.gameserver.bot.core.model.BotContext;
@@ -26,7 +26,7 @@ import org.l2jmobius.gameserver.model.Location;
  * These goals activate at higher priorities (47 and 46) so the bot always
  * buffs and loots before this action runs.
  */
-public class SearchTargetGoapAction implements GoapAction
+public class SearchTargetGoapAction extends AbstractGoapAction
 {
 	private static final WorldState PRECONDITIONS = new WorldState();
 	private static final WorldState EFFECTS = new WorldState();
@@ -37,16 +37,9 @@ public class SearchTargetGoapAction implements GoapAction
 		EFFECTS.set(Fact.TARGET_EXISTS, true);
 	}
 
-	@Override
-	public WorldState getPreconditions()
+	public SearchTargetGoapAction()
 	{
-		return PRECONDITIONS;
-	}
-
-	@Override
-	public WorldState getEffects()
-	{
-		return EFFECTS;
+		super(PRECONDITIONS, EFFECTS);
 	}
 
 	@Override

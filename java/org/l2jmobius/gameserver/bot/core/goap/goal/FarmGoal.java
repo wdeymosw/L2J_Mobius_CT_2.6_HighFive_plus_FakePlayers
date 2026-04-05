@@ -3,8 +3,8 @@
  */
 package org.l2jmobius.gameserver.bot.core.goap.goal;
 
+import org.l2jmobius.gameserver.bot.core.goap.AbstractGoapGoal;
 import org.l2jmobius.gameserver.bot.core.goap.Fact;
-import org.l2jmobius.gameserver.bot.core.goap.GoapGoal;
 import org.l2jmobius.gameserver.bot.core.goap.GoapTuning;
 import org.l2jmobius.gameserver.bot.core.goap.WorldState;
 
@@ -15,7 +15,7 @@ import org.l2jmobius.gameserver.bot.core.goap.WorldState;
  * so this goal naturally activates only when there is something to kill.
  * Finding a target is the job of {@link HuntGoal}.
  */
-public class FarmGoal implements GoapGoal
+public class FarmGoal extends AbstractGoapGoal
 {
 	private static final WorldState DESIRED = new WorldState();
 
@@ -26,10 +26,9 @@ public class FarmGoal implements GoapGoal
 		// WanderGoal handles "return to zone" after the fight.
 	}
 
-	@Override
-	public WorldState getDesiredState()
+	public FarmGoal()
 	{
-		return DESIRED;
+		super(DESIRED);
 	}
 
 	@Override

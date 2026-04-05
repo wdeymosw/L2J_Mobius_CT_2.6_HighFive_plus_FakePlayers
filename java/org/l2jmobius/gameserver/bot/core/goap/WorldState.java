@@ -13,10 +13,6 @@ import org.l2jmobius.gameserver.bot.core.service.LootService;
 import org.l2jmobius.gameserver.bot.core.service.PotionData;
 import org.l2jmobius.gameserver.bot.core.service.SkillService;
 import org.l2jmobius.gameserver.bot.core.service.TargetService;
-import org.l2jmobius.gameserver.model.actor.Player;
-import org.l2jmobius.gameserver.model.effects.EffectType;
-import org.l2jmobius.gameserver.model.skill.Skill;
-import org.l2jmobius.gameserver.model.skill.targets.TargetType;
 
 /**
  * Set of boolean {@link Fact}s representing the bot's world at one point in time.
@@ -191,10 +187,10 @@ public class WorldState
 		ws.set(Fact.INVENTORY_OK, !ctx.inventoryFull && (ctx.weightPenalty < 2));
 		ws.set(Fact.POTION_READY, ctx.potionReuseReady);
 		ws.set(Fact.HAS_AMMO, !ctx.outOfAmmo);
-		ws.set(Fact.HAS_POTIONS, hasPotions(bot.getPlayer()));
+		ws.set(Fact.HAS_POTIONS, PotionData.hasPotions(bot.getPlayer()));
 
 		// --- Skills ---
-		ws.set(Fact.HAS_HEAL_SKILL, hasHealSkill(bot));
+		ws.set(Fact.HAS_HEAL_SKILL, SkillService.hasHealSkill(bot));
 
 		// --- Player state ---
 		ws.set(Fact.IS_SITTING, bot.getPlayer().isSitting());
@@ -218,31 +214,6 @@ public class WorldState
 	// -------------------------------------------------------------------------
 	// Private helpers
 	// -------------------------------------------------------------------------
-
-	private static boolean hasPotions(Player player)
-	{
-		for (int id : PotionData.HEAL_POTION_IDS)
-		{
-			if (player.getInventory().getInventoryItemCount(id, -1) > 0)
-			{
-				return true;
-			}
-		}
-		return false;
-	}
-
-	private static boolean hasHealSkill(BotInstance bot)
-	{
-		final Player player = bot.getPlayer();
-		for (Skill skill : player.getAllSkills())
-		{
-			if ((skill.getTargetType() == TargetType.SELF) && skill.hasEffectType(EffectType.HEAL) && !player.isSkillDisabled(skill) && (player.getCurrentMp() >= skill.getMpConsume()))
-			{
-				return true;
-			}
-		}
-		return false;
-	}
 
 	@Override
 	public String toString()

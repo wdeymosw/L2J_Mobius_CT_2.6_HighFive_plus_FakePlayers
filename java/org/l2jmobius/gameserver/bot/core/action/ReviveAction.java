@@ -17,21 +17,13 @@ import org.l2jmobius.gameserver.bot.core.model.BotInstance;
  * This action exists as a reusable atomic building block for any future
  * revive sequences that need explicit queue ordering.
  */
-public class ReviveAction implements BotAction
+public class ReviveAction extends AbstractOneTimeAction
 {
-	private boolean _done = false;
-
 	@Override
-	public void execute(BotInstance bot, long now) throws FatalBotException, ValidationBotException, RecoverableBotException
+	protected void doExecute(BotInstance bot, long now) throws FatalBotException, ValidationBotException, RecoverableBotException
 	{
 		bot.getPlayer().doRevive();
 		bot.getPlayer().setRunning();
-		_done = true;
-	}
-
-	@Override
-	public boolean isDone(BotInstance bot, long now)
-	{
-		return _done;
 	}
 }
+

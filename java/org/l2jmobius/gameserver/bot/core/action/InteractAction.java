@@ -17,10 +17,9 @@ import org.l2jmobius.gameserver.model.actor.Creature;
  * the caller should queue a {@link WaitAction} afterward if a response delay
  * is needed before the next action.
  */
-public class InteractAction implements BotAction
+public class InteractAction extends AbstractOneTimeAction
 {
 	private final Creature _target;
-	private boolean _done = false;
 
 	public InteractAction(Creature target)
 	{
@@ -28,18 +27,9 @@ public class InteractAction implements BotAction
 	}
 
 	@Override
-	public void execute(BotInstance bot, long now) throws FatalBotException, ValidationBotException, RecoverableBotException
+	protected void doExecute(BotInstance bot, long now) throws FatalBotException, ValidationBotException, RecoverableBotException
 	{
-		if (!_done)
-		{
-			bot.getPlayer().doInteract(_target);
-			_done = true;
-		}
-	}
-
-	@Override
-	public boolean isDone(BotInstance bot, long now)
-	{
-		return _done;
+		bot.getPlayer().doInteract(_target);
 	}
 }
+

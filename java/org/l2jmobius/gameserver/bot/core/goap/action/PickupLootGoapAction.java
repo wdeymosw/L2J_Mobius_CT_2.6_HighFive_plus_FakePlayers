@@ -3,8 +3,8 @@
  */
 package org.l2jmobius.gameserver.bot.core.goap.action;
 
+import org.l2jmobius.gameserver.bot.core.goap.AbstractGoapAction;
 import org.l2jmobius.gameserver.bot.core.goap.Fact;
-import org.l2jmobius.gameserver.bot.core.goap.GoapAction;
 import org.l2jmobius.gameserver.bot.core.goap.GoapTuning;
 import org.l2jmobius.gameserver.bot.core.goap.WorldState;
 import org.l2jmobius.gameserver.bot.core.model.BotContext;
@@ -23,7 +23,7 @@ import org.l2jmobius.gameserver.bot.core.service.LootService;
  * <p>
  * Driven by {@link org.l2jmobius.gameserver.bot.core.goap.goal.PickupGoal}.
  */
-public class PickupLootGoapAction implements GoapAction
+public class PickupLootGoapAction extends AbstractGoapAction
 {
 	private static final WorldState PRECONDITIONS = new WorldState();
 	private static final WorldState EFFECTS = new WorldState();
@@ -35,16 +35,9 @@ public class PickupLootGoapAction implements GoapAction
 		EFFECTS.set(Fact.LOOT_NEARBY, false);
 	}
 
-	@Override
-	public WorldState getPreconditions()
+	public PickupLootGoapAction()
 	{
-		return PRECONDITIONS;
-	}
-
-	@Override
-	public WorldState getEffects()
-	{
-		return EFFECTS;
+		super(PRECONDITIONS, EFFECTS);
 	}
 
 	@Override

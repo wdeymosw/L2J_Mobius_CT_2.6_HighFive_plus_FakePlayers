@@ -3,8 +3,8 @@
  */
 package org.l2jmobius.gameserver.bot.core.goap.goal;
 
+import org.l2jmobius.gameserver.bot.core.goap.AbstractGoapGoal;
 import org.l2jmobius.gameserver.bot.core.goap.Fact;
-import org.l2jmobius.gameserver.bot.core.goap.GoapGoal;
 import org.l2jmobius.gameserver.bot.core.goap.GoapTuning;
 import org.l2jmobius.gameserver.bot.core.goap.WorldState;
 
@@ -12,7 +12,7 @@ import org.l2jmobius.gameserver.bot.core.goap.WorldState;
  * Priority 10 — fallback goal: just be in the farm zone.
  * Always active if nothing else takes priority.
  */
-public class WanderGoal implements GoapGoal
+public class WanderGoal extends AbstractGoapGoal
 {
 	private static final WorldState DESIRED = new WorldState();
 
@@ -21,10 +21,9 @@ public class WanderGoal implements GoapGoal
 		DESIRED.set(Fact.IN_FARM_ZONE, true);
 	}
 
-	@Override
-	public WorldState getDesiredState()
+	public WanderGoal()
 	{
-		return DESIRED;
+		super(DESIRED);
 	}
 
 	@Override

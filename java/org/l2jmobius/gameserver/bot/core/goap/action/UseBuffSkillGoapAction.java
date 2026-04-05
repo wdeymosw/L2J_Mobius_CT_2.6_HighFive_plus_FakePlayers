@@ -4,8 +4,8 @@
 package org.l2jmobius.gameserver.bot.core.goap.action;
 
 import org.l2jmobius.gameserver.bot.core.action.WaitAction;
+import org.l2jmobius.gameserver.bot.core.goap.AbstractGoapAction;
 import org.l2jmobius.gameserver.bot.core.goap.Fact;
-import org.l2jmobius.gameserver.bot.core.goap.GoapAction;
 import org.l2jmobius.gameserver.bot.core.goap.GoapTuning;
 import org.l2jmobius.gameserver.bot.core.goap.WorldState;
 import org.l2jmobius.gameserver.bot.core.model.BotContext;
@@ -23,7 +23,7 @@ import org.l2jmobius.gameserver.bot.core.service.BuffService;
  * <p>
  * Driven by {@link org.l2jmobius.gameserver.bot.core.goap.goal.BuffGoal}.
  */
-public class UseBuffSkillGoapAction implements GoapAction
+public class UseBuffSkillGoapAction extends AbstractGoapAction
 {
 	private static final WorldState PRECONDITIONS = new WorldState();
 	private static final WorldState EFFECTS = new WorldState();
@@ -35,16 +35,9 @@ public class UseBuffSkillGoapAction implements GoapAction
 		EFFECTS.set(Fact.HAS_BUFF, true);
 	}
 
-	@Override
-	public WorldState getPreconditions()
+	public UseBuffSkillGoapAction()
 	{
-		return PRECONDITIONS;
-	}
-
-	@Override
-	public WorldState getEffects()
-	{
-		return EFFECTS;
+		super(PRECONDITIONS, EFFECTS);
 	}
 
 	@Override

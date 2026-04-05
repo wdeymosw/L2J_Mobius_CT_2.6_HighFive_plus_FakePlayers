@@ -4,8 +4,8 @@
 package org.l2jmobius.gameserver.bot.core.goap.action;
 
 import org.l2jmobius.gameserver.bot.core.action.WaitAction;
+import org.l2jmobius.gameserver.bot.core.goap.AbstractGoapAction;
 import org.l2jmobius.gameserver.bot.core.goap.Fact;
-import org.l2jmobius.gameserver.bot.core.goap.GoapAction;
 import org.l2jmobius.gameserver.bot.core.goap.GoapTuning;
 import org.l2jmobius.gameserver.bot.core.goap.WorldState;
 import org.l2jmobius.gameserver.bot.core.model.BotContext;
@@ -17,7 +17,7 @@ import org.l2jmobius.gameserver.bot.core.service.SupplyService;
  * eff:  HAS_AMMO=true
  * cost: 2.0
  */
-public class RestockGoapAction implements GoapAction
+public class RestockGoapAction extends AbstractGoapAction
 {
 	private static final WorldState PRECONDITIONS = new WorldState();
 	private static final WorldState EFFECTS = new WorldState();
@@ -28,16 +28,9 @@ public class RestockGoapAction implements GoapAction
 		EFFECTS.set(Fact.HAS_AMMO, true);
 	}
 
-	@Override
-	public WorldState getPreconditions()
+	public RestockGoapAction()
 	{
-		return PRECONDITIONS;
-	}
-
-	@Override
-	public WorldState getEffects()
-	{
-		return EFFECTS;
+		super(PRECONDITIONS, EFFECTS);
 	}
 
 	@Override
@@ -56,8 +49,7 @@ public class RestockGoapAction implements GoapAction
 	public void activate(BotInstance bot, long now)
 	{
 		SupplyService.restock(bot);
-		bot.clearQueue();
-		bot.queueAction(new WaitAction(500));
+		bot.replaceQueue(new WaitAction(500));
 	}
 
 	@Override
