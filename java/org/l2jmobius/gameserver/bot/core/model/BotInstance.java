@@ -9,6 +9,7 @@ import java.util.List;
 import org.l2jmobius.gameserver.bot.core.action.BotAction;
 import org.l2jmobius.gameserver.bot.core.action.BotExecutor;
 import org.l2jmobius.gameserver.bot.core.behaviour.BehaviourController;
+import org.l2jmobius.gameserver.bot.core.behaviour.BotBehaviour;
 import org.l2jmobius.gameserver.bot.core.goap.GoapAction;
 import org.l2jmobius.gameserver.bot.core.zone.FarmZone;
 import org.l2jmobius.gameserver.geoengine.pathfinding.GeoLocation;
@@ -160,7 +161,18 @@ public class BotInstance
 		{
 			_behaviourController.tick(this, now);
 		}
-		org.l2jmobius.gameserver.bot.core.goap.GoapAgent.tick(this, now);
+
+		// When the active behaviour is running a direct executor script, bypass GOAP replanning
+		// and tick only the executor. GOAP would otherwise interrupt the scripted sequence.
+		final BotBehaviour active = (_behaviourController != null) ? _behaviourController.getActive() : null;
+		if ((active != null) && active.isScripted())
+		{
+			tickExecutor(now);
+		}
+		else
+		{
+			org.l2jmobius.gameserver.bot.core.goap.GoapAgent.tick(this, now);
+		}
 	}
 
 	// =========================================================================

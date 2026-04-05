@@ -6,6 +6,9 @@ package org.l2jmobius.gameserver.bot.core.behaviour;
 import java.util.List;
 import java.util.logging.Logger;
 
+import org.l2jmobius.gameserver.bot.core.action.MoveToAction;
+import org.l2jmobius.gameserver.bot.core.action.SayAction;
+import org.l2jmobius.gameserver.bot.core.action.WaitAction;
 import org.l2jmobius.gameserver.bot.core.goap.GoapAction;
 import org.l2jmobius.gameserver.bot.core.goap.GoalSelector;
 import org.l2jmobius.gameserver.bot.core.goap.action.RestockGoapAction;
@@ -14,22 +17,27 @@ import org.l2jmobius.gameserver.bot.core.goap.action.TeleportToCityGoapAction;
 import org.l2jmobius.gameserver.bot.core.goap.goal.GoToCityGoal;
 import org.l2jmobius.gameserver.bot.core.goap.goal.RestockGoal;
 import org.l2jmobius.gameserver.bot.core.model.BotInstance;
+import org.l2jmobius.gameserver.bot.core.phrases.BotPhrases;
+import org.l2jmobius.gameserver.bot.core.service.SellService;
+import org.l2jmobius.gameserver.bot.core.service.SupplyService;
+import org.l2jmobius.gameserver.bot.core.zone.BotZoneData;
+import org.l2jmobius.gameserver.model.Location;
 
 /**
- * City idle behaviour — the rotation waiting room.
+ * City idle behaviour — travel to city, run activity script, signal rotation.
  * <p>
- * Used in two modes:
- * <ul>
- *   <li>{@link Mode#FOR_PASSIVE} — an ACTIVE bot finished its PvE session.
- *       Travels to city, then immediately marks itself {@code readyToPassive}
- *       so BotManager can swap it with a PASSIVE bot wanting to farm.</li>
- *   <li>{@link Mode#FOR_ACTIVE} — a PASSIVE bot finished its shop session.
- *       Travels to city, stands for {@link BotConfig#BOT_CITY_SESSION_MS},
- *       then marks itself {@code readyToActive} so BotManager can swap it
- *       with an ACTIVE bot wanting to rest.</li>
- * </ul>
- * GOAP handles travel: GoToCityGoal → TeleportToCityGoapAction.
- * Once the bot is no longer in farm zone, arrival is detected and the flag is set.
+ * <b>FOR_PASSIVE</b> — an ACTIVE bot finished its PvE session. Teleports to city,
+ * then walks a scripted route: Grocer → Guild → Gatekeeper area → city center.
+ * Sells junk and restocks supplies at the Grocer stop. Only marks
+ * {@code readyToPassive} after the full script completes.
+ * <p>
+ * <b>FOR_ACTIVE</b> — a PASSIVE bot finished its private-shop session. Teleports
+ * to city and immediately marks {@code readyToActive} (city time was already
+ * spent in PrivateShopBehaviour).
+ * <p>
+ * GOAP handles travel to city (GoToCityGoal → TeleportToCityGoapAction).
+ * Once the bot is no longer in the farm zone, the city script starts and
+ * {@link #isScripted()} returns {@code true}, suppressing further GOAP replanning.
  */
 public class CityIdleBehaviour extends AbstractBotBehaviour
 {
@@ -38,30 +46,50 @@ public class CityIdleBehaviour extends AbstractBotBehaviour
 	/** Controls whether this bot waits to become PASSIVE or ACTIVE after city arrival. */
 	public enum Mode
 	{
-		/** ACTIVE bot arrived in city — waits for manager to assign PASSIVE role. */
+		/** ACTIVE bot arrived in city — runs city script then waits for PASSIVE assignment. */
 		FOR_PASSIVE,
-		/** PASSIVE bot arrived in city — stands BotCitySessionMinutes, then waits for ACTIVE role. */
+		/** PASSIVE bot arrived in city — signals readyToActive immediately. */
 		FOR_ACTIVE
 	}
 
-	/** Action set: sell, restock, travel to city. No farm return — manager handles the next step. */
+	// -----------------------------------------------------------------------
+	// City script steps (FOR_PASSIVE only)
+	// -----------------------------------------------------------------------
+
+	private enum ScriptStep
+	{
+		/** Bot just arrived; queue the Grocer stop on next idle tick. */
+		GROCER,
+		/** Grocer stop done; queue the Guildmaster stop. */
+		GUILD,
+		/** Guild done; queue the Gatekeeper/armor-shop area stop. */
+		ARMOR,
+		/** Armor stop done; walk to city-path entry point and set flag. */
+		CENTER,
+		/** Script complete — readyToPassive already set. */
+		DONE
+	}
+
+	// -----------------------------------------------------------------------
+	// GOAP config (used only while traveling to city, before script starts)
+	// -----------------------------------------------------------------------
+
 	private static final List<GoapAction> ACTIONS = List.of(
 		new SellItemsGoapAction(),
 		new RestockGoapAction(),
 		new TeleportToCityGoapAction());
 
-	/**
-	 * Goals:
-	 * RestockGoal  (30) — sell/restock if needed before idling.
-	 * GoToCityGoal (20) — travel to safe zone if still in farm zone.
-	 */
 	private static final GoalSelector GOAL_SELECTOR = new GoalSelector(List.of(
-		new RestockGoal(),    // 30 — sell + restock first
-		new GoToCityGoal())); // 20 — teleport to city if not already there
+		new RestockGoal(),
+		new GoToCityGoal()));
+
+	// -----------------------------------------------------------------------
+	// Per-instance state
+	// -----------------------------------------------------------------------
 
 	private final Mode _mode;
-	/** True once the bot has left the farm zone (arrived in city). */
 	private boolean _arrivedInCity = false;
+	private ScriptStep _step = ScriptStep.GROCER;
 
 	public CityIdleBehaviour(Mode mode)
 	{
@@ -86,17 +114,29 @@ public class CityIdleBehaviour extends AbstractBotBehaviour
 		return ACTIONS;
 	}
 
+	/**
+	 * While the city script is running GOAP replanning is suppressed.
+	 * BotInstance.update() will call tickExecutor() directly instead.
+	 */
+	@Override
+	public boolean isScripted()
+	{
+		return _arrivedInCity && (_mode == Mode.FOR_PASSIVE) && (_step != ScriptStep.DONE);
+	}
+
 	@Override
 	public void onEnter(BotInstance bot, long now)
 	{
 		_arrivedInCity = false;
-		LOGGER.info("[" + bot.getPlayer().getName() + "] CityIdle: entered, mode=" + _mode);
+		_step = ScriptStep.GROCER;
+		LOGGER.info("[" + bot.getPlayer().getName() + "] CityIdle: entered mode=" + _mode);
 	}
 
 	@Override
 	public void onExit(BotInstance bot)
 	{
 		cancelTimer();
+		bot.clearQueue();
 	}
 
 	@Override
@@ -104,22 +144,109 @@ public class CityIdleBehaviour extends AbstractBotBehaviour
 	{
 		if (!_arrivedInCity)
 		{
-			// Detect arrival: bot is no longer inside the farm zone radius.
 			if (!bot.isInZone())
 			{
 				_arrivedInCity = true;
-				if (_mode == Mode.FOR_PASSIVE)
+				bot.clearQueue();
+
+				if (_mode == Mode.FOR_ACTIVE)
 				{
-					bot.markReadyToPassive(now);
-					LOGGER.info("[" + bot.getPlayer().getName() + "] CityIdle: arrived in city → readyToPassive");
+					bot.markReadyToActive(now);
+					LOGGER.info("[" + bot.getPlayer().getName() + "] CityIdle: arrived → readyToActive");
 				}
 				else
 				{
-					// FOR_ACTIVE: signal immediately — city time was already spent in PrivateShopBehaviour.
-					bot.markReadyToActive(now);
-					LOGGER.info("[" + bot.getPlayer().getName() + "] CityIdle: arrived in city → readyToActive");
+					LOGGER.info("[" + bot.getPlayer().getName() + "] CityIdle: arrived → starting city script");
 				}
 			}
+			return;
+		}
+
+		// FOR_ACTIVE is done after signaling — nothing more to do.
+		if (_mode == Mode.FOR_ACTIVE)
+		{
+			return;
+		}
+
+		// FOR_PASSIVE: advance the city script step-by-step when the executor is idle.
+		if (!bot.isQueueIdle())
+		{
+			return;
+		}
+
+		advanceScript(bot, now);
+	}
+
+	// -----------------------------------------------------------------------
+	// City script state machine
+	// -----------------------------------------------------------------------
+
+	private void advanceScript(BotInstance bot, long now)
+	{
+		final BotZoneData city = bot.getZone().getCityData();
+		if (city == null)
+		{
+			// No city data for this zone — skip straight to done.
+			LOGGER.warning("[" + bot.getPlayer().getName() + "] CityIdle: no cityData, skipping script");
+			bot.markReadyToPassive(now);
+			_step = ScriptStep.DONE;
+			return;
+		}
+
+		switch (_step)
+		{
+			case GROCER:
+			{
+				final Location shop = city.getShop();
+				bot.queueAction(new MoveToAction(shop.getX(), shop.getY(), shop.getZ(), 150));
+				bot.queueAction(new SayAction(BotPhrases.random("grocer")));
+				bot.queueAction(new WaitAction(2_000));
+				// Inline sell + restock: instant service call, then short pause for effect.
+				bot.queueAction(new org.l2jmobius.gameserver.bot.core.action.AbstractOneTimeAction()
+				{
+					@Override
+					protected void doExecute(BotInstance b, long t)
+					{
+						SellService.sell(b);
+						SupplyService.restock(b);
+					}
+				});
+				bot.queueAction(new WaitAction(8_000));
+				_step = ScriptStep.GUILD;
+				break;
+			}
+			case GUILD:
+			{
+				final Location guild = city.getGuildmaster();
+				bot.queueAction(new MoveToAction(guild.getX(), guild.getY(), guild.getZ(), 150));
+				bot.queueAction(new SayAction(BotPhrases.random("guild")));
+				bot.queueAction(new WaitAction(10_000));
+				_step = ScriptStep.ARMOR;
+				break;
+			}
+			case ARMOR:
+			{
+				// Gatekeeper is always near the weapon/armor shop in L2 cities.
+				final Location gate = city.getGatekeeper();
+				bot.queueAction(new MoveToAction(gate.getX(), gate.getY(), gate.getZ(), 200));
+				bot.queueAction(new WaitAction(10_000));
+				_step = ScriptStep.CENTER;
+				break;
+			}
+			case CENTER:
+			{
+				final List<Location> path = city.getCityPath();
+				final Location center = path.isEmpty() ? city.getGatekeeper() : path.get(0);
+				bot.queueAction(new MoveToAction(center.getX(), center.getY(), center.getZ(), 150));
+				bot.queueAction(new WaitAction(2_000));
+				bot.markReadyToPassive(now);
+				_step = ScriptStep.DONE;
+				LOGGER.info("[" + bot.getPlayer().getName() + "] CityIdle: script done → readyToPassive");
+				break;
+			}
+			case DONE:
+				break;
 		}
 	}
 }
+

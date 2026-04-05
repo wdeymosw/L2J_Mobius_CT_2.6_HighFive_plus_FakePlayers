@@ -1,0 +1,74 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!--
+	Bot chat phrases.
+	Each <phrase> supports lang="en|ru|pl".
+	BotConfig.BotsLanguage determines which lang is loaded at runtime.
+	Lines starting with a category <category name="..."> group phrases by location.
+-->
+<botPhrases>
+
+	<!-- ═══════════════════════════════════════════════════════════════════ -->
+	<!-- Grocer / Merchant — bot says this when arriving at the shop        -->
+	<!-- ═══════════════════════════════════════════════════════════════════ -->
+	<category name="grocer">
+		<phrase lang="en">Hmm, need to restock before heading out again.</phrase>
+		<phrase lang="en">Good haul today! Time to cash in.</phrase>
+		<phrase lang="en">Almost out of potions, better stock up.</phrase>
+		<phrase lang="en">Let me see what this merchant has.</phrase>
+		<phrase lang="en">Selling some junk, need the space.</phrase>
+		<phrase lang="en">Another trip to the grocer...</phrase>
+		<phrase lang="en">Spent more than I earned today. At least I'm alive.</phrase>
+		<phrase lang="en">Running low on shots, can't fight without them.</phrase>
+
+		<phrase lang="ru">Надо пополнить запасы, прежде чем снова идти в поля.</phrase>
+		<phrase lang="ru">Неплохой улов сегодня! Время сдать барахло.</phrase>
+		<phrase lang="ru">Зелья почти кончились, надо докупить.</phrase>
+		<phrase lang="ru">Посмотрим, что есть у этого торговца.</phrase>
+		<phrase lang="ru">Продам лишнее, надо освободить место.</phrase>
+		<phrase lang="ru">Снова к торговцу... ну и жизнь.</phrase>
+		<phrase lang="ru">Потратил больше, чем заработал. Зато живой.</phrase>
+		<phrase lang="ru">Стрелы закончились, без них никак.</phrase>
+
+		<phrase lang="ua">Треба поповнити запаси, перш ніж іти знову.</phrase>
+		<phrase lang="ua">Непоганий улов сьогодні! Час здати мотлох.</phrase>
+		<phrase lang="ua">Зілля майже скінчилося, треба докупити.</phrase>
+		<phrase lang="ua">Подивимось, що є у цього торговця.</phrase>
+		<phrase lang="ua">Продам зайве, треба звільнити місце.</phrase>
+		<phrase lang="ua">Знову до торговця... ну й життя.</phrase>
+		<phrase lang="ua">Витратив більше ніж заробив. Зате живий.</phrase>
+		<phrase lang="ua">Стріли скінчилися, без них ніяк.</phrase>
+	</category>
+
+	<!-- ═══════════════════════════════════════════════════════════════════ -->
+	<!-- Guild — bot says this at the Adventure Guildsman                   -->
+	<!-- ═══════════════════════════════════════════════════════════════════ -->
+	<category name="guild">
+		<phrase lang="en">Any new hunts posted today?</phrase>
+		<phrase lang="en">Tough day out there, needed a break.</phrase>
+		<phrase lang="en">My skills could use some sharpening.</phrase>
+		<phrase lang="en">Heard the eastern fields are dangerous lately.</phrase>
+		<phrase lang="en">Good fights today, but I need better gear.</phrase>
+		<phrase lang="en">Checking the boards before heading back.</phrase>
+		<phrase lang="en">Anyone need a spare sword arm for tomorrow?</phrase>
+		<phrase lang="en">This guild better have some decent quests left.</phrase>
+
+		<phrase lang="ru">Есть новые задания на сегодня?</phrase>
+		<phrase lang="ru">Тяжёлый денёк был, надо передохнуть.</phrase>
+		<phrase lang="ru">Мои навыки не мешало бы подтянуть.</phrase>
+		<phrase lang="ru">Говорят, восточные поля стали опасней.</phrase>
+		<phrase lang="ru">Хорошо подрался сегодня, но снаряга нужна лучше.</phrase>
+		<phrase lang="ru">Гляну доску объявлений перед возвращением.</phrase>
+		<phrase lang="ru">Кому нужна помощь завтра — я свободен.</phrase>
+		<phrase lang="ru">В этой гильдии хоть что-нибудь приличное есть?</phrase>
+
+		<phrase lang="ua">Є нові завдання на сьогодні?</phrase>
+		<phrase lang="ua">Важкий деньок був, треба відпочити.</phrase>
+		<phrase lang="ua">Мої навички не завадило б підтягнути.</phrase>
+		<phrase lang="ua">Кажуть, східні поля стали небезпечніші.</phrase>
+		<phrase lang="ua">Добре побився сьогодні, але спорядження треба краще.</phrase>
+		<phrase lang="ua">Гляну дошку оголошень перед поверненням.</phrase>
+		<phrase lang="ua">Кому потрібна допомога завтра — я вільний.</phrase>
+		<phrase lang="ua">У цій гільдії хоч щось пристойне є?</phrase>
+	</category>
+
+</botPhrases>

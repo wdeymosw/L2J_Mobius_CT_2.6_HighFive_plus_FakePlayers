@@ -55,4 +55,16 @@ public interface BotBehaviour
 	 * when a transition condition is met.
 	 */
 	void onTick(BotInstance bot, long now);
+
+	/**
+	 * Returns {@code true} while this behaviour is running a direct executor script
+	 * (e.g. city walk sequence) and GOAP replanning should be suppressed.
+	 * <p>
+	 * When {@code true}, {@link org.l2jmobius.gameserver.bot.core.model.BotInstance#update}
+	 * will tick the executor directly instead of delegating to GoapAgent.
+	 */
+	default boolean isScripted()
+	{
+		return false;
+	}
 }

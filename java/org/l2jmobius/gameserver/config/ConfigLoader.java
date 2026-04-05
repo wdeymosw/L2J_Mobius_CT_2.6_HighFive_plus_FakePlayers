@@ -33,6 +33,7 @@ import org.l2jmobius.gameserver.config.custom.CommunityBoardConfig;
 import org.l2jmobius.gameserver.config.custom.CustomMailManagerConfig;
 import org.l2jmobius.gameserver.config.custom.DelevelManagerConfig;
 import org.l2jmobius.gameserver.config.custom.BotConfig;
+import org.l2jmobius.gameserver.bot.core.phrases.BotPhrases;
 import org.l2jmobius.gameserver.config.custom.DualboxCheckConfig;
 import org.l2jmobius.gameserver.config.custom.FactionSystemConfig;
 import org.l2jmobius.gameserver.config.custom.FindPvpConfig;
@@ -108,6 +109,7 @@ public class ConfigLoader
 		DualboxCheckConfig.load();
 		FactionSystemConfig.load();
 		BotConfig.load();
+		BotPhrases.load();
 		FindPvpConfig.load();
 		FreeMountsConfig.load();
 		HellboundStatusConfig.load();

@@ -44,6 +44,8 @@ public class BotConfig
 	public static long BOT_PVE_SESSION_MS;
 	public static long BOT_CITY_SESSION_MS;
 	public static long BOT_SHOP_SESSION_MS;
+	/** Language code for bot chat phrases: en, ru, pl */
+	public static String BOT_LANGUAGE;
 
 	public static void load()
 	{
@@ -63,5 +65,6 @@ public class BotConfig
 		BOT_PVE_SESSION_MS = config.getInt("BotPveSessionMinutes", 60) * 60_000L;
 		BOT_CITY_SESSION_MS = config.getInt("BotCitySessionMinutes", 5) * 60_000L;
 		BOT_SHOP_SESSION_MS = config.getInt("BotShopSessionMinutes", 60) * 60_000L;
+		BOT_LANGUAGE = config.getString("BotsLanguage", "en");
 	}
 }
