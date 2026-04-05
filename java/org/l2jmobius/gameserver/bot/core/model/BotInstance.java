@@ -8,6 +8,7 @@ import java.util.List;
 
 import org.l2jmobius.gameserver.bot.core.action.BotAction;
 import org.l2jmobius.gameserver.bot.core.action.BotExecutor;
+import org.l2jmobius.gameserver.bot.core.behaviour.BehaviourController;
 import org.l2jmobius.gameserver.bot.core.goap.GoapAction;
 import org.l2jmobius.gameserver.bot.core.zone.FarmZone;
 import org.l2jmobius.gameserver.geoengine.pathfinding.GeoLocation;
@@ -38,6 +39,9 @@ public class BotInstance
 	// -------------------------------------------------------------------------
 
 	private final BotExecutor _executor = new BotExecutor();
+
+	/** Manages the active BotBehaviour and transitions between behaviours. Set by BotFactory. */
+	private BehaviourController _behaviourController;
 
 	// -------------------------------------------------------------------------
 	// Runtime state
@@ -139,6 +143,11 @@ public class BotInstance
 
 	public void update(long now)
 	{
+		// Tick the behaviour controller first (checks timers, handles transitions).
+		if (_behaviourController != null)
+		{
+			_behaviourController.tick(this, now);
+		}
 		org.l2jmobius.gameserver.bot.core.goap.GoapAgent.tick(this, now);
 	}
 
@@ -149,6 +158,8 @@ public class BotInstance
 	public Player getPlayer() { return _player; }
 	public BotProfile getProfile() { return _profile; }
 	public BotRole getRole() { return _role; }
+	public BehaviourController getBehaviourController() { return _behaviourController; }
+	public void setBehaviourController(BehaviourController controller) { _behaviourController = controller; }
 
 	// =========================================================================
 	// Executor delegates (prefer these over exposing the executor directly)

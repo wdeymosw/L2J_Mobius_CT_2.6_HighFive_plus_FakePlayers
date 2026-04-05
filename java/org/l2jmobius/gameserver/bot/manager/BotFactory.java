@@ -5,6 +5,10 @@ package org.l2jmobius.gameserver.bot.manager;
 
 import java.util.logging.Logger;
 
+import org.l2jmobius.gameserver.bot.core.behaviour.BehaviourController;
+import org.l2jmobius.gameserver.bot.core.behaviour.CityIdleBehaviour;
+import org.l2jmobius.gameserver.bot.core.behaviour.PrivateShopBehaviour;
+import org.l2jmobius.gameserver.bot.core.behaviour.PveBehaviour;
 import org.l2jmobius.gameserver.bot.core.model.BotInstance;
 import org.l2jmobius.gameserver.bot.core.model.BotProfile;
 import org.l2jmobius.gameserver.bot.core.model.BotRole;
@@ -131,6 +135,16 @@ public class BotFactory
 		EquipService.equip(bot);
 		SkillService.setup(bot);
 		giveInitialSupplies(bot);
+
+		// Wire the behaviour controller based on bot type:
+		// ACTIVE  → PvE farming (default: kills mobs, gets exp)
+		// PASSIVE → PrivateShop (sells items, creates city population)
+		final long now = System.currentTimeMillis();
+		final org.l2jmobius.gameserver.bot.core.behaviour.BotBehaviour initialBehaviour =
+			(profile.getType() == org.l2jmobius.gameserver.bot.core.model.BotType.PASSIVE)
+				? new PrivateShopBehaviour()
+				: new PveBehaviour();
+		bot.setBehaviourController(new BehaviourController(initialBehaviour, bot, now));
 
 		// Bot spawns at its last saved DB position.
 		// ThinkService handles navigation on the first tick:

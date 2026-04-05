@@ -8,19 +8,9 @@ import java.util.List;
 import java.util.concurrent.ThreadLocalRandom;
 import java.util.logging.Logger;
 
-import org.l2jmobius.gameserver.bot.core.goap.action.AttackGoapAction;
 import org.l2jmobius.gameserver.bot.core.goap.action.DrinkPotionGoapAction;
 import org.l2jmobius.gameserver.bot.core.goap.action.MoveToTargetGoapAction;
-import org.l2jmobius.gameserver.bot.core.goap.action.PickupLootGoapAction;
-import org.l2jmobius.gameserver.bot.core.goap.action.RestockGoapAction;
-import org.l2jmobius.gameserver.bot.core.goap.action.SearchTargetGoapAction;
-import org.l2jmobius.gameserver.bot.core.goap.action.SellItemsGoapAction;
-import org.l2jmobius.gameserver.bot.core.goap.action.SitRestGoapAction;
 import org.l2jmobius.gameserver.bot.core.goap.action.TeleportToCityGoapAction;
-import org.l2jmobius.gameserver.bot.core.goap.action.TeleportToFarmGoapAction;
-import org.l2jmobius.gameserver.bot.core.goap.action.UseBuffSkillGoapAction;
-import org.l2jmobius.gameserver.bot.core.goap.action.UseDamageSkillGoapAction;
-import org.l2jmobius.gameserver.bot.core.goap.action.UseHealSkillGoapAction;
 import org.l2jmobius.gameserver.bot.core.exception.BotException;
 import org.l2jmobius.gameserver.bot.core.exception.RecoverableBotException;
 import org.l2jmobius.gameserver.bot.core.exception.ValidationBotException;
@@ -29,16 +19,6 @@ import org.l2jmobius.gameserver.bot.core.exception.BotRecoveryStrategy;
 import org.l2jmobius.gameserver.bot.core.validation.BotStateValidator;
 import org.l2jmobius.gameserver.bot.core.validation.BotSystemStateValidator;
 import org.l2jmobius.gameserver.bot.core.logging.StructuredBotLogger;
-import org.l2jmobius.gameserver.bot.core.goap.goal.BuffGoal;
-import org.l2jmobius.gameserver.bot.core.goap.goal.DefendGoal;
-import org.l2jmobius.gameserver.bot.core.goap.goal.DrinkPotionGoal;
-import org.l2jmobius.gameserver.bot.core.goap.goal.FarmGoal;
-import org.l2jmobius.gameserver.bot.core.goap.goal.HuntGoal;
-import org.l2jmobius.gameserver.bot.core.goap.goal.PickupGoal;
-import org.l2jmobius.gameserver.bot.core.goap.goal.RestockGoal;
-import org.l2jmobius.gameserver.bot.core.goap.goal.RestoreGoal;
-import org.l2jmobius.gameserver.bot.core.goap.goal.SurviveGoal;
-import org.l2jmobius.gameserver.bot.core.goap.goal.WanderGoal;
 import org.l2jmobius.gameserver.bot.core.model.BotContext;
 import org.l2jmobius.gameserver.bot.core.model.BotInstance;
 import org.l2jmobius.gameserver.bot.core.service.TargetService;
@@ -71,35 +51,6 @@ public class GoapAgent
 	private static final long THINK_MS_MAX = GoapTuning.THINK_MS_MAX;
 	private static final long REVIVE_DELAY_MIN = GoapTuning.REVIVE_DELAY_MIN;
 	private static final long REVIVE_DELAY_MAX = GoapTuning.REVIVE_DELAY_MAX;
-
-	/** All available GOAP actions. Shared, stateless singletons. */
-	private static final List<GoapAction> ACTIONS = List.of(
-		new UseDamageSkillGoapAction(), // 0.8 — skill attack (preferred over autoattack)
-		new AttackGoapAction(),         // 1.0 — autoattack fallback
-		new MoveToTargetGoapAction(),
-		new SearchTargetGoapAction(),
-		new UseBuffSkillGoapAction(),
-		new PickupLootGoapAction(),
-		new DrinkPotionGoapAction(),
-		new UseHealSkillGoapAction(),
-		new SitRestGoapAction(),
-		new TeleportToFarmGoapAction(),
-		new TeleportToCityGoapAction(),
-		new SellItemsGoapAction(),
-		new RestockGoapAction());
-
-	/** Goal selector evaluated each replan. Goals are checked in priority order. */
-	private static final GoalSelector GOAL_SELECTOR = new GoalSelector(List.of(
-		new SurviveGoal(),      // 100 — HP critical
-		new DefendGoal(),       //  90 — under attack
-		new DrinkPotionGoal(),  //  52 — HP low + potion ready (in and out of combat)
-		new FarmGoal(),         //  50 — kill existing target
-		new BuffGoal(),         //  47 — apply pending self-buffs
-		new PickupGoal(),       //  46 — collect nearby loot
-		new HuntGoal(),         //  45 — find a target (in zone, no target)
-		new RestoreGoal(),      //  40 — HP/MP low (sit rest / heal skill)
-		new RestockGoal(),      //  30 — out of supplies
-		new WanderGoal()));     //  10 — fallback: get to farm zone
 
 	private GoapAgent()
 	{
@@ -315,7 +266,7 @@ public class GoapAgent
 			}
 			final BotContext freshCtx = BotContext.of(bot, now);
 			final WorldState freshWs = WorldState.fromContext(freshCtx, bot);
-			final GoapGoal newGoal = GOAL_SELECTOR.select(freshWs);
+			final GoapGoal newGoal = bot.getBehaviourController().getActive().getGoalSelector().select(freshWs);
 			final int newPriority = (newGoal != null) ? newGoal.getPriority(freshWs) : 0;
 			if (newPriority <= bot.getActiveGoalPriority())
 			{
@@ -424,9 +375,10 @@ public class GoapAgent
 
 	private static void replan(BotInstance bot, BotContext ctx, WorldState ws, long now)
 	{
-		// Collect actions that are currently executable.
+		// Collect actions that are currently executable from the active behaviour.
+		final List<GoapAction> behaviourActions = bot.getBehaviourController().getActive().getActions();
 		final List<GoapAction> valid = new ArrayList<>();
-		for (GoapAction action : ACTIONS)
+		for (GoapAction action : behaviourActions)
 		{
 			if (action.isValid(ctx, bot))
 			{
@@ -434,7 +386,8 @@ public class GoapAgent
 			}
 		}
 
-		final GoapGoal goal = GOAL_SELECTOR.select(ws);
+		final GoalSelector selector = bot.getBehaviourController().getActive().getGoalSelector();
+		final GoapGoal goal = selector.select(ws);
 		if (goal == null)
 		{
 			// Log at warning level so it always appears in logs regardless of DEBUG mode.

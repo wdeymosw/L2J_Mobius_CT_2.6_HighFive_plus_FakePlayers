@@ -41,6 +41,9 @@ public class BotConfig
 	public static int BOT_CITY_IDLE_MAX_SECONDS;
 	public static int BOT_GATE_WAIT_MIN_SECONDS;
 	public static int BOT_GATE_WAIT_MAX_SECONDS;
+	public static long BOT_PVE_SESSION_MS;
+	public static long BOT_CITY_SESSION_MS;
+	public static long BOT_SHOP_SESSION_MS;
 
 	public static void load()
 	{
@@ -57,5 +60,8 @@ public class BotConfig
 		BOT_CITY_IDLE_MAX_SECONDS = config.getInt("BotCityIdleMaxSeconds", 600);
 		BOT_GATE_WAIT_MIN_SECONDS = config.getInt("BotGateWaitMinSeconds", 15);
 		BOT_GATE_WAIT_MAX_SECONDS = config.getInt("BotGateWaitMaxSeconds", 25);
+		BOT_PVE_SESSION_MS = config.getInt("BotPveSessionMinutes", 60) * 60_000L;
+		BOT_CITY_SESSION_MS = config.getInt("BotCitySessionMinutes", 5) * 60_000L;
+		BOT_SHOP_SESSION_MS = config.getInt("BotShopSessionMinutes", 60) * 60_000L;
 	}
 }

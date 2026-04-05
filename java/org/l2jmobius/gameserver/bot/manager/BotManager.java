@@ -20,8 +20,11 @@ import java.util.logging.Level;
 import java.util.logging.Logger;
 
 import org.l2jmobius.commons.database.DatabaseFactory;
+import org.l2jmobius.gameserver.bot.core.behaviour.BotBehaviourEvent;
+import org.l2jmobius.gameserver.bot.core.behaviour.PartyBehaviour;
 import org.l2jmobius.gameserver.bot.core.model.BotInstance;
 import org.l2jmobius.gameserver.bot.core.model.BotProfile;
+import org.l2jmobius.gameserver.bot.core.model.BotRole;
 import org.l2jmobius.gameserver.bot.core.model.BotType;
 import org.l2jmobius.gameserver.bot.core.zone.FarmZone;
 import org.l2jmobius.gameserver.bot.core.zone.ZoneRegistry;
@@ -218,6 +221,51 @@ public class BotManager
 	}
 
 	// -------------------------------------------------------------------------
+	// Party events (future: PartyBehaviour integration)
+	// -------------------------------------------------------------------------
+
+	/**
+	 * Called when a player invites a bot to a party with a specific role.
+	 * Transitions the bot to {@link PartyBehaviour} with the assigned role.
+	 * <p>
+	 * TODO: Wire this to the actual party invite packet handler.
+	 *
+	 * @param objectId the bot's Player objectId
+	 * @param role     the role assigned in the party
+	 */
+	public void onPartyInvite(int objectId, BotRole role)
+	{
+		final BotInstance bot = _bots.get(objectId);
+		if (bot == null)
+		{
+			return;
+		}
+		final long now = System.currentTimeMillis();
+		final PartyBehaviour partyBehaviour = new PartyBehaviour();
+		partyBehaviour.setPartyRole(role);
+		bot.getBehaviourController().transition(partyBehaviour, bot, now);
+		LOGGER.info("BotManager: " + bot.getPlayer().getName() + " joined party as " + role);
+	}
+
+	/**
+	 * Called when the bot's party is dissolved.
+	 * Returns the bot to PvE farming.
+	 *
+	 * @param objectId the bot's Player objectId
+	 */
+	public void onPartyDissolve(int objectId)
+	{
+		final BotInstance bot = _bots.get(objectId);
+		if (bot == null)
+		{
+			return;
+		}
+		final long now = System.currentTimeMillis();
+		bot.getBehaviourController().dispatch(BotBehaviourEvent.PARTY_DISSOLVE, bot, now, null);
+		LOGGER.info("BotManager: " + bot.getPlayer().getName() + " party dissolved, returning to PvE");
+	}
+
+	// -------------------------------------------------------------------------
 	// Gradual spawn
 	// -------------------------------------------------------------------------
 
@@ -317,7 +365,10 @@ public class BotManager
 				}
 				if (doStatus)
 				{
-					LOGGER.info("BotManager: [" + bot.getPlayer().getName() + "] phase=" + bot.getPhase() + " pos=" + bot.getPlayer().getX() + "," + bot.getPlayer().getY() + " isMoving=" + bot.getPlayer().isMoving());
+					final String behaviourName = (bot.getBehaviourController() != null)
+						? bot.getBehaviourController().getActive().getName()
+						: "none";
+					LOGGER.info("BotManager: [" + bot.getPlayer().getName() + "] behaviour=" + behaviourName + " phase=" + bot.getPhase() + " pos=" + bot.getPlayer().getX() + "," + bot.getPlayer().getY() + " isMoving=" + bot.getPlayer().isMoving());
 				}
 				bot.update(now);
 			}
