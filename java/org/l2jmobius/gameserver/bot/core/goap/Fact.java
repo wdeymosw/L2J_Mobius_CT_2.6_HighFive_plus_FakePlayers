@@ -33,6 +33,8 @@ public enum Fact
 	// --- Combat ---
 	/** At least one mob has this bot in its attack-by list or has targeted the bot. */
 	UNDER_ATTACK,
+	/** At least one attacker is different from the bot's current target. */
+	ATTACKED_BY_DIFFERENT,
 	/** Bot has a living, locked target. */
 	TARGET_EXISTS,
 	/** Target is within physical attack range (canAttackTarget == true). */

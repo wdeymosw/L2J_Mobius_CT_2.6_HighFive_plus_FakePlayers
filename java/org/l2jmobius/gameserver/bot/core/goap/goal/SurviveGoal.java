@@ -23,6 +23,7 @@ public class SurviveGoal implements GoapGoal
 	static
 	{
 		DESIRED.set(Fact.IN_SAFE_PLACE, true);
+		DESIRED.set(Fact.HP_CRITICAL, false);
 		DESIRED.set(Fact.HP_LOW, false);
 		DESIRED.set(Fact.MP_LOW, false);
 	}

@@ -56,6 +56,9 @@ import org.l2jmobius.gameserver.bot.core.service.TargetService;
  *   <li>If plan empty → replan</li>
  *   <li>If shouldInterrupt → clear plan + replan</li>
  * </ol>
+ * <p>
+ * <b>Not thread-safe.</b> {@link #tick} must be called exclusively from the BotManager
+ * scheduler thread. All static state (ACTIONS, GOAL_SELECTOR) is read-only after class init.
  */
 public class GoapAgent
 {
@@ -264,7 +267,8 @@ public class GoapAgent
 			// replan picks a different mob instead of looping on the same one.
 			if ((timedOut instanceof MoveToTargetGoapAction) && bot.hasTarget())
 			{
-				StructuredBotLogger.warning(bot, "TARGET_UNREACHABLE", "target", bot.getTarget() != null ? bot.getTarget().getName() : "?");
+				final org.l2jmobius.gameserver.model.actor.Creature unreachableTarget = bot.getTarget();
+				StructuredBotLogger.warning(bot, "TARGET_UNREACHABLE", "target", unreachableTarget != null ? unreachableTarget.getName() : "?");
 				bot.clearTarget();
 			}
 			// Let the action clean up any persistent game state (e.g. SitRest → stand up).
@@ -520,7 +524,7 @@ public class GoapAgent
 				// target, continue the plan unchanged.
 				if (effects.isExplicitlySet(Fact.TARGET_DEAD) || effects.isExplicitlySet(Fact.TARGET_IN_RANGE))
 				{
-					return TargetService.isAttackedByDifferentMob(bot);
+					return ws.get(Fact.ATTACKED_BY_DIFFERENT);
 				}
 				// Any other non-combat action (rest, search, teleport, etc.) → interrupt immediately.
 				return true;

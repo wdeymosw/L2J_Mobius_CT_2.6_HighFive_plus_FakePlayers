@@ -21,6 +21,11 @@ import org.l2jmobius.gameserver.bot.core.model.BotInstance;
  * next one starts. Otherwise the current action is ticked.
  * <p>
  * All action.execute() calls are wrapped in exception handlers for reliability.
+ * <p>
+ * <b>Threading contract:</b> All methods ({@link #tick}, {@link #add}, {@link #clear})
+ * must be called exclusively from the BotManager scheduler thread.
+ * {@code ArrayDeque} is not thread-safe — concurrent access from other threads
+ * will cause {@code ConcurrentModificationException}.
  */
 public class BotExecutor
 {

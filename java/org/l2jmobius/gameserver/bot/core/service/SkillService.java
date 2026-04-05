@@ -182,43 +182,12 @@ public class SkillService
 	 */
 	public static boolean tryDamageSkill(BotInstance bot)
 	{
-		final Player player = bot.getPlayer();
-		if ((bot.getTarget() == null) || bot.getTarget().isDead())
-		{
-			return false;
-		}
-
-		Skill best = null;
-		for (Skill skill : player.getAllSkills())
-		{
-			if (!skill.isActive() || !skill.isDamage())
-			{
-				continue;
-			}
-			if (player.isSkillDisabled(skill))
-			{
-				continue;
-			}
-			if (player.getCurrentMp() < skill.getMpConsume())
-			{
-				continue;
-			}
-			if (!isCombatTargetType(skill.getTargetType()))
-			{
-				continue;
-			}
-			if ((best == null) || (skill.getLevel() > best.getLevel()))
-			{
-				best = skill;
-			}
-		}
-
+		final Skill best = getBestDamageSkill(bot);
 		if (best == null)
 		{
 			return false;
 		}
-
-		player.useMagic(best, false, false);
+		bot.getPlayer().useMagic(best, false, false);
 		return true;
 	}
 

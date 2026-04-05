@@ -12,6 +12,7 @@ import org.l2jmobius.gameserver.bot.core.service.BuffService;
 import org.l2jmobius.gameserver.bot.core.service.LootService;
 import org.l2jmobius.gameserver.bot.core.service.PotionData;
 import org.l2jmobius.gameserver.bot.core.service.SkillService;
+import org.l2jmobius.gameserver.bot.core.service.TargetService;
 import org.l2jmobius.gameserver.model.actor.Player;
 import org.l2jmobius.gameserver.model.effects.EffectType;
 import org.l2jmobius.gameserver.model.skill.Skill;
@@ -28,12 +29,14 @@ import org.l2jmobius.gameserver.model.skill.targets.TargetType;
  */
 public class WorldState
 {
-	// --- HP thresholds (mirrors BotBrain constants, kept here to avoid cross-dependency) ---
+	// --- HP thresholds — mutually exclusive zones ---
+	// CRITICAL [0..20)  LOW [20..60)  MID [60..99)  FULL [99+)
 	private static final double HP_CRITICAL_THRESHOLD = 20.0;
 	private static final double HP_LOW_THRESHOLD = 60.0;
 	private static final double HP_FULL_THRESHOLD = 99.0;
+	// --- MP thresholds — mutually exclusive zones ---
+	// LOW [0..40)  OK [40..99)  FULL [99+)
 	private static final double MP_LOW_THRESHOLD = 40.0;
-	private static final double MP_OK_THRESHOLD = 40.0;
 	private static final double MP_FULL_THRESHOLD = 99.0;
 
 	private final EnumMap<Fact, Boolean> _facts;
@@ -158,19 +161,22 @@ public class WorldState
 	{
 		final WorldState ws = new WorldState();
 
-		// --- Health ---
+		// --- Health (mutually exclusive zones) ---
+		// HP_CRITICAL [0..20), HP_LOW [20..60), HP_MID [60..99), HP_FULL [99+)
 		ws.set(Fact.HP_CRITICAL, ctx.hpPercent < HP_CRITICAL_THRESHOLD);
-		ws.set(Fact.HP_LOW, ctx.hpPercent < HP_LOW_THRESHOLD);
-		ws.set(Fact.HP_MID, ctx.hpPercent < HP_FULL_THRESHOLD);
+		ws.set(Fact.HP_LOW, (ctx.hpPercent >= HP_CRITICAL_THRESHOLD) && (ctx.hpPercent < HP_LOW_THRESHOLD));
+		ws.set(Fact.HP_MID, (ctx.hpPercent >= HP_LOW_THRESHOLD) && (ctx.hpPercent < HP_FULL_THRESHOLD));
 		ws.set(Fact.HP_FULL, ctx.hpPercent >= HP_FULL_THRESHOLD);
 
-		// --- Mana ---
+		// --- Mana (mutually exclusive zones) ---
+		// MP_LOW [0..40), MP_OK [40..99), MP_FULL [99+)
 		ws.set(Fact.MP_LOW, ctx.mpPercent < MP_LOW_THRESHOLD);
-		ws.set(Fact.MP_OK, ctx.mpPercent >= MP_OK_THRESHOLD);
+		ws.set(Fact.MP_OK, (ctx.mpPercent >= MP_LOW_THRESHOLD) && (ctx.mpPercent < MP_FULL_THRESHOLD));
 		ws.set(Fact.MP_FULL, ctx.mpPercent >= MP_FULL_THRESHOLD);
 
 		// --- Combat ---
 		ws.set(Fact.UNDER_ATTACK, ctx.attackerCount > 0);
+		ws.set(Fact.ATTACKED_BY_DIFFERENT, TargetService.isAttackedByDifferentMob(bot));
 		ws.set(Fact.TARGET_EXISTS, ctx.hasTarget());
 		ws.set(Fact.TARGET_IN_RANGE, ctx.canAttackTarget);
 		ws.set(Fact.TARGET_DEAD, !ctx.hasTarget());

@@ -14,6 +14,7 @@ import org.l2jmobius.gameserver.bot.core.service.PotionData;
 import org.l2jmobius.gameserver.bot.core.service.SkillService;
 import org.l2jmobius.gameserver.bot.core.service.SupplyService;
 import org.l2jmobius.gameserver.model.actor.Player;
+import org.l2jmobius.gameserver.model.item.instance.Item;
 import org.l2jmobius.gameserver.model.item.enums.ItemProcessType;
 
 /**
@@ -44,8 +45,15 @@ public class BotFactory
 			final long current = player.getInventory().getInventoryItemCount(shotId, -1);
 			if (current < SupplyService.RESTOCK_THRESHOLD)
 			{
-				player.getInventory().addItem(ItemProcessType.REWARD, shotId, SupplyService.RESTOCK_TARGET - current, player, null);
-				LOGGER.info("BotFactory: gave initial shots id=" + shotId + " to " + player.getName());
+				final Item added = player.getInventory().addItem(ItemProcessType.REWARD, shotId, SupplyService.RESTOCK_TARGET - current, player, null);
+				if (added != null)
+				{
+					LOGGER.info("BotFactory: gave initial shots id=" + shotId + " to " + player.getName());
+				}
+				else
+				{
+					LOGGER.warning("BotFactory: failed to add shots id=" + shotId + " to " + player.getName());
+				}
 			}
 		}
 
@@ -58,8 +66,15 @@ public class BotFactory
 				final long current = player.getInventory().getInventoryItemCount(arrowId, -1);
 				if (current < SupplyService.RESTOCK_THRESHOLD)
 				{
-					player.getInventory().addItem(ItemProcessType.REWARD, arrowId, SupplyService.RESTOCK_TARGET - current, player, null);
-					LOGGER.info("BotFactory: gave initial arrows id=" + arrowId + " to " + player.getName());
+					final Item added = player.getInventory().addItem(ItemProcessType.REWARD, arrowId, SupplyService.RESTOCK_TARGET - current, player, null);
+					if (added != null)
+					{
+						LOGGER.info("BotFactory: gave initial arrows id=" + arrowId + " to " + player.getName());
+					}
+					else
+					{
+						LOGGER.warning("BotFactory: failed to add arrows id=" + arrowId + " to " + player.getName());
+					}
 				}
 			}
 		}
@@ -67,8 +82,15 @@ public class BotFactory
 		final long potionCount = player.getInventory().getInventoryItemCount(PotionData.HEAL_POTION_IDS[0], -1);
 		if (potionCount < SupplyService.POTION_TARGET)
 		{
-			player.getInventory().addItem(ItemProcessType.REWARD, PotionData.HEAL_POTION_IDS[0], SupplyService.POTION_TARGET - potionCount, player, null);
-			LOGGER.info("BotFactory: gave initial potions id=" + PotionData.HEAL_POTION_IDS[0] + " to " + player.getName());
+			final Item added = player.getInventory().addItem(ItemProcessType.REWARD, PotionData.HEAL_POTION_IDS[0], SupplyService.POTION_TARGET - potionCount, player, null);
+			if (added != null)
+			{
+				LOGGER.info("BotFactory: gave initial potions id=" + PotionData.HEAL_POTION_IDS[0] + " to " + player.getName());
+			}
+			else
+			{
+				LOGGER.warning("BotFactory: failed to add potions id=" + PotionData.HEAL_POTION_IDS[0] + " to " + player.getName());
+			}
 		}
 	}
 

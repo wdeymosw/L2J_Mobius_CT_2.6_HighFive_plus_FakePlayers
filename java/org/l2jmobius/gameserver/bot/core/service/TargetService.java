@@ -3,7 +3,9 @@
  */
 package org.l2jmobius.gameserver.bot.core.service;
 
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.Set;
 import java.util.logging.Logger;
 
@@ -75,6 +77,13 @@ public class TargetService
 			return; // caller handles wander
 		}
 
+		// Single-pass reachability cache: each mob is evaluated by GeoEngine exactly once.
+		final Map<Attackable, Boolean> reachableCache = new HashMap<>(candidates.size() * 2);
+		for (Attackable mob : candidates)
+		{
+			reachableCache.put(mob, isReachable(player, mob, geo));
+		}
+
 		// --- Priority 1: nearest mob currently attacking this bot ---
 		final Set<Creature> attackers = player.getAttackByList();
 		Creature nearestAttacker = null;
@@ -85,7 +94,7 @@ public class TargetService
 			{
 				continue;
 			}
-			if (!isReachable(player, mob, geo))
+			if (!Boolean.TRUE.equals(reachableCache.get(mob)))
 			{
 				continue;
 			}
@@ -109,7 +118,7 @@ public class TargetService
 		int skippedEngaged = 0;
 		for (Attackable mob : candidates)
 		{
-			if (!isReachable(player, mob, geo))
+			if (!Boolean.TRUE.equals(reachableCache.get(mob)))
 			{
 				skippedGeo++;
 				continue;
@@ -133,7 +142,7 @@ public class TargetService
 		{
 			for (Attackable mob : candidates)
 			{
-				if (!isReachable(player, mob, geo))
+				if (!Boolean.TRUE.equals(reachableCache.get(mob)))
 				{
 					continue;
 				}

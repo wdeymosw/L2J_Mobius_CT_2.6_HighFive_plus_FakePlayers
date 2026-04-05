@@ -20,6 +20,8 @@ import org.l2jmobius.gameserver.model.actor.Player;
  * <p>
  * Layer 2 entry point is {@link org.l2jmobius.gameserver.bot.core.goap.GoapAgent#tick(BotInstance, long)}.
  * This class owns no logic — it only holds fields and exposes them via getters/setters.
+ * <p>
+ * <b>Not thread-safe.</b> All accesses must occur on the BotManager scheduler thread.
  */
 public class BotInstance
 {

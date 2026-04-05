@@ -3,6 +3,8 @@
  */
 package org.l2jmobius.gameserver.bot.core.action;
 
+import java.util.logging.Logger;
+
 import org.l2jmobius.gameserver.ai.Intention;
 import org.l2jmobius.gameserver.bot.core.exception.FatalBotException;
 import org.l2jmobius.gameserver.bot.core.exception.RecoverableBotException;
@@ -30,6 +32,8 @@ import org.l2jmobius.gameserver.model.actor.Player;
  */
 public class MoveToCreatureAction implements BotAction
 {
+	private static final Logger LOGGER = Logger.getLogger(MoveToCreatureAction.class.getName());
+
 	/** Distance to last waypoint below which we refresh it to the creature's live position. */
 	private static final int LAST_WP_UPDATE_RANGE = 200;
 
@@ -163,6 +167,8 @@ public class MoveToCreatureAction implements BotAction
 			// Target is in a geodata area that is outside map bounds.
 			// After MAX_GEO_ERRORS consecutive failures, abandon this target.
 			_geoErrorCount++;
+			final Player player = bot.getPlayer();
+			LOGGER.warning("[" + player.getName() + "] GeoData out-of-bounds at [" + player.getX() + "," + player.getY() + "," + player.getZ() + "] (errors=" + _geoErrorCount + "): " + e.getMessage());
 			if (_geoErrorCount >= MAX_GEO_ERRORS)
 			{
 				bot.clearTarget();

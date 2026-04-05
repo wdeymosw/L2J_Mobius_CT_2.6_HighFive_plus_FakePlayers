@@ -11,19 +11,27 @@ import org.l2jmobius.gameserver.bot.core.model.BotInstance;
 
 /**
  * Pauses the bot for a fixed duration.
+ * <p>
+ * {@code _endTime} is computed lazily on the first {@link #execute} call so that
+ * scheduler queuing delays do not silently shorten the pause.
  */
 public class WaitAction implements BotAction
 {
-	private final long _endTime;
+	private final long _durationMs;
+	private long _endTime = -1;
 
 	public WaitAction(long durationMs)
 	{
-		_endTime = System.currentTimeMillis() + durationMs;
+		_durationMs = durationMs;
 	}
 
 	@Override
 	public void execute(BotInstance bot, long now) throws FatalBotException, ValidationBotException, RecoverableBotException
 	{
+		if (_endTime < 0)
+		{
+			_endTime = now + _durationMs;
+		}
 		if (!bot.getPlayer().isMoving())
 		{
 			bot.getPlayer().getAI().setIntention(Intention.IDLE);
@@ -33,6 +41,6 @@ public class WaitAction implements BotAction
 	@Override
 	public boolean isDone(BotInstance bot, long now)
 	{
-		return now >= _endTime;
+		return (_endTime >= 0) && (now >= _endTime);
 	}
 }

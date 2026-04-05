@@ -33,19 +33,19 @@ public class ActionOrderingSystem
 	 *
 	 * @param queue deque to reorder
 	 */
-	public static void prioritizeQueue(Deque<Object> queue)
+	public static void prioritizeQueue(Deque<BotAction> queue)
 	{
 		if (queue == null || queue.isEmpty())
 		{
 			return;
 		}
 
-		final Deque<Object> emergency = new ArrayDeque<>();
-		final Deque<Object> recovery = new ArrayDeque<>();
-		final Deque<Object> standard = new ArrayDeque<>();
+		final Deque<BotAction> emergency = new ArrayDeque<>();
+		final Deque<BotAction> recovery = new ArrayDeque<>();
+		final Deque<BotAction> standard = new ArrayDeque<>();
 
 		// Categorize actions
-		for (final Object action : queue)
+		for (final BotAction action : queue)
 		{
 			final String actionName = getActionName(action);
 
@@ -82,34 +82,28 @@ public class ActionOrderingSystem
 		return actionName != null && (actionName.contains("Heal") || actionName.contains("Buff") || actionName.contains("Revive"));
 	}
 
-	private static String getActionName(Object action)
+	private static String getActionName(BotAction action)
 	{
 		if (action == null)
 		{
 			return null;
 		}
-
-		try
-		{
-			return action.getClass().getSimpleName();
-		}
-		catch (Exception e)
-		{
-			return null;
-		}
+		return action.getClass().getSimpleName();
 	}
 
 	/**
 	 * Removes duplicate actions from queue (keep first occurrence).
+	 *
+	 * @param queue deque to deduplicate
 	 */
-	public static void deduplicateQueue(Deque<Object> queue)
+	public static void deduplicateQueue(Deque<BotAction> queue)
 	{
 		if (queue == null || queue.size() < 2)
 		{
 			return;
 		}
 
-		final Deque<Object> seen = new ArrayDeque<>();
+		final Deque<BotAction> seen = new ArrayDeque<>();
 		queue.removeIf(action ->
 		{
 			final String name = getActionName(action);
