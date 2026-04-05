@@ -125,6 +125,17 @@ public class BotInstance
 	/** Priority of the goal that produced the current plan. 0 = no active plan. */
 	private int _activeGoalPriority = 0;
 
+	// -------------------------------------------------------------------------
+	// Rotation flags (managed by BotManager)
+	// -------------------------------------------------------------------------
+
+	/** Mutable current type — may differ from BotProfile.getType() after rotation. */
+	private BotType _currentType;
+	/** Non-zero when this ACTIVE bot has arrived in city and waits to become PASSIVE. */
+	private long _readyToPassiveSince = 0;
+	/** Non-zero when this PASSIVE bot has finished city standby and waits to become ACTIVE. */
+	private long _readyToActiveSince = 0;
+
 	// =========================================================================
 	// Constructor
 	// =========================================================================
@@ -135,6 +146,7 @@ public class BotInstance
 		_profile = profile;
 		_role = RoleResolver.resolve(player.getActiveClass());
 		_lastKnownLevel = player.getLevel();
+		_currentType = profile.getType();
 	}
 
 	// =========================================================================
@@ -160,6 +172,22 @@ public class BotInstance
 	public BotRole getRole() { return _role; }
 	public BehaviourController getBehaviourController() { return _behaviourController; }
 	public void setBehaviourController(BehaviourController controller) { _behaviourController = controller; }
+
+	/** Current runtime type — may differ from BotProfile after rotation swap. */
+	public BotType getCurrentType() { return _currentType; }
+	public void setCurrentType(BotType type) { _currentType = type; }
+
+	/** Mark this bot (currently ACTIVE) as arrived in city and waiting for passive rotation. */
+	public void markReadyToPassive(long now) { _readyToPassiveSince = now; _readyToActiveSince = 0; }
+	/** Mark this bot (currently PASSIVE) as done with city standby and waiting for active rotation. */
+	public void markReadyToActive(long now) { _readyToActiveSince = now; _readyToPassiveSince = 0; }
+	/** Clear rotation flags after manager performs the swap. */
+	public void clearRotationFlags() { _readyToPassiveSince = 0; _readyToActiveSince = 0; }
+
+	public boolean isReadyToPassive() { return _readyToPassiveSince > 0; }
+	public boolean isReadyToActive() { return _readyToActiveSince > 0; }
+	/** When this bot entered the rotation queue (for FIFO ordering). */
+	public long getReadySince() { return _readyToPassiveSince > 0 ? _readyToPassiveSince : _readyToActiveSince; }
 
 	// =========================================================================
 	// Executor delegates (prefer these over exposing the executor directly)

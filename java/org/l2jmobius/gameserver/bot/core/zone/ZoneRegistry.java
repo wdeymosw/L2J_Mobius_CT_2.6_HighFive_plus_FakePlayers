@@ -60,8 +60,9 @@ public class ZoneRegistry
 
 	/**
 	 * Selects a zone suitable for a bot at the given level and position.
-	 * Filters by minLevel..maxLevel and capacity, then picks the zone whose
-	 * homeLocation is closest to (x, y). Ties broken by lowest fill ratio.
+	 * Filters by minLevel..maxLevel and capacity, then picks the zone with
+	 * the lowest fill ratio (fewest bots relative to capacity) for even distribution.
+	 * Ties broken by distance to homeLocation.
 	 *
 	 * @param level bot character level
 	 * @param x     bot's current X coordinate
@@ -93,8 +94,8 @@ public class ZoneRegistry
 			final double dy = (double) home.getY() - y;
 			final double dist = Math.sqrt(dx * dx + dy * dy);
 
-			// Prefer closest home; use fill as tiebreaker.
-			if ((dist < bestDist) || ((dist == bestDist) && (fill < bestFill)))
+			// Prefer lowest fill ratio for even distribution; use distance as tiebreaker.
+			if ((fill < bestFill) || ((fill == bestFill) && (dist < bestDist)))
 			{
 				bestDist = dist;
 				bestFill = fill;

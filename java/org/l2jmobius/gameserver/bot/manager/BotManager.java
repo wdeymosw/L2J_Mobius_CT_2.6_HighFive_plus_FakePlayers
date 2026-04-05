@@ -9,6 +9,7 @@ import java.sql.ResultSet;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
+import java.util.Comparator;
 import java.util.List;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
@@ -18,10 +19,14 @@ import java.util.concurrent.ScheduledFuture;
 import java.util.concurrent.TimeUnit;
 import java.util.logging.Level;
 import java.util.logging.Logger;
+import java.util.stream.Collectors;
 
 import org.l2jmobius.commons.database.DatabaseFactory;
 import org.l2jmobius.gameserver.bot.core.behaviour.BotBehaviourEvent;
+import org.l2jmobius.gameserver.bot.core.behaviour.CityIdleBehaviour;
 import org.l2jmobius.gameserver.bot.core.behaviour.PartyBehaviour;
+import org.l2jmobius.gameserver.bot.core.behaviour.PrivateShopBehaviour;
+import org.l2jmobius.gameserver.bot.core.behaviour.PveBehaviour;
 import org.l2jmobius.gameserver.bot.core.model.BotInstance;
 import org.l2jmobius.gameserver.bot.core.model.BotProfile;
 import org.l2jmobius.gameserver.bot.core.model.BotRole;
@@ -314,10 +319,21 @@ public class BotManager
 		}
 	}
 
-	// Picks ACTIVE or PASSIVE based on configured percentage.
+	// Picks ACTIVE or PASSIVE enforcing the configured ratio against currently online bots.
+	// Counts how many ACTIVE bots are already online and compares the actual ratio to the target.
+	// If actual active% is below target → spawn ACTIVE, otherwise → spawn PASSIVE.
 	private BotType pickType()
 	{
-		return (Math.random() * 100) < BotConfig.BOT_ACTIVE_PERCENT ? BotType.ACTIVE : BotType.PASSIVE;
+		final int total = _bots.size();
+		if (total == 0)
+		{
+			return (Math.random() * 100) < BotConfig.BOT_ACTIVE_PERCENT ? BotType.ACTIVE : BotType.PASSIVE;
+		}
+		final long activeCount = _bots.values().stream()
+			.filter(b -> b.getCurrentType() == BotType.ACTIVE)
+			.count();
+		final double actualActivePct = (activeCount * 100.0) / total;
+		return actualActivePct < BotConfig.BOT_ACTIVE_PERCENT ? BotType.ACTIVE : BotType.PASSIVE;
 	}
 
 	// -------------------------------------------------------------------------
@@ -354,6 +370,9 @@ public class BotManager
 			_lastStatusLog = now;
 		}
 
+		// Process rotation before individual bot ticks so flags are acted on immediately.
+		processRotationQueue(now);
+
 		for (BotInstance bot : _bots.values())
 		{
 			try
@@ -368,7 +387,7 @@ public class BotManager
 					final String behaviourName = (bot.getBehaviourController() != null)
 						? bot.getBehaviourController().getActive().getName()
 						: "none";
-					LOGGER.info("BotManager: [" + bot.getPlayer().getName() + "] behaviour=" + behaviourName + " phase=" + bot.getPhase() + " pos=" + bot.getPlayer().getX() + "," + bot.getPlayer().getY() + " isMoving=" + bot.getPlayer().isMoving());
+					LOGGER.info("BotManager: [" + bot.getPlayer().getName() + "] type=" + bot.getCurrentType() + " behaviour=" + behaviourName + " phase=" + bot.getPhase() + " pos=" + bot.getPlayer().getX() + "," + bot.getPlayer().getY() + " isMoving=" + bot.getPlayer().isMoving());
 				}
 				bot.update(now);
 			}
@@ -376,6 +395,51 @@ public class BotManager
 			{
 				LOGGER.log(Level.SEVERE, "BotManager: tick error for " + bot.getPlayer().getName(), e);
 			}
+		}
+	}
+
+	// -------------------------------------------------------------------------
+	// Rotation queue
+	// -------------------------------------------------------------------------
+
+	private static final long ROTATION_WAIT_TIMEOUT_MS = 60_000; // 1 minute max wait for a pair
+
+	/**
+	 * Two FIFO queues:
+	 *   readyToPassive — ACTIVE bots arrived in city, waiting to become PASSIVE.
+	 *   readyToActive  — PASSIVE bots finished city standby, waiting to become ACTIVE.
+	 * <p>
+	 * If both queues have entries → swap the front pair.
+	 * If either queue is empty   → skip, bot stays in CityIdle and waits.
+	 */
+	private void processRotationQueue(long now)
+	{
+		final List<BotInstance> wantPassive = _bots.values().stream()
+			.filter(BotInstance::isReadyToPassive)
+			.sorted(Comparator.comparingLong(BotInstance::getReadySince))
+			.collect(Collectors.toList());
+
+		final List<BotInstance> wantActive = _bots.values().stream()
+			.filter(BotInstance::isReadyToActive)
+			.sorted(Comparator.comparingLong(BotInstance::getReadySince))
+			.collect(Collectors.toList());
+
+		final int swaps = Math.min(wantPassive.size(), wantActive.size());
+		for (int i = 0; i < swaps; i++)
+		{
+			final BotInstance toPassive = wantPassive.get(i);
+			final BotInstance toActive = wantActive.get(i);
+
+			toPassive.clearRotationFlags();
+			toActive.clearRotationFlags();
+
+			toPassive.setCurrentType(BotType.PASSIVE);
+			toActive.setCurrentType(BotType.ACTIVE);
+
+			toPassive.getBehaviourController().transition(new PrivateShopBehaviour(), toPassive, now);
+			toActive.getBehaviourController().transition(new PveBehaviour(), toActive, now);
+
+			LOGGER.info("BotManager: rotation — " + toPassive.getPlayer().getName() + " ACTIVE→PASSIVE, " + toActive.getPlayer().getName() + " PASSIVE→ACTIVE");
 		}
 	}
 }

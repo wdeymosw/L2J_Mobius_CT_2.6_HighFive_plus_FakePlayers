@@ -8,7 +8,10 @@ import java.util.logging.Logger;
 
 import org.l2jmobius.gameserver.bot.core.goap.GoapAction;
 import org.l2jmobius.gameserver.bot.core.goap.GoalSelector;
+import org.l2jmobius.gameserver.bot.core.goap.action.RestockGoapAction;
 import org.l2jmobius.gameserver.bot.core.goap.action.SellItemsGoapAction;
+import org.l2jmobius.gameserver.bot.core.goap.action.TeleportToCityGoapAction;
+import org.l2jmobius.gameserver.bot.core.goap.goal.GoToCityGoal;
 import org.l2jmobius.gameserver.bot.core.goap.goal.RestockGoal;
 import org.l2jmobius.gameserver.bot.core.model.BotInstance;
 import org.l2jmobius.gameserver.config.custom.BotConfig;
@@ -28,17 +31,21 @@ public class PrivateShopBehaviour extends AbstractBotBehaviour
 {
 	private static final Logger LOGGER = Logger.getLogger(PrivateShopBehaviour.class.getName());
 
-	/** Minimal action set — only selling is supported in this phase. */
+	/** Actions: travel to city first, then sell. No farm actions. */
 	private static final List<GoapAction> ACTIONS = List.of(
-		new SellItemsGoapAction());
+		new TeleportToCityGoapAction(),
+		new SellItemsGoapAction(),
+		new RestockGoapAction());
 
 	/**
-	 * Goals while in private shop mode.
-	 * RestockGoal (30) handles sell-to-NPC if private shop is not yet open.
+	 * Goals:
+	 * GoToCityGoal (20) — travel to safe zone first if still in farm zone.
+	 * RestockGoal  (30) — sell items once in city.
 	 * TODO: Add OpenPrivateShopGoal with higher priority when implemented.
 	 */
 	private static final GoalSelector GOAL_SELECTOR = new GoalSelector(List.of(
-		new RestockGoal())); // 30 — sell items to NPC
+		new RestockGoal(),    // 30 — sell items to NPC
+		new GoToCityGoal())); // 20 — get to city if spawned in farm zone
 
 	@Override
 	public String getName()
@@ -71,14 +78,14 @@ public class PrivateShopBehaviour extends AbstractBotBehaviour
 		cancelTimer();
 	}
 
-	/** When shop session ends, switch back to city idle (which will handle farm return). */
+	/** When shop session ends, go to city and signal readyToActive for rotation. */
 	@Override
 	public void onTick(BotInstance bot, long now)
 	{
 		if (isTimerExpired())
 		{
-			LOGGER.fine(() -> "[" + bot.getPlayer().getName() + "] PrivateShop: session expired, switching to CityIdle");
-			bot.getBehaviourController().transition(new CityIdleBehaviour(), bot, now);
+			LOGGER.info("[" + bot.getPlayer().getName() + "] PrivateShop: session expired → CityIdle (FOR_ACTIVE)");
+			bot.getBehaviourController().transition(new CityIdleBehaviour(CityIdleBehaviour.Mode.FOR_ACTIVE), bot, now);
 		}
 	}
 }

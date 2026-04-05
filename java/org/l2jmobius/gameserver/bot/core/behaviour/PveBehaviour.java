@@ -118,8 +118,8 @@ public class PveBehaviour extends AbstractBotBehaviour
 	{
 		if (isTimerExpired())
 		{
-			LOGGER.info("[" + bot.getPlayer().getName() + "] PvE: session expired → CityIdle");
-			bot.getBehaviourController().transition(new CityIdleBehaviour(), bot, now);
+			LOGGER.info("[" + bot.getPlayer().getName() + "] PvE: session expired → CityIdle (FOR_PASSIVE)");
+			bot.getBehaviourController().transition(new CityIdleBehaviour(CityIdleBehaviour.Mode.FOR_PASSIVE), bot, now);
 		}
 	}
 }
