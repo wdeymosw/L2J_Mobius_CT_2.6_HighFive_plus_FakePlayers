@@ -244,26 +244,20 @@ public class PathService
 			return; // trust it; stuck detection will handle a stall
 		}
 
-		// --- Stopped with no path: find a route ---
-		// Always prefer PathFinding over a blind MOVE_TO so that walls are
-		// properly circumnavigated even when canMoveToTarget returns true
-		// (geodata may incorrectly mark a blocked cell as passable).
+		// --- Stopped with no path: find a route via PathFinding only.
+		// No MOVE_TO fallback — a blind move into a wall causes stuck loops.
+		// If PathFinding fails or is throttled, signal FAIL so the caller can react.
 		if ((now - bot.getLastPathTime()) >= PATH_COOLDOWN_MS)
 		{
 			if (tryPathFinding(bot, player, px, py, pz, tx, ty, tz, now))
 			{
 				return; // waypoints set — will be followed next tick
 			}
-			// PathFinding found nothing or was throttled.
+			// PathFinding returned no path — signal failure.
+			LOGGER.info("PathService: " + player.getName() + " no path to " + tx + "," + ty + " — signalling pathFailed");
+			bot.setPathFailed(true);
 		}
-
-		// Last resort: direct MOVE_TO (also covers PathFinding cooldown window).
-		if (!player.isMoving())
-		{
-			player.getAI().setIntention(Intention.MOVE_TO, new Location(tx, ty, tz));
-			bot.setLastPathTime(now); // back-off before trying PathFinding again
-			LOGGER.fine("PathService: " + player.getName() + " MOVE_TO fallback → " + tx + "," + ty + "," + tz);
-		}
+		// else: still in cooldown — wait for next tick, no action needed.
 	}
 
 	// -------------------------------------------------------------------------
@@ -322,7 +316,8 @@ public class PathService
 		final int count = bot.getStuckCount();
 		LOGGER.info("PathService: " + player.getName() + " stuck " + count + "/" + STUCK_TELEPORT_THRESHOLD + " (moved " + (int) moved + " < min " + (int) expected + ")");
 
-		// ── Last resort: teleport ────────────────────────────────────────────
+		// ── Last resort: signal path failure — let caller decide (city → skip, farm → wander).
+		// Teleport is intentionally removed; fallback is now the caller's responsibility.
 		if (count >= STUCK_TELEPORT_THRESHOLD)
 		{
 			bot.clearGlobalPath();
@@ -331,8 +326,8 @@ public class PathService
 			bot.setStuckCheckTime(0);
 			bot.setStuckSnapshot(Integer.MIN_VALUE, Integer.MIN_VALUE);
 			bot.resetStuckCount();
-			bot.teleport(tx, ty, tz);
-			LOGGER.info("PathService: " + player.getName() + " stuck x" + STUCK_TELEPORT_THRESHOLD + " — teleporting to " + tx + "," + ty + "," + tz);
+			LOGGER.info("PathService: " + player.getName() + " stuck x" + STUCK_TELEPORT_THRESHOLD + " — signalling pathFailed");
+			bot.setPathFailed(true);
 			return true;
 		}
 

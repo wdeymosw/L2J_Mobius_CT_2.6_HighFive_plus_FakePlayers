@@ -119,6 +119,13 @@ public class BotInstance
 	private int _stuckCount = 0;
 
 	// -------------------------------------------------------------------------
+	// Path failure signal (PathService → MoveToAction / CityIdleBehaviour)
+	// -------------------------------------------------------------------------
+
+	/** Set by PathService when pathfinding returns no route or bot is stuck. Consumed by MoveToAction / CityIdleBehaviour. */
+	private boolean _pathFailed = false;
+
+	// -------------------------------------------------------------------------
 	// GOAP plan state (GoapAgent)
 	// -------------------------------------------------------------------------
 
@@ -517,6 +524,14 @@ public class BotInstance
 	public int getStuckCount() { return _stuckCount; }
 	public void incrementStuckCount() { _stuckCount++; }
 	public void resetStuckCount() { _stuckCount = 0; }
+
+	// =========================================================================
+	// Path failure signal
+	// =========================================================================
+
+	/** Set by PathService when pathfinding finds no route or stuck detection gives up. Cleared by MoveToAction. */
+	public boolean isPathFailed() { return _pathFailed; }
+	public void setPathFailed(boolean failed) { _pathFailed = failed; }
 
 	// =========================================================================
 	// GOAP plan (GoapAgent)

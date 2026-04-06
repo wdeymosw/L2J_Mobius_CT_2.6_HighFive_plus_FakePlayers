@@ -45,6 +45,11 @@ public class MoveToAction implements BotAction
 	@Override
 	public void execute(BotInstance bot, long now) throws FatalBotException, ValidationBotException, RecoverableBotException
 	{
+		if (bot.isPathFailed())
+		{
+			bot.setPathFailed(false);
+			throw new ValidationBotException("No path to " + _dest.getX() + "," + _dest.getY() + "," + _dest.getZ(), bot);
+		}
 		PathService.thinkMove(bot, _dest.getX(), _dest.getY(), _dest.getZ());
 	}
 

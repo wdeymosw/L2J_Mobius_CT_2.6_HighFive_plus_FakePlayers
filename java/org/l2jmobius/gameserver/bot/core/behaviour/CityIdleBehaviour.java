@@ -88,9 +88,16 @@ public class CityIdleBehaviour extends AbstractBotBehaviour
 	// Per-instance state
 	// -----------------------------------------------------------------------
 
+	/** How many times to retry a failed MoveToAction before falling back to teleport. */
+	private static final int MAX_PATH_RETRIES = 3;
+	/** Pause between retries (ms) — gives PathFinding a moment to free up rate-limit slots. */
+	private static final long RETRY_PAUSE_MS = 1_500;
+
 	private final Mode _mode;
 	private boolean _arrivedInCity = false;
 	private ScriptStep _step = ScriptStep.GROCER;
+	/** Retry counter for the current script step — reset when step advances. */
+	private int _pathRetryCount = 0;
 
 	public CityIdleBehaviour(Mode mode)
 	{
@@ -203,6 +210,26 @@ public class CityIdleBehaviour extends AbstractBotBehaviour
 		}
 
 		// FOR_PASSIVE: advance the city script step-by-step when the executor is idle.
+		// If the last MoveToAction threw ValidationBotException (no path), retry up to
+		// MAX_PATH_RETRIES times (with a short pause), then fall back to teleport.
+		if (bot.isPathFailed())
+		{
+			bot.setPathFailed(false);
+			if (_pathRetryCount < MAX_PATH_RETRIES)
+			{
+				_pathRetryCount++;
+				LOGGER.info("[" + bot.getPlayer().getName() + "] CityIdle: pathFailed at step=" + _step + " — retry " + _pathRetryCount + "/" + MAX_PATH_RETRIES);
+				retryCurrentStep(bot);
+			}
+			else
+			{
+				LOGGER.info("[" + bot.getPlayer().getName() + "] CityIdle: pathFailed at step=" + _step + " — all retries exhausted, teleporting");
+				_pathRetryCount = 0;
+				teleportToCurrentStep(bot);
+			}
+			return;
+		}
+
 		if (!bot.isQueueIdle())
 		{
 			return;
@@ -215,8 +242,61 @@ public class CityIdleBehaviour extends AbstractBotBehaviour
 	// City script state machine
 	// -----------------------------------------------------------------------
 
+	/** Returns the destination Location for the current script step, or {@code null} if unavailable. */
+	private Location getStepDestination(BotInstance bot)
+	{
+		final BotZoneData city = bot.getZone().getCityData();
+		if (city == null)
+		{
+			return null;
+		}
+		switch (_step)
+		{
+			case GROCER:
+				return city.getShop();
+			case GUILD:
+				return city.getGuildmaster();
+			case ARMOR:
+				return city.getGatekeeper();
+			case CENTER:
+			{
+				final List<Location> path = city.getCityPath();
+				return path.isEmpty() ? city.getGatekeeper() : path.get(0);
+			}
+			default:
+				return null;
+		}
+	}
+
+	/** Re-queues a MoveToAction for the current step after a short pause — called on path failure retry. */
+	private void retryCurrentStep(BotInstance bot)
+	{
+		final Location dest = getStepDestination(bot);
+		if (dest == null)
+		{
+			return;
+		}
+		bot.clearQueue();
+		bot.queueAction(new WaitAction(RETRY_PAUSE_MS));
+		bot.queueAction(new MoveToAction(dest.getX(), dest.getY(), dest.getZ(), 150));
+	}
+
+	/** Teleports the bot directly to the current step's destination — last resort after all retries fail. */
+	private void teleportToCurrentStep(BotInstance bot)
+	{
+		final Location dest = getStepDestination(bot);
+		if (dest == null)
+		{
+			return;
+		}
+		bot.clearQueue();
+		bot.teleport(dest.getX(), dest.getY(), dest.getZ());
+		// Queue is now idle — advanceScript will fire on the next tick.
+	}
+
 	private void advanceScript(BotInstance bot, long now)
 	{
+		_pathRetryCount = 0; // step completed (or skipped) — reset retry counter for the next step
 		final BotZoneData city = bot.getZone().getCityData();
 		if (city == null)
 		{
