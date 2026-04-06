@@ -6,7 +6,6 @@ package org.l2jmobius.gameserver.bot.core.service;
 import java.util.logging.Logger;
 
 import org.l2jmobius.gameserver.bot.core.model.BotInstance;
-import org.l2jmobius.gameserver.bot.core.model.BotRole;
 import org.l2jmobius.gameserver.model.actor.Player;
 import org.l2jmobius.gameserver.model.item.enums.ItemGrade;
 import org.l2jmobius.gameserver.model.item.enums.ItemProcessType;
@@ -14,143 +13,13 @@ import org.l2jmobius.gameserver.model.item.enums.ItemProcessType;
 /**
  * Provides grade-appropriate gear sets for bots by role.
  * <p>
- * Gear roles:
- *   TANK    — heavy armor + 1H sword + shield
- *   FIGHTER — light/heavy armor + sword (no offhand)
- *   ARCHER  — light armor + bow
- *   CASTER  — robe + staff/blunt (MAGE, HEALER, BUFFER, SUMMONER)
- * <p>
- * Grades: D → C → B → A. S-grade is never given to bots.
+ * Set definitions are loaded from {@code data/bot/BotGearSets.xml} via {@link BotGearSetData}.
  * <p>
  * After giving items, call {@link EquipService#equip(BotInstance)} to put them on.
- * Item IDs are mid-tier — intentionally NOT top/masterwork gear.
- * All IDs verified against dist/game/data/stats/items/*.xml.
  */
 public class GearService
 {
 	private static final Logger LOGGER = Logger.getLogger(GearService.class.getName());
-
-	// -------------------------------------------------------------------------
-	// Gear set slots: [weapon, offhand, chest, legs, gloves, boots, helmet]
-	// offhand = 0  → no offhand
-	// legs    = 0  → onepiece armor (chest covers both)
-	// -------------------------------------------------------------------------
-	private static final int WEAPON  = 0;
-	private static final int OFFHAND = 1;
-	private static final int CHEST   = 2;
-	private static final int LEGS    = 3;
-	private static final int GLOVES  = 4;
-	private static final int BOOTS   = 5;
-	private static final int HELMET  = 6;
-
-	// -------------------------------------------------------------------------
-	// TANK  (HEAVY armor + 1H sword + shield)
-	// -------------------------------------------------------------------------
-	private static final int[][] TANK_SETS =
-	{
-		// D-grade
-		{  123,  626,  352,  377,  604,   40,   45 }, // Saber / Bronze Shield / Brigandine Tunic(HEAVY) / Scale Gaiters(HEAVY) / Crafted Leather Gloves / Leather Boots / Bone Helmet
-		// C-grade
-		{   74,  107,   60,    0,   61,   64,  517 }, // Katana(1H) / Composite Shield / Composite Armor(HEAVY onepiece) / 0 / Mithril Plate Gloves / Composite Boots / Composite Helmet
-		// B-grade
-		{   79,  673, 2376, 2379,    0, 2439, 2415 }, // Sword of Damascus(1H) / Avadon Shield / Avadon Breastplate(HEAVY) / Avadon Gaiters(HEAVY) / 0 / Sealed Blue Wolf Boots / Avadon Circlet
-		// A-grade
-		{ 2500,  673,  365,  388,    0, 2440, 2418 }, // Dark Legion's Edge(1H) / Avadon Shield / Dark Crystal Breastplate(HEAVY) / Dark Crystal Gaiters(HEAVY) / 0 / Boots of Nightmare / Helm of Nightmare
-	};
-
-	// -------------------------------------------------------------------------
-	// FIGHTER  (LIGHT/HEAVY armor + sword, no offhand)
-	// -------------------------------------------------------------------------
-	private static final int[][] FIGHTER_SETS =
-	{
-		// D-grade
-		{  123,    0,  394,  416,  604,   40,   45 }, // Saber / / Reinforced Leather Shirt(LIGHT) / Reinforced Leather Gaiters(LIGHT) / Crafted Leather Gloves / Leather Boots / Bone Helmet
-		// C-grade
-		{   75,    0,   60,    0,   61,   64,  517 }, // Caliburs(1H) / / Composite Armor(HEAVY onepiece) / 0 / Mithril Plate Gloves / Composite Boots / Composite Helmet
-		// B-grade
-		{   79,    0, 2391,    0,    0, 2439, 2416 }, // Sword of Damascus(1H) / / Blue Wolf Leather Armor(LIGHT onepiece) / 0 / 0 / Sealed Blue Wolf Boots / Blue Wolf Helmet
-		// A-grade
-		{ 2500,    0, 2385, 2389,    0, 2441, 2418 }, // Dark Legion's Edge(1H) / / Dark Crystal Leather Armor(LIGHT) / Dark Crystal Leggings(LIGHT) / 0 / Dark Legion Boots / Helm of Nightmare
-	};
-
-	// -------------------------------------------------------------------------
-	// ARCHER  (LIGHT armor + bow — NO offhand, bow is lrhand)
-	// -------------------------------------------------------------------------
-	private static final int[][] ARCHER_SETS =
-	{
-		// D-grade
-		{  274,    0,  394,  416,  604,   40,   45 }, // Reinforced Bow / / Reinforced Leather Shirt(LIGHT) / Reinforced Leather Gaiters(LIGHT) / Crafted Leather Gloves / Leather Boots / Bone Helmet
-		// C-grade
-		{  273,    0,  398,  418,   61, 2431,  499 }, // Composite Bow / / Plated Leather(LIGHT) / Plated Leather Gaiters(LIGHT) / Mithril Plate Gloves / Plated Leather Boots / Mithril Helmet
-		// B-grade
-		{  284,    0, 2391,    0,    0, 2439, 2416 }, // Dark Elven Long Bow / / Blue Wolf Leather Armor(LIGHT onepiece) / 0 / 0 / Sealed Blue Wolf Boots / Blue Wolf Helmet
-		// A-grade
-		{  288,    0, 2385, 2389,    0,  563, 2419 }, // Carnage Bow / / Dark Crystal Leather Armor(LIGHT) / Dark Crystal Leggings(LIGHT) / 0 / Dark Crystal Boots / Majestic Circlet
-	};
-
-	// -------------------------------------------------------------------------
-	// CASTER  (MAGIC robe + staff/blunt — mage, healer, buffer, summoner)
-	// -------------------------------------------------------------------------
-	private static final int[][] CASTER_SETS =
-	{
-		// D-grade
-		{  178,    0,  432,  465,  604,   40,   45 }, // Bone Staff / / Cursed Tunic(MAGIC) / Cursed Stockings(MAGIC) / Crafted Leather Gloves / Leather Boots / Bone Helmet
-		// C-grade
-		{ 2503,    0,  439,  471, 2454, 2430,  549 }, // Yaksa Mace / / Karmian Tunic(MAGIC) / Karmian Stockings(MAGIC) / Karmian Gloves / Karmian Boots / Helm of Avadon
-		// B-grade (weapon is C-grade Yaksa Mace — TODO: replace with B-grade blunt)
-		{ 2503,    0, 2406,    0,    0, 2439, 2415 }, // Yaksa Mace / / Avadon Robe(MAGIC onepiece) / 0 / 0 / Sealed Blue Wolf Boots / Avadon Circlet
-		// A-grade
-		{ 2504,    0, 2408,    0,    0, 2440, 2419 }, // Meteor Shower / / Robe of Nightmare(MAGIC onepiece) / 0 / 0 / Boots of Nightmare / Majestic Circlet
-	};
-
-	// -------------------------------------------------------------------------
-	// DUAL  (LIGHT armor + dual sword — gladiator, duelist)
-	// -------------------------------------------------------------------------
-	private static final int[][] DUAL_SETS =
-	{
-		// D-grade
-		{ 2525,    0,  394,  416,  604,   40,   45 }, // Bastard Sword*Bastard Sword / / Reinforced Leather Shirt(LIGHT) / Reinforced Leather Gaiters(LIGHT) / Crafted Leather Gloves / Leather Boots / Bone Helmet
-		// C-grade
-		{ 2560,    0,   60,    0,   61,   64,  517 }, // Elven Long Sword*Elven Long Sword / / Composite Armor(HEAVY onepiece) / 0 / Mithril Plate Gloves / Composite Boots / Composite Helmet
-		// B-grade
-		{ 2606,    0, 2391,    0,    0, 2439, 2416 }, // Caliburs*Caliburs / / Blue Wolf Leather Armor(LIGHT onepiece) / 0 / 0 / Sealed Blue Wolf Boots / Blue Wolf Helmet
-		// A-grade
-		{ 5705,    0, 2385, 2389,    0, 2441, 2418 }, // Keshanberk*Damascus / / Dark Crystal Leather Armor(LIGHT) / Dark Crystal Leggings(LIGHT) / 0 / Dark Legion Boots / Helm of Nightmare
-	};
-
-	// -------------------------------------------------------------------------
-	// JEWELRY — role-independent (earring × 2, ring × 2, necklace × 1)
-	// -------------------------------------------------------------------------
-	// [0]=earring, [1]=ring, [2]=necklace
-	private static final int[][] JEWELRY_SETS =
-	{
-		// D-grade
-		{ 849, 880, 910 }, // Tiger's Eye Earring / Black Pearl Ring / Necklace of Devotion
-		// C-grade
-		{ 853, 884, 916 }, // Earring of Protection / Ring of Protection / Necklace of Protection
-		// B-grade
-		{ 856, 887, 921 }, // Adamantite Earring / Adamantite Ring / Necklace of Mana
-		// A-grade
-		{ 862, 893, 924 }, // Majestic Earring / Majestic Ring / Majestic Necklace
-	};
-
-	// -------------------------------------------------------------------------
-	// Grade index helper
-	// -------------------------------------------------------------------------
-	private static int gradeIndex(ItemGrade grade)
-	{
-		if (grade == null)
-		{
-			return 0;
-		}
-		switch (grade)
-		{
-			case C: return 1;
-			case B: return 2;
-			case A: return 3;
-			default: return 0; // D or NONE
-		}
-	}
 
 	private GearService()
 	{
@@ -163,35 +32,38 @@ public class GearService
 	/**
 	 * Gives a complete grade-appropriate gear set to the bot based on its role.
 	 * Items are added to inventory; call {@link EquipService#equip(BotInstance)} afterwards.
-	 * S-grade is never given regardless of the requested grade.
 	 *
 	 * @param bot   the bot to equip
 	 * @param grade desired gear grade (D/C/B/A)
 	 */
 	public static void giveGearSet(BotInstance bot, ItemGrade grade)
 	{
-		final int[] set = selectSet(bot.getRole(), grade);
-		if (set == null)
+		final BotGearSetData data = BotGearSetData.getInstance();
+		final int[] gear = data.getGearSet(bot.getRole(), grade);
+		if (gear == null)
 		{
 			LOGGER.warning("GearService: no gear set defined for role=" + bot.getRole() + " grade=" + grade);
 			return;
 		}
 
 		final Player player = bot.getPlayer();
-		giveIfValid(player, set[WEAPON],  "weapon");
-		giveIfValid(player, set[OFFHAND], "offhand");
-		giveIfValid(player, set[CHEST],   "chest");
-		giveIfValid(player, set[LEGS],    "legs");
-		giveIfValid(player, set[GLOVES],  "gloves");
-		giveIfValid(player, set[BOOTS],   "boots");
-		giveIfValid(player, set[HELMET],  "helmet");
+		giveIfValid(player, gear[BotGearSetData.WEAPON],  "weapon");
+		giveIfValid(player, gear[BotGearSetData.OFFHAND], "offhand");
+		giveIfValid(player, gear[BotGearSetData.CHEST],   "chest");
+		giveIfValid(player, gear[BotGearSetData.LEGS],    "legs");
+		giveIfValid(player, gear[BotGearSetData.GLOVES],  "gloves");
+		giveIfValid(player, gear[BotGearSetData.BOOTS],   "boots");
+		giveIfValid(player, gear[BotGearSetData.HELMET],  "helmet");
 
-		final int[] jewelry = JEWELRY_SETS[gradeIndex(grade)];
-		giveIfValid(player, jewelry[0], "earring1");
-		giveIfValid(player, jewelry[0], "earring2"); // two of the same
-		giveIfValid(player, jewelry[1], "ring1");
-		giveIfValid(player, jewelry[1], "ring2");    // two of the same
-		giveIfValid(player, jewelry[2], "necklace");
+		final int[] jewelry = data.getJewelrySet(grade);
+		if (jewelry != null)
+		{
+			giveIfValid(player, jewelry[BotGearSetData.EARRING],  "earring1");
+			giveIfValid(player, jewelry[BotGearSetData.EARRING],  "earring2");
+			giveIfValid(player, jewelry[BotGearSetData.RING],     "ring1");
+			giveIfValid(player, jewelry[BotGearSetData.RING],     "ring2");
+			giveIfValid(player, jewelry[BotGearSetData.NECKLACE], "necklace");
+		}
 
 		LOGGER.info("GearService: gave " + grade + "-grade gear set to " + player.getName() + " (" + bot.getRole() + ")");
 	}
@@ -206,41 +78,11 @@ public class GearService
 	// Helpers
 	// -------------------------------------------------------------------------
 
-	private static int[] selectSet(BotRole role, ItemGrade grade)
-	{
-		final int[][] sets;
-		switch (role)
-		{
-			case TANK:
-				sets = TANK_SETS;
-				break;
-			case ARCHER:
-				sets = ARCHER_SETS;
-				break;
-			case DUAL:
-				sets = DUAL_SETS;
-				break;
-			case MAGE:
-			case HEALER:
-			case BUFFER:
-			case SUMMONER:
-				sets = CASTER_SETS;
-				break;
-			case MELEE:
-			case CRAFTER:
-			default:
-				sets = FIGHTER_SETS;
-				break;
-		}
-		final int idx = gradeIndex(grade);
-		return (idx < sets.length) ? sets[idx] : sets[sets.length - 1];
-	}
-
 	private static void giveIfValid(Player player, int itemId, String slot)
 	{
 		if (itemId <= 0)
 		{
-			return; // 0 = no item for this slot
+			return;
 		}
 		player.getInventory().addItem(ItemProcessType.REWARD, itemId, 1, player, null);
 	}

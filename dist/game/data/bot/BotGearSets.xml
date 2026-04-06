@@ -1,0 +1,119 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!--
+    Bot gear sets by role and grade.
+    Slots: weapon, offhand (0 = none), chest, legs (0 = onepiece), gloves (0 = none), boots, helmet
+    Grades: D, C, B, A  — S-grade is never used for bots.
+    All item IDs verified against dist/game/data/stats/items/*.xml.
+-->
+<gearSets>
+
+    <!-- ═══════════════════════════════════════════════════════════════
+         TANK — heavy armor + 1H sword + shield
+    ═══════════════════════════════════════════════════════════════ -->
+    <role name="TANK">
+        <!-- D: Saber / Bronze Shield / Brigandine Tunic(HEAVY) / Scale Gaiters(HEAVY) / Crafted Leather Gloves / Leather Boots / Bone Helmet -->
+        <grade name="D" weapon="123" offhand="626" chest="352" legs="377" gloves="604" boots="40" helmet="45"/>
+        <!-- C: Katana(1H) / Composite Shield / Composite Armor(HEAVY onepiece) / - / Mithril Plate Gloves / Composite Boots / Composite Helmet -->
+        <grade name="C" weapon="74"  offhand="107" chest="60"  legs="0"   gloves="61"  boots="64"   helmet="517"/>
+        <!-- B: Sword of Damascus(1H) / Avadon Shield / Avadon Breastplate(HEAVY) / Avadon Gaiters(HEAVY) / - / Sealed Blue Wolf Boots / Avadon Circlet -->
+        <grade name="B" weapon="79"  offhand="673" chest="2376" legs="2379" gloves="0" boots="2439" helmet="2415"/>
+        <!-- A: Dark Legion's Edge(1H) / Avadon Shield / Dark Crystal Breastplate(HEAVY) / Dark Crystal Gaiters(HEAVY) / - / Boots of Nightmare / Helm of Nightmare -->
+        <grade name="A" weapon="2500" offhand="673" chest="365" legs="388" gloves="0" boots="2440" helmet="2418"/>
+    </role>
+
+    <!-- ═══════════════════════════════════════════════════════════════
+         MELEE / CRAFTER — light/heavy armor + sword, no offhand
+    ═══════════════════════════════════════════════════════════════ -->
+    <role name="MELEE">
+        <!-- D: Saber / - / Reinforced Leather Shirt(LIGHT) / Reinforced Leather Gaiters(LIGHT) / Crafted Leather Gloves / Leather Boots / Bone Helmet -->
+        <grade name="D" weapon="123" offhand="0" chest="394" legs="416" gloves="604" boots="40"   helmet="45"/>
+        <!-- C: Caliburs(1H) / - / Composite Armor(HEAVY onepiece) / - / Mithril Plate Gloves / Composite Boots / Composite Helmet -->
+        <grade name="C" weapon="75"  offhand="0" chest="60"  legs="0"   gloves="61"  boots="64"   helmet="517"/>
+        <!-- B: Sword of Damascus(1H) / - / Blue Wolf Leather Armor(LIGHT onepiece) / - / - / Sealed Blue Wolf Boots / Blue Wolf Helmet -->
+        <grade name="B" weapon="79"  offhand="0" chest="2391" legs="0"  gloves="0"   boots="2439" helmet="2416"/>
+        <!-- A: Dark Legion's Edge(1H) / - / Dark Crystal Leather Armor(LIGHT) / Dark Crystal Leggings(LIGHT) / - / Dark Legion Boots / Helm of Nightmare -->
+        <grade name="A" weapon="2500" offhand="0" chest="2385" legs="2389" gloves="0" boots="2441" helmet="2418"/>
+    </role>
+    <role name="CRAFTER">
+        <grade name="D" weapon="123" offhand="0" chest="394" legs="416" gloves="604" boots="40"   helmet="45"/>
+        <grade name="C" weapon="75"  offhand="0" chest="60"  legs="0"   gloves="61"  boots="64"   helmet="517"/>
+        <grade name="B" weapon="79"  offhand="0" chest="2391" legs="0"  gloves="0"   boots="2439" helmet="2416"/>
+        <grade name="A" weapon="2500" offhand="0" chest="2385" legs="2389" gloves="0" boots="2441" helmet="2418"/>
+    </role>
+
+    <!-- ═══════════════════════════════════════════════════════════════
+         ARCHER — light armor + bow (bow is lrhand, no offhand)
+    ═══════════════════════════════════════════════════════════════ -->
+    <role name="ARCHER">
+        <!-- D: Reinforced Bow / - / Reinforced Leather Shirt(LIGHT) / Reinforced Leather Gaiters(LIGHT) / Crafted Leather Gloves / Leather Boots / Bone Helmet -->
+        <grade name="D" weapon="274" offhand="0" chest="394" legs="416" gloves="604" boots="40"   helmet="45"/>
+        <!-- C: Composite Bow / - / Plated Leather(LIGHT) / Plated Leather Gaiters(LIGHT) / Mithril Plate Gloves / Plated Leather Boots / Mithril Helmet -->
+        <grade name="C" weapon="273" offhand="0" chest="398" legs="418" gloves="61"  boots="2431" helmet="499"/>
+        <!-- B: Dark Elven Long Bow / - / Blue Wolf Leather Armor(LIGHT onepiece) / - / - / Sealed Blue Wolf Boots / Blue Wolf Helmet -->
+        <grade name="B" weapon="284" offhand="0" chest="2391" legs="0"  gloves="0"   boots="2439" helmet="2416"/>
+        <!-- A: Carnage Bow / - / Dark Crystal Leather Armor(LIGHT) / Dark Crystal Leggings(LIGHT) / - / Dark Crystal Boots / Majestic Circlet -->
+        <grade name="A" weapon="288" offhand="0" chest="2385" legs="2389" gloves="0" boots="563"  helmet="2419"/>
+    </role>
+
+    <!-- ═══════════════════════════════════════════════════════════════
+         DUAL — light armor + dual sword (gladiator, duelist)
+    ═══════════════════════════════════════════════════════════════ -->
+    <role name="DUAL">
+        <!-- D: Bastard Sword*Bastard Sword / - / Reinforced Leather Shirt(LIGHT) / Reinforced Leather Gaiters(LIGHT) / Crafted Leather Gloves / Leather Boots / Bone Helmet -->
+        <grade name="D" weapon="2525" offhand="0" chest="394" legs="416" gloves="604" boots="40"   helmet="45"/>
+        <!-- C: Elven Long Sword*Elven Long Sword / - / Composite Armor(HEAVY onepiece) / - / Mithril Plate Gloves / Composite Boots / Composite Helmet -->
+        <grade name="C" weapon="2560" offhand="0" chest="60"  legs="0"   gloves="61"  boots="64"   helmet="517"/>
+        <!-- B: Caliburs*Caliburs / - / Blue Wolf Leather Armor(LIGHT onepiece) / - / - / Sealed Blue Wolf Boots / Blue Wolf Helmet -->
+        <grade name="B" weapon="2606" offhand="0" chest="2391" legs="0"  gloves="0"   boots="2439" helmet="2416"/>
+        <!-- A: Keshanberk*Damascus / - / Dark Crystal Leather Armor(LIGHT) / Dark Crystal Leggings(LIGHT) / - / Dark Legion Boots / Helm of Nightmare -->
+        <grade name="A" weapon="5705" offhand="0" chest="2385" legs="2389" gloves="0" boots="2441" helmet="2418"/>
+    </role>
+
+    <!-- ═══════════════════════════════════════════════════════════════
+         CASTER roles — magic robe + staff/blunt
+         (MAGE, HEALER, BUFFER, SUMMONER share the same sets)
+    ═══════════════════════════════════════════════════════════════ -->
+    <role name="MAGE">
+        <!-- D: Bone Staff / - / Cursed Tunic(MAGIC) / Cursed Stockings(MAGIC) / Crafted Leather Gloves / Leather Boots / Bone Helmet -->
+        <grade name="D" weapon="178"  offhand="0" chest="432" legs="465" gloves="604"  boots="40"   helmet="45"/>
+        <!-- C: Yaksa Mace / - / Karmian Tunic(MAGIC) / Karmian Stockings(MAGIC) / Karmian Gloves / Karmian Boots / Helm of Avadon -->
+        <grade name="C" weapon="2503" offhand="0" chest="439" legs="471" gloves="2454" boots="2430" helmet="549"/>
+        <!-- B: Yaksa Mace (TODO: replace with B-grade blunt) / - / Avadon Robe(MAGIC onepiece) / - / - / Sealed Blue Wolf Boots / Avadon Circlet -->
+        <grade name="B" weapon="2503" offhand="0" chest="2406" legs="0"  gloves="0"    boots="2439" helmet="2415"/>
+        <!-- A: Meteor Shower / - / Robe of Nightmare(MAGIC onepiece) / - / - / Boots of Nightmare / Majestic Circlet -->
+        <grade name="A" weapon="2504" offhand="0" chest="2408" legs="0"  gloves="0"    boots="2440" helmet="2419"/>
+    </role>
+    <role name="HEALER">
+        <grade name="D" weapon="178"  offhand="0" chest="432" legs="465" gloves="604"  boots="40"   helmet="45"/>
+        <grade name="C" weapon="2503" offhand="0" chest="439" legs="471" gloves="2454" boots="2430" helmet="549"/>
+        <grade name="B" weapon="2503" offhand="0" chest="2406" legs="0"  gloves="0"    boots="2439" helmet="2415"/>
+        <grade name="A" weapon="2504" offhand="0" chest="2408" legs="0"  gloves="0"    boots="2440" helmet="2419"/>
+    </role>
+    <role name="BUFFER">
+        <grade name="D" weapon="178"  offhand="0" chest="432" legs="465" gloves="604"  boots="40"   helmet="45"/>
+        <grade name="C" weapon="2503" offhand="0" chest="439" legs="471" gloves="2454" boots="2430" helmet="549"/>
+        <grade name="B" weapon="2503" offhand="0" chest="2406" legs="0"  gloves="0"    boots="2439" helmet="2415"/>
+        <grade name="A" weapon="2504" offhand="0" chest="2408" legs="0"  gloves="0"    boots="2440" helmet="2419"/>
+    </role>
+    <role name="SUMMONER">
+        <grade name="D" weapon="178"  offhand="0" chest="432" legs="465" gloves="604"  boots="40"   helmet="45"/>
+        <grade name="C" weapon="2503" offhand="0" chest="439" legs="471" gloves="2454" boots="2430" helmet="549"/>
+        <grade name="B" weapon="2503" offhand="0" chest="2406" legs="0"  gloves="0"    boots="2439" helmet="2415"/>
+        <grade name="A" weapon="2504" offhand="0" chest="2408" legs="0"  gloves="0"    boots="2440" helmet="2419"/>
+    </role>
+
+    <!-- ═══════════════════════════════════════════════════════════════
+         JEWELRY — role-independent (two earrings, two rings, one necklace)
+    ═══════════════════════════════════════════════════════════════ -->
+    <jewelry>
+        <!-- D: Tiger's Eye Earring / Black Pearl Ring / Necklace of Devotion -->
+        <grade name="D" earring="849" ring="880" necklace="910"/>
+        <!-- C: Earring of Protection / Ring of Protection / Necklace of Protection -->
+        <grade name="C" earring="853" ring="884" necklace="916"/>
+        <!-- B: Adamantite Earring / Adamantite Ring / Necklace of Mana -->
+        <grade name="B" earring="856" ring="887" necklace="921"/>
+        <!-- A: Majestic Earring / Majestic Ring / Majestic Necklace -->
+        <grade name="A" earring="862" ring="893" necklace="924"/>
+    </jewelry>
+
+</gearSets>

@@ -9,6 +9,7 @@ import java.util.logging.Logger;
 import org.l2jmobius.gameserver.bot.core.action.MoveToAction;
 import org.l2jmobius.gameserver.bot.core.action.SayAction;
 import org.l2jmobius.gameserver.bot.core.action.WaitAction;
+import org.l2jmobius.gameserver.bot.core.zone.BotZoneData;
 import org.l2jmobius.gameserver.bot.core.goap.GoapAction;
 import org.l2jmobius.gameserver.bot.core.goap.GoalSelector;
 import org.l2jmobius.gameserver.bot.core.goap.action.RestockGoapAction;
@@ -129,7 +130,40 @@ public class CityIdleBehaviour extends AbstractBotBehaviour
 	{
 		_arrivedInCity = false;
 		_step = ScriptStep.GROCER;
-		LOGGER.info("[" + bot.getPlayer().getName() + "] CityIdle: entered mode=" + _mode);
+
+		// If bot is still in the farm zone — teleport to city immediately.
+		// Without this the bot would either walk on foot or wait for GOAP to trigger GoToCityGoal.
+		if (bot.isInZone())
+		{
+			final BotZoneData city = bot.getZone().getCityData();
+			final Location dest;
+			if (city != null)
+			{
+				final List<Location> path = city.getCityPath();
+				dest = path.isEmpty() ? city.getGatekeeper() : path.get(0);
+			}
+			else
+			{
+				dest = bot.getProfile().getZone().getHomeLocation();
+			}
+			bot.clearQueue();
+			bot.teleport(dest.getX(), dest.getY(), dest.getZ());
+			_arrivedInCity = true;
+
+			if (_mode == Mode.FOR_ACTIVE)
+			{
+				bot.markReadyToActive(now);
+				LOGGER.info("[" + bot.getPlayer().getName() + "] CityIdle: teleported to city → readyToActive");
+			}
+			else
+			{
+				LOGGER.info("[" + bot.getPlayer().getName() + "] CityIdle: teleported to city → starting city script");
+			}
+		}
+		else
+		{
+			LOGGER.info("[" + bot.getPlayer().getName() + "] CityIdle: entered mode=" + _mode + " (already outside farm zone)");
+		}
 	}
 
 	@Override

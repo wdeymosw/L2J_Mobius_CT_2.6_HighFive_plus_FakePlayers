@@ -235,10 +235,15 @@ public class GoapAgent
 		// not the snapshot from step 4 which may predate a mob's first attack this tick.
 		if (bot.getCurrentGoapAction() == null)
 		{
-			// Before replan, switch to nearest attacker if under attack.
+			// Before replan, switch to nearest attacker if:
+			//   a) UNDER_ATTACK is true (attacker list up-to-date), OR
+			//   b) bot took damage this tick (attacker list may lag — covers the race where
+			//      Mob B hit the bot the moment Mob A died, but getAttackByList hasn't updated).
+			// switchToNearestAttacker is a no-op if no candidate is found, so false-positives
+			// (e.g. environment damage with no real attacker) are harmless.
 			final BotContext replanCtx = BotContext.of(bot, now);
 			final WorldState replanWs = WorldState.fromContext(replanCtx, bot);
-			if (replanWs.get(Fact.UNDER_ATTACK))
+			if (replanWs.get(Fact.UNDER_ATTACK) || bot.hasTakenDamageSinceLastTick())
 			{
 				TargetService.switchToNearestAttacker(bot);
 				// Rebuild once more with updated target
@@ -496,6 +501,13 @@ public class GoapAgent
 				if (!effects.isExplicitlySet(Fact.TARGET_DEAD) && !effects.isExplicitlySet(Fact.TARGET_IN_RANGE) && !effects.isExplicitlySet(Fact.THREAT_NEUTRALIZED))
 				{
 					return true; // Taking damage outside of a combat action — interrupt immediately.
+				}
+				// In combat action but damage is from a DIFFERENT mob (e.g. bot chasing Mob A,
+				// Mob B attacks — attacker list may not have updated yet so UNDER_ATTACK is stale).
+				// Use a direct lookup rather than the cached ws fact.
+				if (TargetService.isAttackedByDifferentMob(bot))
+				{
+					return true;
 				}
 			}
 		}

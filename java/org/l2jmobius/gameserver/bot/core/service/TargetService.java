@@ -3,6 +3,7 @@
  */
 package org.l2jmobius.gameserver.bot.core.service;
 
+import java.util.Comparator;
 import java.util.HashMap;
 import org.l2jmobius.gameserver.bot.core.goap.GoapTuning;
 import java.util.List;
@@ -33,6 +34,12 @@ public class TargetService
 
 	/** Maximum Z-axis difference to consider a mob reachable (avoids targeting mobs on other floors). */
 	private static final int MAX_Z_DIFF = GoapTuning.TARGET_MAX_Z_DIFF;
+
+	/**
+	 * Within this radius a mob is assumed reachable without geo checks (Z-diff only).
+	 * Prevents GeoEngine false-negatives from causing the bot to skip a nearby mob.
+	 */
+	private static final int NEAR_REACH_RADIUS = GoapTuning.TARGET_NEAR_REACH_RADIUS;
 
 	/** Minimum delay between searches (ms). */
 	private static final long SEARCH_COOLDOWN_MIN = GoapTuning.TARGET_SEARCH_COOLDOWN_MIN;
@@ -78,7 +85,12 @@ public class TargetService
 			return; // caller handles wander
 		}
 
+		// Sort nearest-first so that when distances are equal the closer mob always wins,
+		// and to make the attacker/engaged loops naturally prefer nearby targets.
+		candidates.sort(Comparator.comparingDouble(mob -> player.calculateDistance2D(mob)));
+
 		// Single-pass reachability cache: each mob is evaluated by GeoEngine exactly once.
+		// Mobs within NEAR_REACH_RADIUS bypass geo checks — see isReachable().
 		final Map<Attackable, Boolean> reachableCache = new HashMap<>(candidates.size() * 2);
 		for (Attackable mob : candidates)
 		{
@@ -309,15 +321,26 @@ public class TargetService
 	// -------------------------------------------------------------------------
 
 	/**
-	 * Returns {@code true} if {@code mob} is reachable from {@code player}:
-	 * Z-difference within {@value #MAX_Z_DIFF}, line-of-sight visible, and a
-	 * path exists (canMoveToTarget).
+	 * Returns {@code true} if {@code mob} is reachable from {@code player}.
+	 * <p>
+	 * Two-tier check:
+	 * <ul>
+	 *   <li><b>Near zone</b> ({@code dist ≤ NEAR_REACH_RADIUS}): only Z-difference is checked.
+	 *       GeoEngine is skipped to avoid false-negatives on minor terrain irregularities
+	 *       that would otherwise cause the bot to ignore a nearby mob and chase a distant one.</li>
+	 *   <li><b>Far zone</b>: full check — Z-difference + line-of-sight + canMoveToTarget.</li>
+	 * </ul>
 	 */
 	private static boolean isReachable(Player player, Attackable mob, GeoEngine geo)
 	{
 		if (Math.abs(player.getZ() - mob.getZ()) > MAX_Z_DIFF)
 		{
 			return false;
+		}
+		// Very close mobs are assumed reachable — skip expensive geo checks.
+		if (player.calculateDistance2D(mob) <= NEAR_REACH_RADIUS)
+		{
+			return true;
 		}
 		if (!geo.canSeeTarget(player, mob))
 		{

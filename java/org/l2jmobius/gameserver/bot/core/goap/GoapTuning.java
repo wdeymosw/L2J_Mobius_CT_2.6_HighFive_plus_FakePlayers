@@ -174,7 +174,7 @@ public final class GoapTuning
 	public static final long ACTION_STAND_TIMEOUT_MS = 3_000;
 
 	/** Max time to wait for the bot to close range to its target before aborting movement. */
-	public static final long ACTION_MOVE_TO_TARGET_TIMEOUT_MS = 8_000;
+	public static final long ACTION_MOVE_TO_TARGET_TIMEOUT_MS = 3_000;
 
 	/** Wait after issuing standUp() for the ~2500 ms sit→stand animation to finish. */
 	public static final long STAND_UP_ANIMATION_MS = 2_600;
@@ -219,15 +219,27 @@ public final class GoapTuning
 
 	/**
 	 * Per-tick distance the mob must increase to be counted as fleeing.
-	 * After {@link #MAX_FLEE_CHECKS} consecutive flee ticks the target is abandoned.
+	 * After {@link #MAX_FLEE_CHECKS} accumulated flee ticks the target is abandoned.
 	 */
 	public static final int MOB_FLEE_DELTA = 150;
 
 	/** Consecutive geo-path errors before the bot gives up on the current target. */
 	public static final int MAX_GEO_ERRORS = 3;
 
-	/** Consecutive "mob is fleeing" ticks before the bot abandons the target. */
-	public static final int MAX_FLEE_CHECKS = 3;
+	/**
+	 * Accumulated flee ticks before the bot abandons a fleeing target.
+	 * The counter decays by 1 on non-flee ticks (instead of resetting to 0), so
+	 * intermittent pauses by the mob don't erase accumulated evidence of fleeing.
+	 */
+	public static final int MAX_FLEE_CHECKS = 5;
+
+	/**
+	 * Minimum chase ticks before the net-progress check activates.
+	 * If after this many ticks the bot is no closer to the mob than when the chase
+	 * started, the target is abandoned (mob is effectively kiting/escaping).
+	 * At 250–400 ms per tick this equals roughly 1.5–2.4 s of fruitless chasing.
+	 */
+	public static final int MOB_NO_PROGRESS_TICKS = 6;
 
 	/**
 	 * If the bot is within this distance of the farm zone, it walks directly
@@ -247,6 +259,13 @@ public final class GoapTuning
 
 	/** Maximum Z-axis difference when evaluating whether a mob is reachable (avoids cross-floor targeting). */
 	public static final int TARGET_MAX_Z_DIFF = 800;
+
+	/**
+	 * Within this radius a mob is considered reachable without geo checks (Z-diff only).
+	 * Avoids GeoEngine false-negatives on minor terrain irregularities that would cause
+	 * the bot to skip a nearby mob and chase a distant one instead.
+	 */
+	public static final int TARGET_NEAR_REACH_RADIUS = 300;
 
 	/** Minimum delay between consecutive target searches. */
 	public static final long TARGET_SEARCH_COOLDOWN_MIN = 2_000;

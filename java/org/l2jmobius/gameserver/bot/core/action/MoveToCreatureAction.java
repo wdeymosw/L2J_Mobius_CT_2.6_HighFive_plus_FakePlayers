@@ -45,20 +45,31 @@ public class MoveToCreatureAction implements BotAction
 	private static final int MAX_GEO_ERRORS = GoapTuning.MAX_GEO_ERRORS;
 
 	/**
-	 * Consecutive ticks where distance to target increased by at least this many units squared.
-	 * Used to detect a fleeing mob. A mob that consistently runs away from the bot should be
-	 * abandoned so the bot finds a stationary or closer target instead.
+	 * Maximum accumulated flee ticks before the target is abandoned.
+	 * The counter decays (not resets) on non-flee ticks, so intermittent mob pauses
+	 * don't erase evidence of fleeing.
 	 */
 	private static final int MAX_FLEE_CHECKS = GoapTuning.MAX_FLEE_CHECKS;
 
 	/** Minimum squared-distance increase per tick to count as "mob is moving away". */
 	private static final int FLEE_DELTA_SQ = GoapTuning.MOB_FLEE_DELTA * GoapTuning.MOB_FLEE_DELTA;
 
+	/**
+	 * Chase ticks after which net-progress is evaluated.
+	 * If the bot is no closer than at chase start, the mob is kiting — abandon.
+	 */
+	private static final int NO_PROGRESS_TICKS = GoapTuning.MOB_NO_PROGRESS_TICKS;
+
 	private final Creature _target;
 	private final int _arrivalRadius;
 	private int _geoErrorCount = 0;
 	private int _fleeCount = 0;
-	private int _lastDistSq = Integer.MAX_VALUE;
+	/** Distance² to the target at the start of this chase. Set on the first tick. */
+	private int _initialDistSq = -1;
+	/** Distance² observed on the previous tick. Used for consecutive flee detection. */
+	private int _lastDistSq = 0;
+	/** Total ticks spent chasing this target. Used for net-progress check. */
+	private int _chaseTicks = 0;
 
 	/**
 	 * Navigation target passed to PathService — snapshot of mob position, updated only
@@ -100,16 +111,39 @@ public class MoveToCreatureAction implements BotAction
 		final int ty = _target.getY();
 		final int tz = _target.getZ();
 
-		// --- Fleeing mob detection: if the mob is consistently moving away for MAX_FLEE_CHECKS
-		// consecutive ticks, abandon it and let the planner find a closer / stationary target. ---
+		// --- Fleeing mob detection ---
+		// Two complementary checks:
+		//   1. Accumulated flee ticks: each tick the mob moves further adds 1; each tick it
+		//      doesn't subtracts 1 (decay). Abandons when accumulated count ≥ MAX_FLEE_CHECKS.
+		//      Decay (not reset) means intermittent mob pauses don't erase flee evidence.
+		//   2. Net-progress check: if after NO_PROGRESS_TICKS ticks the bot is no closer
+		//      than when the chase started, the mob is kiting — abandon immediately.
 		{
 			final Player player = bot.getPlayer();
 			final int fdx = tx - player.getX();
 			final int fdy = ty - player.getY();
 			final int distSq = (fdx * fdx) + (fdy * fdy);
-			if (distSq > (_lastDistSq + FLEE_DELTA_SQ))
+
+			if (_initialDistSq < 0)
 			{
-				_fleeCount++;
+				// First tick: establish baseline; skip flee check this tick.
+				_initialDistSq = distSq;
+				_lastDistSq = distSq;
+			}
+			else
+			{
+				_chaseTicks++;
+
+				// Accumulated flee counter (decay instead of hard reset).
+				if (distSq > (_lastDistSq + FLEE_DELTA_SQ))
+				{
+					_fleeCount++;
+				}
+				else
+				{
+					_fleeCount = Math.max(0, _fleeCount - 1);
+				}
+
 				if (_fleeCount >= MAX_FLEE_CHECKS)
 				{
 					bot.clearTarget();
@@ -118,12 +152,20 @@ public class MoveToCreatureAction implements BotAction
 					player.getAI().setIntention(Intention.IDLE);
 					return;
 				}
+
+				// Net-progress check: if the bot has spent enough ticks chasing
+				// but is no closer than the starting distance, abandon.
+				if ((_chaseTicks >= NO_PROGRESS_TICKS) && (distSq >= _initialDistSq))
+				{
+					bot.clearTarget();
+					bot.clearGlobalPath();
+					bot.clearPath();
+					player.getAI().setIntention(Intention.IDLE);
+					return;
+				}
+
+				_lastDistSq = distSq;
 			}
-			else
-			{
-				_fleeCount = 0;
-			}
-			_lastDistSq = distSq;
 		}
 
 		// --- When close to the last waypoint, refresh it to mob's live position.
